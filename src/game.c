@@ -2,6 +2,7 @@
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/managers/system.h>
 #include <ace/managers/blit.h>
+#include <ace/managers/bob.h>
 #include <ace/utils/palette.h>
 #include <ace/managers/key.h>
 #include "selurina.h"
@@ -13,7 +14,9 @@ static tSimpleBufferManager *s_pBufferMain;
 static tBitMap *s_pPlayerFrames;
 static tBitMap *s_pPlayerMasks;
 
-static tUwCoordYX s_pPositions[] = {
+static tBob s_pBobs[6];
+
+static tUwCoordYX s_pPositions[6] = {
 	{.uwX = 30, .uwY = 30},
 	{.uwX = 130, .uwY = 30},
 	{.uwX = 230, .uwY = 30},
@@ -44,6 +47,16 @@ static void gameGsCreate(void) {
 	s_pPlayerFrames = bitmapCreateFromFile("data/player.bm", 0);
 	s_pPlayerMasks = bitmapCreateFromFile("data/player_mask.bm", 0);
 
+ bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
+ for(UBYTE i = 0; i < 6; ++i) {
+ 	bobInit(
+		&s_pBobs[i], 32, 32, 1,
+		s_pPlayerFrames->Planes[0], s_pPlayerMasks->Planes[0],
+		s_pPositions[i].uwX, s_pPositions[i].uwY
+	);
+ }
+ bobReallocateBgBuffers();
+
 	systemUnuse();
 	viewLoad(s_pView);
 }
@@ -54,20 +67,12 @@ static void gameGsLoop(void) {
 		return;
 	}
 
-	// Undraw & save
+ 	bobBegin(s_pBufferMain->pBack);
 	for(UBYTE i = 0; i < 6; ++i) {
-		blitRect(s_pBufferMain->pBack, s_pPositions[i].uwX, s_pPositions[i].uwY, 32, 32, 0);
-		blitRect(s_pBufferMain->pBack, s_pPositions[i].uwX, s_pPositions[i].uwY, 32, 32, 0);
+		bobPush(&s_pBobs[i]);
 	}
-
-	// Draw
-	for(UBYTE i = 0; i < 6; ++i ) {
-		blitCopyMask(
-			s_pPlayerFrames, 0, 0,
-			s_pBufferMain->pBack, s_pPositions[i].uwX, s_pPositions[i].uwY,
-			32, 32, (UWORD*)s_pPlayerMasks->Planes[0]
-		);
-	}
+	bobPushingDone();
+	bobEnd();
 
 	viewProcessManagers(s_pView);
 	copProcessBlocks();
@@ -81,6 +86,7 @@ static void gameGsDestroy(void) {
 	systemUse();
 
 	viewDestroy(s_pView);
+	bobManagerDestroy();
 	bitmapDestroy(s_pPlayerFrames);
 	bitmapDestroy(s_pPlayerMasks);
 }
