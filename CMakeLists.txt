@@ -8,6 +8,7 @@ endif()
 set(CMAKE_C_STANDARD 11)
 
 # ACE
+set(ACE_BOB_WRAP_Y OFF)
 add_subdirectory(deps/ace ace)
 file(GLOB_RECURSE GAME_src src/*.c src/*.h)
 
