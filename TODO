@@ -1,14 +1,21 @@
 General:
 	✔ Spawning portals on cursor position @done(23-05-19 11:35)
 	✔ writing/loading levels @done(23-05-19 12:37)
-	☐ 8x8 tileset
-	☐ Smaller character bounding box
-	☐ Jumping
+	✔ 8x8 tileset @done(23-05-19 13:08)
+	✔ 8x16 character bounding box @done(23-05-19 13:08)
+	✔ Jumping @done(23-05-19 14:33)
+	☐ X collisions
+	☐ Portal directions
+	☐ Entrance/exit tiles
 	☐ Basic cube
 	☐ Picking up objects
+	☐ Fix overlapping portals
+	☐ Abyss
+	☐ Cube spawner
 	☐ Basic turrets
 	☐ Shooting portals (raycast)
 	☐ Multi-bob character body
+	☐ Air control X
 	☐ Figure out the artstyle
 
 Tiles:
@@ -18,10 +25,12 @@ Tiles:
 	☐ Button
 	☐ Electricity fields
 
-Moving objects:
+Misc objects:
 	☐ Lifts
 	☐ Crushers
 	☐ Energy ball
+	☐ Entrance
+	☐ Doors
 
 Momentum, normal-wise:
 	✔ down-up @done(23-05-19 09:00)
@@ -37,4 +46,4 @@ Momentum, normal-wise:
 	☐ right-down
 	☐ right-up
 
-Test chamber:
+Test chambers:

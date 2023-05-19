@@ -2,8 +2,6 @@
 #include "game.h"
 #include "map.h"
 
-static const fix16_t s_fAlmostOne = fix16_one - 1;
-
 void bodyInit(tBodyBox *pBody, fix16_t fPosX, fix16_t fPosY, UBYTE ubWidth, UBYTE ubHeight) {
 	pBody->fPosX = fPosX;
 	pBody->fPosY = fPosY;
@@ -42,13 +40,16 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 }
 
 void bodySimulate(tBodyBox *pBody) {
+	pBody->fVelocityY = fix16_clamp(fix16_add(pBody->fVelocityY, pBody->fAccelerationY), fix16_from_int(-7), fix16_from_int(7));
+
 	fix16_t fNewPosX = fix16_add(pBody->fPosX, pBody->fVelocityX);
 	fix16_t fNewPosY = fix16_add(pBody->fPosY, pBody->fVelocityY);
-	UWORD uwTop = fix16_to_int(fix16_add(pBody->fPosY, s_fAlmostOne));
-	UWORD uwBottom = uwTop + pBody->ubHeight - 1;
+	UWORD uwTop = fix16_to_int(pBody->fPosY);
+	UWORD uwBottom = uwTop + pBody->ubHeight;
 	UWORD uwLeft = fix16_to_int(pBody->fPosX);
 	UWORD uwRight = uwLeft + pBody->ubWidth - 1;
 
+	pBody->isOnGround = 0;
 	pBody->fPosX = fNewPosX;
 
 	if(pBody->fVelocityY > 0) {
@@ -60,6 +61,7 @@ void bodySimulate(tBodyBox *pBody) {
 			uwTop = ((uwBottom / MAP_TILE_SIZE) * MAP_TILE_SIZE) - pBody->ubHeight;
 			fNewPosY = fix16_from_int(uwTop);
 			pBody->fVelocityY = 0;
+			pBody->isOnGround = 1;
 		}
 		else if(
 			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwBottom / MAP_TILE_SIZE) == TILE_SLIPGATE_1 &&
@@ -99,10 +101,9 @@ void bodySimulate(tBodyBox *pBody) {
 		// 	fNewPosY = fix16_from_int(uwTop);
 		// }
 	}
+
 	pBody->fPosY = fNewPosY;
 
 	pBody->sBob.sPos.uwX = fix16_to_int(pBody->fPosX);
 	pBody->sBob.sPos.uwY = fix16_to_int(pBody->fPosY);
-
-	pBody->fVelocityY = fix16_clamp(fix16_add(pBody->fVelocityY, pBody->fAccelerationY), fix16_from_int(-7), fix16_from_int(7));
 }

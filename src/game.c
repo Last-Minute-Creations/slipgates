@@ -13,6 +13,8 @@
 #include "body_box.h"
 #include "map.h"
 
+static fix16_t s_fPlayerJumpVeloY = F16(-2);
+
 static tView *s_pView;
 static tVPort *s_pVpMain;
 static tSimpleBufferManager *s_pBufferMain;
@@ -31,6 +33,10 @@ static UWORD s_uwGameFrame;
 // static char s_szAccelerationX[13];
 // static char s_szAccelerationY[13];
 
+static UBYTE playerCanJump(void) {
+	return s_sBodyPlayer.isOnGround;
+}
+
 static UBYTE tileGetColor(tTile eTile) {
 	switch (eTile)
 	{
@@ -41,17 +47,30 @@ static UBYTE tileGetColor(tTile eTile) {
 	}
 }
 
+static void drawTile(UBYTE ubTileX, UBYTE ubTileY) {
+	UBYTE ubColor = tileGetColor(mapGetTileAt(ubTileX, ubTileY));
+	blitRect(
+		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
+	);
+	blitRect(
+		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
+	);
+}
+
 // TODO: refactor and move to map.c?
 static void drawMap(void) {
-	for(UBYTE x = 0; x < MAP_TILE_WIDTH; ++x) {
-		for(UBYTE y = 0; y < MAP_TILE_HEIGHT; ++y) {
+	for(UBYTE ubTileX = 0; ubTileX < MAP_TILE_WIDTH; ++ubTileX) {
+		for(UBYTE ubTileY = 0; ubTileY < MAP_TILE_HEIGHT; ++ubTileY) {
+			UBYTE ubColor = tileGetColor(mapGetTileAt(ubTileX, ubTileY));
 			blitRect(
-				s_pBufferMain->pBack, x * MAP_TILE_SIZE, y * MAP_TILE_SIZE,
-				MAP_TILE_SIZE, MAP_TILE_SIZE, tileGetColor(mapGetTileAt(x, y))
+				s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+				MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
 			);
 			blitRect(
-				s_pBufferMain->pFront, x * MAP_TILE_SIZE, y * MAP_TILE_SIZE,
-				MAP_TILE_SIZE, MAP_TILE_SIZE, tileGetColor(mapGetTileAt(x, y))
+				s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+				MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
 			);
 		}
 	}
@@ -176,26 +195,29 @@ static void gameGsLoop(void) {
 			drawMap();
 		}
 	}
-	else if(keyUse(KEY_Z)) {
+
+	// Level editor
+	if(keyCheck(KEY_Z)) {
 		g_sCurrentLevel.pTiles[uwCrossX / MAP_TILE_SIZE][uwCrossY / MAP_TILE_SIZE] = TILE_WALL_1;
-		drawMap();
+		drawTile(uwCrossX / MAP_TILE_SIZE, uwCrossY / MAP_TILE_SIZE);
 	}
-	else if(keyUse(KEY_X)) {
+	else if(keyCheck(KEY_X)) {
 		g_sCurrentLevel.pTiles[uwCrossX / MAP_TILE_SIZE][uwCrossY / MAP_TILE_SIZE] = TILE_BG_1;
-		drawMap();
+		drawTile(uwCrossX / MAP_TILE_SIZE, uwCrossY / MAP_TILE_SIZE);
 	}
 	spriteProcess(s_pSpriteCrosshair);
 
-	if(keyCheck(KEY_W)) {
-		s_sBodyPlayer.fVelocityY = fix16_from_int(-3);
+	// Movement
+	if(keyUse(KEY_W) && playerCanJump()) {
+		s_sBodyPlayer.fVelocityY = s_fPlayerJumpVeloY;
 	}
 
 	s_sBodyPlayer.fVelocityX = 0;
 	if(keyCheck(KEY_A)) {
-		s_sBodyPlayer.fVelocityX = fix16_from_int(-1);
+		s_sBodyPlayer.fVelocityX = fix16_from_int(-2);
 	}
 	else if(keyCheck(KEY_D)) {
-		s_sBodyPlayer.fVelocityX = fix16_from_int(1);
+		s_sBodyPlayer.fVelocityX = fix16_from_int(2);
 	}
 
 	bodySimulate(&s_sBodyPlayer);

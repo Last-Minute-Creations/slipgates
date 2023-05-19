@@ -14,6 +14,7 @@ typedef struct tBodyBox {
 	fix16_t fAccelerationY;
 	UBYTE ubWidth;
 	UBYTE ubHeight;
+	UBYTE isOnGround;
 } tBodyBox;
 
 void bodySimulate(tBodyBox *pBody);
