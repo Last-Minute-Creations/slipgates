@@ -5,6 +5,7 @@ General:
 	✔ 8x16 character bounding box @done(23-05-19 13:08)
 	✔ Jumping @done(23-05-19 14:33)
 	✔ X collisions @done(23-05-19 15:57)
+	✔ Air control X @done(23-05-19 17:41)
 	☐ Portal directions
 	☐ Entrance/exit tiles
 	☐ Basic cube
@@ -15,7 +16,6 @@ General:
 	☐ Basic turrets
 	☐ Shooting portals (raycast)
 	☐ Multi-bob character body
-	☐ Air control X
 	☐ Figure out the artstyle
 	☐ Bigger max velocity
 
