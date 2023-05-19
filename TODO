@@ -17,6 +17,7 @@ General:
 	☐ Multi-bob character body
 	☐ Air control X
 	☐ Figure out the artstyle
+	☐ Bigger max velocity
 
 Tiles:
 	☐ Red beam
@@ -33,15 +34,19 @@ Misc objects:
 	☐ Doors
 
 Momentum, normal-wise:
-	✔ down-up @done(23-05-19 09:00)
+	✔ up-up @done(23-05-19 09:00)
+	✔ up-down @done(23-05-19 09:00)
+	✔ up-left @done(23-05-19 17:40)
+	✔ up-right @done(23-05-19 17:40)
+	☐ down-down
+	☐ down-up
 	☐ down-left
 	☐ down-right
-	☐ up-down
-	☐ up-left
-	☐ up-right
+	☐ left-left
 	☐ left-right
 	☐ left-down
 	☐ left-up
+	☐ right-right
 	☐ right-left
 	☐ right-down
 	☐ right-up

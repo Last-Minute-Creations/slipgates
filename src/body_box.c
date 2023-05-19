@@ -14,18 +14,39 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 	logWrite("Slipgate!");
 	switch(g_pSlipgates[ubIndexSrc].eNormal) {
 		case DIRECTION_UP:
-			if(g_pSlipgates[!ubIndexSrc].eNormal == DIRECTION_UP) {
-				WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE);
-				pBody->fPosX = fix16_add(pBody->fPosX, fix16_from_int(wDeltaX));
-				pBody->fVelocityY = fix16_mul(pBody->fVelocityY, fix16_from_int(-1));
-				// Be sure to teleport exactly at same height, otherwise U-loop will increase velocity
-				UWORD wDeltaY = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileY * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
-				pBody->fPosY = fix16_add(pBody->fPosY, fix16_from_int(wDeltaY));
-			}
-			else {
-				WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE);
-				pBody->fPosX = fix16_add(pBody->fPosX, fix16_from_int(wDeltaX));
-				pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileY + 1) * MAP_TILE_SIZE);
+			switch(g_pSlipgates[!ubIndexSrc].eNormal) {
+				case DIRECTION_UP: {
+					WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_add(pBody->fPosX, fix16_from_int(wDeltaX));
+					pBody->fVelocityY = -pBody->fVelocityY;
+					// Be sure to teleport exactly at same height, otherwise U-loop will increase velocity
+					UWORD wDeltaY = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileY * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_add(pBody->fPosY, fix16_from_int(wDeltaY));
+				} break;
+				case DIRECTION_DOWN: {
+					WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_add(pBody->fPosX, fix16_from_int(wDeltaX));
+					pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileY + 1) * MAP_TILE_SIZE);
+				} break;
+				case DIRECTION_LEFT: {
+					// fix16_t fTmp = pBody->fVelocityX;
+					pBody->fVelocityX = -pBody->fVelocityY;
+					pBody->fVelocityY = 0; // more controllable?
+					// pBody->fVelocityY = fTmp;
+					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE - pBody->ubWidth);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+				} break;
+				case DIRECTION_RIGHT: {
+					// fix16_t fTmp = pBody->fVelocityX;
+					pBody->fVelocityX = pBody->fVelocityY;
+					pBody->fVelocityY = 0; // more controllable?
+					// pBody->fVelocityY = fTmp;
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+				} break;
+				case DIRECTION_NONE: {
+
+				} break;
 			}
 			break;
 		case DIRECTION_DOWN:
