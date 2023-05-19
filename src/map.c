@@ -77,11 +77,14 @@ tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY) {
 }
 
 void mapCloseSlipgates(void) {
-	setSlipgateTiles(&g_pSlipgates[0], TILE_WALL_1);
-	setSlipgateTiles(&g_pSlipgates[1], TILE_WALL_1);
-
-	g_pSlipgates[0].eNormal = DIRECTION_NONE;
-	g_pSlipgates[1].eNormal = DIRECTION_NONE;
+	if(g_pSlipgates[0].eNormal != DIRECTION_NONE) {
+		setSlipgateTiles(&g_pSlipgates[0], TILE_WALL_1);
+		g_pSlipgates[0].eNormal = DIRECTION_NONE;
+	}
+	if(g_pSlipgates[1].eNormal != DIRECTION_NONE) {
+		setSlipgateTiles(&g_pSlipgates[1], TILE_WALL_1);
+		g_pSlipgates[1].eNormal = DIRECTION_NONE;
+	}
 }
 
 UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
