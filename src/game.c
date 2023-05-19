@@ -9,6 +9,7 @@
 #include <ace/managers/key.h>
 #include "slipgates.h"
 #include "body_box.h"
+#include "map.h"
 
 static tView *s_pView;
 static tVPort *s_pVpMain;
@@ -19,37 +20,6 @@ static tBitMap *s_pPlayerMasks;
 static tBitMap *s_pBmCursor;
 static tBodyBox s_sBodyPlayer;
 static tSprite *s_pSpriteCrosshair;
-
-typedef enum tTile {
-	TILE_BG_1 = 0,
-	TILE_WALL_1 = 1,
-	TILE_PORTAL_1 = 2,
-	TILE_PORTAL_2 = 3,
-} tTile;
-
-UBYTE g_pTiles[20][16] = { // x,y
-	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-};
-
 
 static UWORD s_uwGameFrame;
 static char s_szPosX[13];
@@ -122,6 +92,7 @@ static void gameGsCreate(void) {
 	s_uwGameFrame = 0;
 
 	systemUnuse();
+	mapInit();
 	drawMap();
 	viewLoad(s_pView);
 }
@@ -141,11 +112,11 @@ static void gameGsLoop(void) {
 	s_pSpriteCrosshair->wX = uwMouseX;
 	s_pSpriteCrosshair->wY = uwMouseY;
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
-		g_pTiles[uwCrossX / 16][uwCrossY / 16] = TILE_PORTAL_1;
+		mapTrySpawnSlipgate(0, uwCrossX / 16, uwCrossY / 16);
 		drawMap();
 	}
 	else if(mouseUse(MOUSE_PORT_1, MOUSE_RMB)) {
-		g_pTiles[uwCrossX / 16][uwCrossY / 16] = TILE_PORTAL_2;
+		mapTrySpawnSlipgate(1, uwCrossX / 16, uwCrossY / 16);
 		drawMap();
 	}
 	else if(keyUse(KEY_Z)) {
