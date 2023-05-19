@@ -3,6 +3,8 @@
 #include <ace/managers/system.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/bob.h>
+#include <ace/managers/sprite.h>
+#include <ace/managers/mouse.h>
 #include <ace/utils/palette.h>
 #include <ace/managers/key.h>
 #include "slipgates.h"
@@ -14,6 +16,9 @@ static tSimpleBufferManager *s_pBufferMain;
 
 static tBitMap *s_pPlayerFrames;
 static tBitMap *s_pPlayerMasks;
+static tBitMap *s_pBmCursor;
+static tBodyBox s_sBodyPlayer;
+static tSprite *s_pSpriteCrosshair;
 
 UBYTE g_pTiles[20][16] = { // x,y
 	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -38,7 +43,7 @@ UBYTE g_pTiles[20][16] = { // x,y
 	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
 
-static tBodyBox s_sBodyPlayer;
+
 static UWORD s_uwGameFrame;
 static char s_szPosX[13];
 static char s_szPosY[13];
@@ -84,20 +89,29 @@ static void gameGsCreate(void) {
 	TAG_END);
 
 	paletteLoad("data/slipgates.plt", s_pVpMain->pPalette, 32);
+	s_pVpMain->pPalette[17] = 0xA86;
+	s_pVpMain->pPalette[18] = 0x27D;
+	s_pVpMain->pPalette[19] = 0xE96;
 
 	s_pPlayerFrames = bitmapCreateFromFile("data/player.bm", 0);
 	s_pPlayerMasks = bitmapCreateFromFile("data/player_mask.bm", 0);
+	s_pBmCursor = bitmapCreateFromFile("data/cursor.bm", 0);
 
 	bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
-
 	bobInit(
 		&s_sBodyPlayer.sBob, 16, 32, 1,
 		s_pPlayerFrames->Planes[0], s_pPlayerMasks->Planes[0],
 		0, 0
 	);
 	bodyInit(&s_sBodyPlayer, fix16_from_int(100), fix16_from_int(150));
-
 	bobReallocateBgBuffers();
+
+	spriteManagerCreate(s_pView, 0);
+	s_pSpriteCrosshair = spriteAdd(0, s_pBmCursor);
+	systemSetDmaBit(DMAB_SPRITE, 1);
+	spriteProcessChannel(0);
+	mouseSetBounds(MOUSE_PORT_1, 0, 0, 320 - 16, 256 - 27);
+
 	s_uwGameFrame = 0;
 
 	systemUnuse();
@@ -130,6 +144,10 @@ static void gameGsLoop(void) {
 	bobPushingDone();
 	bobEnd();
 
+	s_pSpriteCrosshair->wX = mouseGetX(MOUSE_PORT_1);
+	s_pSpriteCrosshair->wY = mouseGetY(MOUSE_PORT_1);
+	spriteProcess(s_pSpriteCrosshair);
+
 	fix16_to_str(s_sBodyPlayer.fPosX, s_szPosX, 2);
 	fix16_to_str(s_sBodyPlayer.fPosY, s_szPosY, 2);
 	fix16_to_str(s_sBodyPlayer.fVelocityX, s_szVelocityX, 2);
@@ -157,10 +175,13 @@ static void gameGsDestroy(void) {
 	viewLoad(0);
 	systemUse();
 
+	systemSetDmaBit(DMAB_SPRITE, 0);
+	spriteManagerDestroy();
 	viewDestroy(s_pView);
 	bobManagerDestroy();
 	bitmapDestroy(s_pPlayerFrames);
 	bitmapDestroy(s_pPlayerMasks);
+	bitmapDestroy(s_pBmCursor);
 }
 
 tState g_sStateGame = { .cbCreate = gameGsCreate, .cbLoop = gameGsLoop, .cbDestroy = gameGsDestroy };

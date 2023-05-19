@@ -50,6 +50,7 @@ file(MAKE_DIRECTORY ${GEN_DIR})
 
 # Palette
 file(GLOB palette_slipgates_gpl ${RES_DIR}/slipgates.gpl)
+file(GLOB palette_sprite_gpl ${RES_DIR}/sprite_export.gpl)
 set(palette_slipgates "${DATA_DIR}/slipgates.plt")
 convertPalette(${GAME_EXECUTABLE} ${palette_slipgates_gpl} ${palette_slipgates})
 set(transparency_hex "#993399")
@@ -62,6 +63,14 @@ convertBitmaps(
 		${DATA_DIR}/player.bm
 	MASKS
 		${DATA_DIR}/player_mask.bm
+)
+
+convertBitmaps(
+	TARGET ${GAME_EXECUTABLE} PALETTE ${palette_sprite_gpl}
+	INTERLEAVED SOURCES
+		${RES_DIR}/cursor.png
+	DESTINATIONS
+		${DATA_DIR}/cursor.bm
 )
 
 # convertFont(

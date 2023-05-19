@@ -7,6 +7,7 @@
 #include <ace/generic/main.h>
 #include <ace/managers/key.h>
 #include <ace/managers/joy.h>
+#include <ace/managers/mouse.h>
 #include "game.h"
 
 tStateManager *g_pGameStateManager;
@@ -14,6 +15,7 @@ tStateManager *g_pGameStateManager;
 void genericCreate(void) {
 	keyCreate();
 	joyOpen();
+	mouseCreate(MOUSE_PORT_1);
 	g_pGameStateManager = stateManagerCreate();
 	statePush(g_pGameStateManager, &g_sStateGame);
 }
@@ -21,6 +23,7 @@ void genericCreate(void) {
 void genericProcess(void) {
 	keyProcess();
 	joyProcess();
+	mouseProcess();
 	stateProcess(g_pGameStateManager);
 }
 
@@ -28,4 +31,5 @@ void genericDestroy(void) {
 	stateManagerDestroy(g_pGameStateManager);
 	keyDestroy();
 	joyClose();
+	mouseDestroy();
 }
