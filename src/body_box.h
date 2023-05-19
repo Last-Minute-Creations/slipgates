@@ -12,9 +12,11 @@ typedef struct tBodyBox {
 	fix16_t fVelocityY;
 	fix16_t fAccelerationX;
 	fix16_t fAccelerationY;
+	UBYTE ubWidth;
+	UBYTE ubHeight;
 } tBodyBox;
 
 void bodySimulate(tBodyBox *pBody);
-void bodyInit(tBodyBox *pBody, fix16_t fPosX, fix16_t fPosY);
+void bodyInit(tBodyBox *pBody, fix16_t fPosX, fix16_t fPosY, UBYTE ubWidth, UBYTE ubHeight);
 
 #endif // SLIPGATES_BODY_H

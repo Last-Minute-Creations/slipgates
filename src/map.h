@@ -4,10 +4,10 @@
 #include "slipgate.h"
 #include <fixmath/fix16.h>
 
-#define MAP_TILE_WIDTH 20
-#define MAP_TILE_HEIGHT 16
-#define MAP_TILE_SHIFT 4
-#define MAP_TILE_SIZE (1 << 4)
+#define MAP_TILE_SHIFT 3
+#define MAP_TILE_SIZE (1 << MAP_TILE_SHIFT)
+#define MAP_TILE_WIDTH 40
+#define MAP_TILE_HEIGHT 32
 
 typedef enum tTile {
 	TILE_BG_1 = 0,

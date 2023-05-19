@@ -64,7 +64,8 @@ static void loadLevel(UBYTE ubIndex) {
 	bodyInit(
 		&s_sBodyPlayer,
 		g_sCurrentLevel.fStartX,
-		g_sCurrentLevel.fStartY
+		g_sCurrentLevel.fStartY,
+		8, 16
 	);
 	drawMap();
 	viewLoad(s_pView);
@@ -121,7 +122,7 @@ static void gameGsCreate(void) {
 
 	bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
 	bobInit(
-		&s_sBodyPlayer.sBob, 16, 32, 1,
+		&s_sBodyPlayer.sBob, 16, 16, 1,
 		s_pPlayerFrames->Planes[0], s_pPlayerMasks->Planes[0],
 		0, 0
 	);

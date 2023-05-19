@@ -31,10 +31,14 @@ void mapLoad(UBYTE ubIndex) {
 		memset(&g_sCurrentLevel, 0, sizeof(g_sCurrentLevel));
 		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
 			g_sCurrentLevel.pTiles[ubX][0] = TILE_WALL_1;
+			g_sCurrentLevel.pTiles[ubX][1] = TILE_WALL_1;
+			g_sCurrentLevel.pTiles[ubX][MAP_TILE_HEIGHT - 2] = TILE_WALL_1;
 			g_sCurrentLevel.pTiles[ubX][MAP_TILE_HEIGHT - 1] = TILE_WALL_1;
 		}
 		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
 			g_sCurrentLevel.pTiles[0][ubY] = TILE_WALL_1;
+			g_sCurrentLevel.pTiles[1][ubY] = TILE_WALL_1;
+			g_sCurrentLevel.pTiles[MAP_TILE_WIDTH - 2][ubY] = TILE_WALL_1;
 			g_sCurrentLevel.pTiles[MAP_TILE_WIDTH - 1][ubY] = TILE_WALL_1;
 		}
 		g_sCurrentLevel.fStartX = fix16_from_int(100);
