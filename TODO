@@ -1,5 +1,6 @@
 General:
-	☐ Spawning portals on cursor position
+	✔ Spawning portals on cursor position @done(23-05-19 11:35)
+	☐ writing/loading levels
 	☐ 8x8 tileset
 	☐ Smaller character bounding box
 	☐ Jumping

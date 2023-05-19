@@ -6,6 +6,7 @@
 #include <ace/managers/sprite.h>
 #include <ace/managers/mouse.h>
 #include <ace/utils/palette.h>
+#include <ace/utils/file.h>
 #include <ace/managers/key.h>
 #include "slipgates.h"
 #include "body_box.h"
@@ -39,6 +40,7 @@ static UBYTE tileGetColor(UBYTE ubTile) {
 	}
 }
 
+// TODO: refactor and move to map.c?
 static void drawMap(void) {
 	for(UBYTE x = 0; x < 20; ++x) {
 		for(UBYTE y = 0; y < 16; ++y) {
@@ -46,6 +48,34 @@ static void drawMap(void) {
 			blitRect(s_pBufferMain->pFront, x * 16, y * 16, 16, 16, tileGetColor(g_pTiles[x][y]));
 		}
 	}
+}
+
+static void loadLevel(UBYTE ubIndex) {
+	viewLoad(0);
+	bodyInit(&s_sBodyPlayer, fix16_from_int(100), fix16_from_int(150));
+	s_uwGameFrame = 0;
+	mapInit(ubIndex);
+	drawMap();
+	viewLoad(s_pView);
+}
+
+static void saveLevel(UNUSED_ARG UBYTE ubIndex) {
+	mapClosePortals();
+
+	char szName[13];
+	char cNewLine = '\n';
+	sprintf(szName, "level%03hhu.dat", ubIndex);
+	systemUse();
+	tFile *pFile = fileOpen(szName, "wb");
+	for(UBYTE y = 0; y < 16; ++y) {
+		for(UBYTE x = 0; x < 20; ++x) {
+			UBYTE ubGlyph = '0' + g_pTiles[x][y];
+			fileWrite(pFile, &ubGlyph, sizeof(ubGlyph));
+		}
+		fileWrite(pFile, &cNewLine, sizeof(cNewLine));
+	}
+	fileClose(pFile);
+	systemUnuse();
 }
 
 static void gameGsCreate(void) {
@@ -80,7 +110,6 @@ static void gameGsCreate(void) {
 		s_pPlayerFrames->Planes[0], s_pPlayerMasks->Planes[0],
 		0, 0
 	);
-	bodyInit(&s_sBodyPlayer, fix16_from_int(100), fix16_from_int(150));
 	bobReallocateBgBuffers();
 
 	spriteManagerCreate(s_pView, 0);
@@ -89,18 +118,28 @@ static void gameGsCreate(void) {
 	spriteProcessChannel(0);
 	mouseSetBounds(MOUSE_PORT_1, 0, 0, 320 - 16, 256 - 27);
 
-	s_uwGameFrame = 0;
 
 	systemUnuse();
-	mapInit();
-	drawMap();
-	viewLoad(s_pView);
+	loadLevel(0);
 }
 
 static void gameGsLoop(void) {
 	if(keyUse(KEY_ESCAPE)) {
 		statePop(g_pGameStateManager);
 		return;
+	}
+	else {
+		for(UBYTE i = 0; i < 4; ++i) {
+			if(keyUse(KEY_F1 + i)) {
+				if(keyCheck(KEY_CONTROL)) {
+					saveLevel(1 + i);
+				}
+				else {
+					loadLevel(1 + i);
+				}
+				break;
+			}
+		}
 	}
 
  	bobBegin(s_pBufferMain->pBack);

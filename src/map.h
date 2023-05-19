@@ -13,7 +13,9 @@ typedef enum tTile {
 extern tSlipgate g_pSlipgates[2];
 extern UBYTE g_pTiles[20][16];
 
-void mapInit(void);
+void mapInit(UBYTE ubIndex);
+
+void mapClosePortals(void);
 
 UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY);
 
