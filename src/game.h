@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef SELURINA_GAME_H
-#define SELURINA_GAME_H
+#ifndef SLIPGATES_GAME_H
+#define SLIPGATES_GAME_H
 
 #include <ace/managers/state.h>
 
 extern tState g_sStateGame;
+extern UBYTE g_pTiles[20][16]; // x,y
 
-#endif // SELURINA_GAME_H
+#endif // SLIPGATES_GAME_H

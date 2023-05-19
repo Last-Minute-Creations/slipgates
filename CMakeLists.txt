@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14.0)
-project(selurina)
+project(slipgates)
 
 if(NOT AMIGA)
 	message(SEND_ERROR "This project only compiles for Amiga")
@@ -12,7 +12,7 @@ set(ACE_BOB_WRAP_Y OFF)
 add_subdirectory(deps/ace ace)
 file(GLOB_RECURSE GAME_src src/*.c src/*.h)
 
-set(GAME_EXECUTABLE_STEM selurina)
+set(GAME_EXECUTABLE_STEM slipgates)
 if(ELF2HUNK)
 	set(GAME_EXECUTABLE ${GAME_EXECUTABLE_STEM}.elf)
 	set(GAME_OUTPUT_EXECUTABLE ${GAME_EXECUTABLE_STEM}.exe)
@@ -49,15 +49,15 @@ file(MAKE_DIRECTORY ${DATA_DIR})
 file(MAKE_DIRECTORY ${GEN_DIR})
 
 # Palette
-file(GLOB palette_selurina_gpl ${RES_DIR}/selurina.gpl)
-set(palette_selurina "${DATA_DIR}/selurina.plt")
-convertPalette(${GAME_EXECUTABLE} ${palette_selurina_gpl} ${palette_selurina})
+file(GLOB palette_slipgates_gpl ${RES_DIR}/slipgates.gpl)
+set(palette_slipgates "${DATA_DIR}/slipgates.plt")
+convertPalette(${GAME_EXECUTABLE} ${palette_slipgates_gpl} ${palette_slipgates})
 set(transparency_hex "#993399")
 
 convertBitmaps(
-	TARGET ${GAME_EXECUTABLE} PALETTE ${palette_selurina_gpl} MASK_COLOR ${transparency_hex}
+	TARGET ${GAME_EXECUTABLE} PALETTE ${palette_slipgates_gpl} MASK_COLOR ${transparency_hex}
 	INTERLEAVED SOURCES
-		${RES_DIR}/3rd_party/player.png
+		${RES_DIR}/player.png
 	DESTINATIONS
 		${DATA_DIR}/player.bm
 	MASKS
