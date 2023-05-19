@@ -42,10 +42,10 @@ Momentum, normal-wise:
 	✔ left-right @done(23-05-19 18:32)
 	✔ left-down @done(23-05-19 18:53)
 	✔ left-up @done(23-05-19 18:53)
-	☐ right-right
-	☐ right-left
-	☐ right-down
-	☐ right-up
+	✔ right-right @done(23-05-19 19:18)
+	✔ right-left @done(23-05-19 19:18)
+	✔ right-down @done(23-05-19 19:18)
+	✔ right-up @done(23-05-19 19:18)
 	☐ down-down
 	☐ down-up
 	☐ down-left
