@@ -6,7 +6,6 @@ General:
 	✔ Jumping @done(23-05-19 14:33)
 	✔ X collisions @done(23-05-19 15:57)
 	✔ Air control X @done(23-05-19 17:41)
-	☐ Portal directions
 	☐ Entrance/exit tiles
 	☐ Basic cube
 	☐ Picking up objects
@@ -25,6 +24,7 @@ Tiles:
 	☐ Togglable wall
 	☐ Button
 	☐ Electricity fields
+	☐ No-portal wall
 
 Misc objects:
 	☐ Lifts
