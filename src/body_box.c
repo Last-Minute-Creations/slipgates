@@ -50,36 +50,36 @@ void bodySimulate(tBodyBox *pBody) {
 	pBody->fPosX = fNewPosX;
 
 	if(pBody->fVelocityY > 0) {
-		if(g_pTiles[uwLeft / 16][uwBottom / 16] == 1 || g_pTiles[uwRight / 16][uwBottom / 16] == 1) {
+		if(mapIsTileSolid(uwLeft / 16, uwBottom / 16) || mapIsTileSolid(uwRight / 16, uwBottom / 16)) {
 			// collide with floor
 			uwTop = ((uwBottom / 16) * 16) - 32;
 			fNewPosY = fix16_from_int(uwTop);
 			pBody->fVelocityY = 0;
 		}
-		else if(g_pTiles[uwLeft / 16][uwBottom / 16] == 2 && g_pSlipgates[0].eNormal == DIRECTION_UP) {
+		else if(mapGetTileAt(uwLeft / 16, uwBottom / 16) == TILE_SLIPGATE_1 && g_pSlipgates[0].eNormal == DIRECTION_UP) {
 			// Slipgate A
 			moveBodyViaSlipgate(pBody, 0);
 			fNewPosY = pBody->fPosY;
 		}
-		else if(g_pTiles[uwLeft / 16][uwBottom / 16] == 3 && g_pSlipgates[1].eNormal == DIRECTION_UP) {
+		else if(mapGetTileAt(uwLeft / 16, uwBottom / 16) == TILE_SLIPGATE_2 && g_pSlipgates[1].eNormal == DIRECTION_UP) {
 			// Slipgate B
 			moveBodyViaSlipgate(pBody, 1);
 			fNewPosY = pBody->fPosY;
 		}
 	}
 	else if(pBody->fVelocityY < 0) {
-		if(g_pTiles[uwLeft / 16][uwTop / 16] == 1 || g_pTiles[uwRight / 16][uwTop / 16] == 1) {
+		if(mapIsTileSolid(uwLeft / 16, uwTop / 16) || mapIsTileSolid(uwRight / 16, uwTop / 16)) {
 			// collide with ceil
 			uwTop = ((uwTop / 16 + 1) * 16);
 			fNewPosY = fix16_from_int(uwTop);
 			// pBody->fVelocityY = 0;
 		}
-		else if(g_pTiles[uwLeft / 16][uwTop / 16] == 2) {
+		else if(mapGetTileAt(uwLeft / 16, uwTop / 16) == TILE_SLIPGATE_1) {
 			// Slipgate A
 			uwTop = 256 - 16 - 32;
 			fNewPosY = fix16_from_int(uwTop);
 		}
-		else if(g_pTiles[uwLeft / 16][uwTop / 16] == 3) {
+		else if(mapGetTileAt(uwLeft / 16, uwTop / 16) == TILE_SLIPGATE_2) {
 			// Slipgate B
 			uwTop = 256 - 16 - 32;
 			fNewPosY = fix16_from_int(uwTop);

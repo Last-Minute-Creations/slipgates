@@ -1,67 +1,94 @@
 #include "map.h"
 #include <bartman/gcc8_c_support.h>
+#include <ace/utils/file.h>
+#include <ace/managers/system.h>
 
 //----------------------------------------------------------------- PRIVATE VARS
 
-UNUSED_ARG static UBYTE s_pLevels[5][20][16] = { // x,y
-	[0] = {
+UNUSED_ARG static const tLevel s_sLevelZero = {
+	.fStartX = F16(100),
+	.fStartY = F16(100),
+	.pTiles = {
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1},
-		{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-		{1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-	},
-	[1] = {},
-	[2] = {},
-	[3] = {},
-	[4] = {},
+	}
 };
 
 //------------------------------------------------------------ PRIVATE FUNCTIONS
 
 static void setSlipgateTiles(const tSlipgate *pSlipgate, tTile eTile) {
-	g_pTiles[pSlipgate->uwTileX][pSlipgate->uwTileY] = eTile;
+	g_sCurrentLevel.pTiles[pSlipgate->uwTileX][pSlipgate->uwTileY] = eTile;
 	switch(pSlipgate->eNormal) {
 		case DIRECTION_UP:
 		case DIRECTION_DOWN:
-			g_pTiles[pSlipgate->uwTileX + 1][pSlipgate->uwTileY] = eTile;
+			g_sCurrentLevel.pTiles[pSlipgate->uwTileX + 1][pSlipgate->uwTileY] = eTile;
 			break;
 		case DIRECTION_LEFT:
 		case DIRECTION_RIGHT:
-			g_pTiles[pSlipgate->uwTileX][pSlipgate->uwTileY + 1] = eTile;
+			g_sCurrentLevel.pTiles[pSlipgate->uwTileX][pSlipgate->uwTileY + 1] = eTile;
 			break;
 		case DIRECTION_NONE:
 			break;
 	}
 }
 
-static UBYTE mapIsSolidAt(UBYTE ubTileX, UBYTE ubTileY) {
-	return g_pTiles[ubTileX][ubTileY] > TILE_BG_1;
-}
-
 //------------------------------------------------------------- PUBLIC FUNCTIONS
 
-void mapInit(UNUSED_ARG UBYTE ubIndex) {
-	mapTrySpawnSlipgate(0, 7, 15);
-	mapTrySpawnSlipgate(1, 11, 15);
+void mapLoad(UNUSED_ARG UBYTE ubIndex) {
+	if(ubIndex == 0) {
+		memcpy(&g_sCurrentLevel, &s_sLevelZero, sizeof(g_sCurrentLevel));
+	}
+	else {
+		char szName[13];
+		sprintf(szName, "level%03hhu.dat", ubIndex);
+		systemUse();
+		tFile *pFile = fileOpen(szName, "rb");
+		fileRead(pFile, &g_sCurrentLevel.fStartX, sizeof(g_sCurrentLevel.fStartX));
+		fileRead(pFile, &g_sCurrentLevel.fStartY, sizeof(g_sCurrentLevel.fStartY));
+		fileSeek(pFile, sizeof(UBYTE), SEEK_CUR); // skip newline
+
+		for(UBYTE y = 0; y < MAP_TILE_HEIGHT; ++y) {
+			for(UBYTE x = 0; x < MAP_TILE_WIDTH; ++x) {
+				UBYTE ubGlyph;
+				fileRead(pFile, &ubGlyph, sizeof(ubGlyph));
+				g_sCurrentLevel.pTiles[x][y] = ubGlyph - '0';
+			}
+			fileSeek(pFile, sizeof(UBYTE), SEEK_CUR); // skip newline
+		}
+		fileClose(pFile);
+		systemUnuse();
+	}
+	g_pSlipgates[0].eNormal = DIRECTION_NONE;
+	g_pSlipgates[1].eNormal = DIRECTION_NONE;
 }
 
-void mapClosePortals(void) {
+UBYTE mapIsTileSolid(UBYTE ubTileX, UBYTE ubTileY) {
+	return g_sCurrentLevel.pTiles[ubTileX][ubTileY] > TILE_BG_1;
+}
+
+tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY) {
+	return g_sCurrentLevel.pTiles[ubTileX][ubTileY];
+}
+
+void mapCloseSlipgates(void) {
 	setSlipgateTiles(&g_pSlipgates[0], TILE_WALL_1);
 	setSlipgateTiles(&g_pSlipgates[1], TILE_WALL_1);
 
@@ -70,7 +97,7 @@ void mapClosePortals(void) {
 }
 
 UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
-	if(!mapIsSolidAt(ubTileX, ubTileY)) {
+	if(!mapIsTileSolid(ubTileX, ubTileY)) {
 		return 0;
 	}
 
@@ -79,22 +106,38 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		setSlipgateTiles(pSlipgate, TILE_WALL_1);
 	}
 
-	if(!mapIsSolidAt(ubTileX - 1, ubTileY) && mapIsSolidAt(ubTileX, ubTileY + 1) && !mapIsSolidAt(ubTileX - 1, ubTileY + 1)) {
+	if(
+		!mapIsTileSolid(ubTileX - 1, ubTileY) &&
+		mapIsTileSolid(ubTileX, ubTileY + 1) &&
+		!mapIsTileSolid(ubTileX - 1, ubTileY + 1)
+	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_LEFT;
 	}
-	else if(!mapIsSolidAt(ubTileX + 1, ubTileY) && mapIsSolidAt(ubTileX, ubTileY + 1) && !mapIsSolidAt(ubTileX + 1, ubTileY + 1)) {
+	else if(
+		!mapIsTileSolid(ubTileX + 1, ubTileY) &&
+		mapIsTileSolid(ubTileX, ubTileY + 1) &&
+		!mapIsTileSolid(ubTileX + 1, ubTileY + 1)
+	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_RIGHT;
 	}
-	else if(!mapIsSolidAt(ubTileX, ubTileY - 1) && mapIsSolidAt(ubTileX + 1, ubTileY) && !mapIsSolidAt(ubTileX + 1, ubTileY - 1)) {
+	else if(
+		!mapIsTileSolid(ubTileX, ubTileY - 1) &&
+		mapIsTileSolid(ubTileX + 1, ubTileY) &&
+		!mapIsTileSolid(ubTileX + 1, ubTileY - 1)
+	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_UP;
 	}
-	else if(!mapIsSolidAt(ubTileX, ubTileY + 1) && mapIsSolidAt(ubTileX + 1, ubTileY) && !mapIsSolidAt(ubTileX + 1, ubTileY + 1)) {
+	else if(
+		!mapIsTileSolid(ubTileX, ubTileY + 1) &&
+		mapIsTileSolid(ubTileX + 1, ubTileY) &&
+		!mapIsTileSolid(ubTileX + 1, ubTileY + 1)
+	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_DOWN;
@@ -109,25 +152,4 @@ tSlipgate g_pSlipgates[2] = {
 	{.uwTileX = 11, .uwTileY = 15, .eNormal = DIRECTION_NONE},
 };
 
-UBYTE g_pTiles[20][16] = { // x,y
-	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-};
+tLevel g_sCurrentLevel;

@@ -2,6 +2,12 @@
 #define SLIPGATES_MAP_H
 
 #include "slipgate.h"
+#include <fixmath/fix16.h>
+
+#define MAP_TILE_WIDTH 20
+#define MAP_TILE_HEIGHT 16
+#define MAP_TILE_SHIFT 4
+#define MAP_TILE_SIZE (1 << 4)
 
 typedef enum tTile {
 	TILE_BG_1 = 0,
@@ -10,12 +16,22 @@ typedef enum tTile {
 	TILE_SLIPGATE_2 = 3,
 } tTile;
 
+typedef struct tLevel {
+	fix16_t fStartX;
+	fix16_t fStartY;
+	tTile pTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
+} tLevel;
+
 extern tSlipgate g_pSlipgates[2];
-extern UBYTE g_pTiles[20][16];
+extern tLevel g_sCurrentLevel;
 
-void mapInit(UBYTE ubIndex);
+void mapLoad(UBYTE ubIndex);
 
-void mapClosePortals(void);
+UBYTE mapIsTileSolid(UBYTE ubTileX, UBYTE ubTileY);
+
+tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY);
+
+void mapCloseSlipgates(void);
 
 UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY);
 

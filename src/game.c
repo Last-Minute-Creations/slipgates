@@ -1,4 +1,5 @@
 #include "game.h"
+#include <ace/generic/screen.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/managers/system.h>
 #include <ace/managers/blit.h>
@@ -23,53 +24,67 @@ static tBodyBox s_sBodyPlayer;
 static tSprite *s_pSpriteCrosshair;
 
 static UWORD s_uwGameFrame;
-static char s_szPosX[13];
-static char s_szPosY[13];
-static char s_szVelocityX[13];
-static char s_szVelocityY[13];
-static char s_szAccelerationX[13];
-static char s_szAccelerationY[13];
+// static char s_szPosX[13];
+// static char s_szPosY[13];
+// static char s_szVelocityX[13];
+// static char s_szVelocityY[13];
+// static char s_szAccelerationX[13];
+// static char s_szAccelerationY[13];
 
-static UBYTE tileGetColor(UBYTE ubTile) {
-	switch (ubTile)
+static UBYTE tileGetColor(tTile eTile) {
+	switch (eTile)
 	{
-		case 1: return 7;
-		case 2: return 8;
-		case 3: return 13;
+		case TILE_WALL_1: return 7;
+		case TILE_SLIPGATE_1: return 8;
+		case TILE_SLIPGATE_2: return 13;
 		default: return 16;
 	}
 }
 
 // TODO: refactor and move to map.c?
 static void drawMap(void) {
-	for(UBYTE x = 0; x < 20; ++x) {
-		for(UBYTE y = 0; y < 16; ++y) {
-			blitRect(s_pBufferMain->pBack, x * 16, y * 16, 16, 16, tileGetColor(g_pTiles[x][y]));
-			blitRect(s_pBufferMain->pFront, x * 16, y * 16, 16, 16, tileGetColor(g_pTiles[x][y]));
+	for(UBYTE x = 0; x < MAP_TILE_WIDTH; ++x) {
+		for(UBYTE y = 0; y < MAP_TILE_HEIGHT; ++y) {
+			blitRect(
+				s_pBufferMain->pBack, x * MAP_TILE_SIZE, y * MAP_TILE_SIZE,
+				MAP_TILE_SIZE, MAP_TILE_SIZE, tileGetColor(mapGetTileAt(x, y))
+			);
+			blitRect(
+				s_pBufferMain->pFront, x * MAP_TILE_SIZE, y * MAP_TILE_SIZE,
+				MAP_TILE_SIZE, MAP_TILE_SIZE, tileGetColor(mapGetTileAt(x, y))
+			);
 		}
 	}
 }
 
 static void loadLevel(UBYTE ubIndex) {
 	viewLoad(0);
-	bodyInit(&s_sBodyPlayer, fix16_from_int(100), fix16_from_int(150));
 	s_uwGameFrame = 0;
-	mapInit(ubIndex);
+	mapLoad(ubIndex);
+	bodyInit(
+		&s_sBodyPlayer,
+		g_sCurrentLevel.fStartX,
+		g_sCurrentLevel.fStartY
+	);
 	drawMap();
 	viewLoad(s_pView);
 }
 
 static void saveLevel(UNUSED_ARG UBYTE ubIndex) {
-	mapClosePortals();
+	mapCloseSlipgates();
 
 	char szName[13];
 	char cNewLine = '\n';
 	sprintf(szName, "level%03hhu.dat", ubIndex);
 	systemUse();
 	tFile *pFile = fileOpen(szName, "wb");
-	for(UBYTE y = 0; y < 16; ++y) {
-		for(UBYTE x = 0; x < 20; ++x) {
-			UBYTE ubGlyph = '0' + g_pTiles[x][y];
+	fileWrite(pFile, &s_sBodyPlayer.fPosX, sizeof(s_sBodyPlayer.fPosX));
+	fileWrite(pFile, &s_sBodyPlayer.fPosY, sizeof(s_sBodyPlayer.fPosY));
+	fileWrite(pFile, &cNewLine, sizeof(cNewLine));
+
+	for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
+		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
+			UBYTE ubGlyph = '0' + mapGetTileAt(ubX, ubY);
 			fileWrite(pFile, &ubGlyph, sizeof(ubGlyph));
 		}
 		fileWrite(pFile, &cNewLine, sizeof(cNewLine));
@@ -116,7 +131,7 @@ static void gameGsCreate(void) {
 	s_pSpriteCrosshair = spriteAdd(0, s_pBmCursor);
 	systemSetDmaBit(DMAB_SPRITE, 1);
 	spriteProcessChannel(0);
-	mouseSetBounds(MOUSE_PORT_1, 0, 0, 320 - 16, 256 - 27);
+	mouseSetBounds(MOUSE_PORT_1, 0, 0, SCREEN_PAL_WIDTH - 16, SCREEN_PAL_HEIGHT - 27);
 
 
 	systemUnuse();
@@ -151,19 +166,21 @@ static void gameGsLoop(void) {
 	s_pSpriteCrosshair->wX = uwMouseX;
 	s_pSpriteCrosshair->wY = uwMouseY;
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
-		mapTrySpawnSlipgate(0, uwCrossX / 16, uwCrossY / 16);
-		drawMap();
+		if(mapTrySpawnSlipgate(0, uwCrossX / MAP_TILE_SIZE, uwCrossY / MAP_TILE_SIZE)) {
+			drawMap();
+		}
 	}
 	else if(mouseUse(MOUSE_PORT_1, MOUSE_RMB)) {
-		mapTrySpawnSlipgate(1, uwCrossX / 16, uwCrossY / 16);
-		drawMap();
+		if(mapTrySpawnSlipgate(1, uwCrossX / MAP_TILE_SIZE, uwCrossY / MAP_TILE_SIZE)) {
+			drawMap();
+		}
 	}
 	else if(keyUse(KEY_Z)) {
-		g_pTiles[uwCrossX / 16][uwCrossY / 16] = TILE_WALL_1;
+		g_sCurrentLevel.pTiles[uwCrossX / MAP_TILE_SIZE][uwCrossY / MAP_TILE_SIZE] = TILE_WALL_1;
 		drawMap();
 	}
 	else if(keyUse(KEY_X)) {
-		g_pTiles[uwCrossX / 16][uwCrossY / 16] = TILE_BG_1;
+		g_sCurrentLevel.pTiles[uwCrossX / MAP_TILE_SIZE][uwCrossY / MAP_TILE_SIZE] = TILE_BG_1;
 		drawMap();
 	}
 	spriteProcess(s_pSpriteCrosshair);
@@ -185,20 +202,20 @@ static void gameGsLoop(void) {
 	bobPushingDone();
 	bobEnd();
 
-	fix16_to_str(s_sBodyPlayer.fPosX, s_szPosX, 2);
-	fix16_to_str(s_sBodyPlayer.fPosY, s_szPosY, 2);
-	fix16_to_str(s_sBodyPlayer.fVelocityX, s_szVelocityX, 2);
-	fix16_to_str(s_sBodyPlayer.fVelocityY, s_szVelocityY, 2);
-	fix16_to_str(s_sBodyPlayer.fAccelerationX, s_szAccelerationX, 2);
-	fix16_to_str(s_sBodyPlayer.fAccelerationY, s_szAccelerationY, 2);
+	// fix16_to_str(s_sBodyPlayer.fPosX, s_szPosX, 2);
+	// fix16_to_str(s_sBodyPlayer.fPosY, s_szPosY, 2);
+	// fix16_to_str(s_sBodyPlayer.fVelocityX, s_szVelocityX, 2);
+	// fix16_to_str(s_sBodyPlayer.fVelocityY, s_szVelocityY, 2);
+	// fix16_to_str(s_sBodyPlayer.fAccelerationX, s_szAccelerationX, 2);
+	// fix16_to_str(s_sBodyPlayer.fAccelerationY, s_szAccelerationY, 2);
 
-	logWrite(
-		"GF %hu end, pos %s,%s v %s,%s a %s,%s",
-		s_uwGameFrame,
-		s_szPosX, s_szPosY,
-		s_szVelocityX, s_szVelocityY,
-		s_szAccelerationX, s_szAccelerationY
-	);
+	// logWrite(
+	// 	"GF %hu end, pos %s,%s v %s,%s a %s,%s",
+	// 	s_uwGameFrame,
+	// 	s_szPosX, s_szPosY,
+	// 	s_szVelocityX, s_szVelocityY,
+	// 	s_szAccelerationX, s_szAccelerationY
+	// );
 
 	++s_uwGameFrame;
 	viewProcessManagers(s_pView);
