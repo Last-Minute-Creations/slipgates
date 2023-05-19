@@ -20,6 +20,13 @@ static tBitMap *s_pBmCursor;
 static tBodyBox s_sBodyPlayer;
 static tSprite *s_pSpriteCrosshair;
 
+typedef enum tTile {
+	TILE_BG_1 = 0,
+	TILE_WALL_1 = 1,
+	TILE_PORTAL_1 = 2,
+	TILE_PORTAL_2 = 3,
+} tTile;
+
 UBYTE g_pTiles[20][16] = { // x,y
 	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -127,6 +134,30 @@ static void gameGsLoop(void) {
 
  	bobBegin(s_pBufferMain->pBack);
 
+	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
+	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
+	UWORD uwCrossX = uwMouseX + 8;
+	UWORD uwCrossY = uwMouseY + 14;
+	s_pSpriteCrosshair->wX = uwMouseX;
+	s_pSpriteCrosshair->wY = uwMouseY;
+	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
+		g_pTiles[uwCrossX / 16][uwCrossY / 16] = TILE_PORTAL_1;
+		drawMap();
+	}
+	else if(mouseUse(MOUSE_PORT_1, MOUSE_RMB)) {
+		g_pTiles[uwCrossX / 16][uwCrossY / 16] = TILE_PORTAL_2;
+		drawMap();
+	}
+	else if(keyUse(KEY_Z)) {
+		g_pTiles[uwCrossX / 16][uwCrossY / 16] = TILE_WALL_1;
+		drawMap();
+	}
+	else if(keyUse(KEY_X)) {
+		g_pTiles[uwCrossX / 16][uwCrossY / 16] = TILE_BG_1;
+		drawMap();
+	}
+	spriteProcess(s_pSpriteCrosshair);
+
 	if(keyCheck(KEY_W)) {
 		s_sBodyPlayer.fVelocityY = fix16_from_int(-3);
 	}
@@ -143,10 +174,6 @@ static void gameGsLoop(void) {
 	bobPush(&s_sBodyPlayer.sBob);
 	bobPushingDone();
 	bobEnd();
-
-	s_pSpriteCrosshair->wX = mouseGetX(MOUSE_PORT_1);
-	s_pSpriteCrosshair->wY = mouseGetY(MOUSE_PORT_1);
-	spriteProcess(s_pSpriteCrosshair);
 
 	fix16_to_str(s_sBodyPlayer.fPosX, s_szPosX, 2);
 	fix16_to_str(s_sBodyPlayer.fPosY, s_szPosY, 2);
