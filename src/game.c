@@ -13,8 +13,8 @@
 #include "body_box.h"
 #include "map.h"
 
-#define PLAYER_VELO_DELTA_X_GROUND 2
-#define PLAYER_VELO_DELTA_X_AIR (fix16_one / 8)
+#define PLAYER_VELO_DELTA_X_GROUND 3
+#define PLAYER_VELO_DELTA_X_AIR (fix16_one / 4)
 
 static fix16_t s_fPlayerJumpVeloY = F16(-3);
 
@@ -228,7 +228,7 @@ static void gameGsLoop(void) {
 	}
 	else {
 		if(keyCheck(KEY_A)) {
-			if(s_sBodyPlayer.fVelocityX > 0) {
+			if(s_sBodyPlayer.fVelocityX >= 0) {
 				s_sBodyPlayer.fVelocityX = fix16_sub(
 					s_sBodyPlayer.fVelocityX,
 					PLAYER_VELO_DELTA_X_AIR
@@ -236,7 +236,7 @@ static void gameGsLoop(void) {
 			}
 		}
 		else if(keyCheck(KEY_D)) {
-			if(s_sBodyPlayer.fVelocityX < 0) {
+			if(s_sBodyPlayer.fVelocityX <= 0) {
 				s_sBodyPlayer.fVelocityX = fix16_add(
 					s_sBodyPlayer.fVelocityX,
 					PLAYER_VELO_DELTA_X_AIR

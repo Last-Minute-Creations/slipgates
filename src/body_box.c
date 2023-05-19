@@ -29,18 +29,14 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 					pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileY + 1) * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_LEFT: {
-					// fix16_t fTmp = pBody->fVelocityX;
 					pBody->fVelocityX = -pBody->fVelocityY;
-					pBody->fVelocityY = 0; // more controllable?
-					// pBody->fVelocityY = fTmp;
+					pBody->fVelocityY = 0; // faster / easier to control (?) than swapped variant
 					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE - pBody->ubWidth);
 					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_RIGHT: {
-					// fix16_t fTmp = pBody->fVelocityX;
 					pBody->fVelocityX = pBody->fVelocityY;
-					pBody->fVelocityY = 0; // more controllable?
-					// pBody->fVelocityY = fTmp;
+					pBody->fVelocityY = 0; // faster / easier to control (?) than swapped variant
 					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
 					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
 				} break;
@@ -70,10 +66,16 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 		case DIRECTION_LEFT:
 			switch(g_pSlipgates[!ubIndexSrc].eNormal) {
 				case DIRECTION_UP: {
-
+					pBody->fVelocityY = -pBody->fVelocityX;
+					pBody->fVelocityX = 0; // faster / easier to control (?) than swapped variant
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE - pBody->ubHeight);
 				} break;
 				case DIRECTION_DOWN: {
-
+					pBody->fVelocityY = pBody->fVelocityX;
+					pBody->fVelocityX = 0; // faster / easier to control (?) than swapped variant
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileY + 1) * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_LEFT: {
 					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE - pBody->ubWidth);
