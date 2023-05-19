@@ -6,6 +6,7 @@ General:
 	✔ Jumping @done(23-05-19 14:33)
 	✔ X collisions @done(23-05-19 15:57)
 	✔ Air control X @done(23-05-19 17:41)
+	☐ Shooting portals (raycast)
 	☐ Entrance/exit tiles
 	☐ Basic cube
 	☐ Picking up objects
@@ -13,7 +14,6 @@ General:
 	☐ Abyss
 	☐ Cube spawner
 	☐ Basic turrets
-	☐ Shooting portals (raycast)
 	☐ Multi-bob character body
 	☐ Figure out the artstyle
 	☐ Bigger max velocity
