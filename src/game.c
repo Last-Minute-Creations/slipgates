@@ -70,7 +70,7 @@ static void loadLevel(UBYTE ubIndex) {
 	viewLoad(s_pView);
 }
 
-static void saveLevel(UNUSED_ARG UBYTE ubIndex) {
+static void saveLevel(UBYTE ubIndex) {
 	mapCloseSlipgates();
 
 	char szName[13];

@@ -5,33 +5,6 @@
 
 //----------------------------------------------------------------- PRIVATE VARS
 
-UNUSED_ARG static const tLevel s_sLevelZero = {
-	.fStartX = F16(100),
-	.fStartY = F16(100),
-	.pTiles = {
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-	}
-};
-
 //------------------------------------------------------------ PRIVATE FUNCTIONS
 
 static void setSlipgateTiles(const tSlipgate *pSlipgate, tTile eTile) {
@@ -52,9 +25,20 @@ static void setSlipgateTiles(const tSlipgate *pSlipgate, tTile eTile) {
 
 //------------------------------------------------------------- PUBLIC FUNCTIONS
 
-void mapLoad(UNUSED_ARG UBYTE ubIndex) {
+void mapLoad(UBYTE ubIndex) {
 	if(ubIndex == 0) {
-		memcpy(&g_sCurrentLevel, &s_sLevelZero, sizeof(g_sCurrentLevel));
+		// hadcoded level
+		memset(&g_sCurrentLevel, 0, sizeof(g_sCurrentLevel));
+		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
+			g_sCurrentLevel.pTiles[ubX][0] = TILE_WALL_1;
+			g_sCurrentLevel.pTiles[ubX][MAP_TILE_HEIGHT - 1] = TILE_WALL_1;
+		}
+		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
+			g_sCurrentLevel.pTiles[0][ubY] = TILE_WALL_1;
+			g_sCurrentLevel.pTiles[MAP_TILE_WIDTH - 1][ubY] = TILE_WALL_1;
+		}
+		g_sCurrentLevel.fStartX = fix16_from_int(100);
+		g_sCurrentLevel.fStartY = fix16_from_int(100);
 	}
 	else {
 		char szName[13];
