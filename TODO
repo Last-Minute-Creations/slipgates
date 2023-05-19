@@ -1,0 +1,39 @@
+General:
+	☐ Spawning portals on cursor position
+	☐ 8x8 tileset
+	☐ Smaller character bounding box
+	☐ Jumping
+	☐ Basic cube
+	☐ Picking up objects
+	☐ Basic turrets
+	☐ Shooting portals (raycast)
+	☐ Multi-bob character body
+	☐ Figure out the artstyle
+
+Tiles:
+	☐ Red beam
+	☐ Blue beam
+	☐ Togglable wall
+	☐ Button
+	☐ Electricity fields
+
+Moving objects:
+	☐ Lifts
+	☐ Crushers
+	☐ Energy ball
+
+Momentum, normal-wise:
+	✔ down-up @done(23-05-19 09:00)
+	☐ down-left
+	☐ down-right
+	☐ up-down
+	☐ up-left
+	☐ up-right
+	☐ left-right
+	☐ left-down
+	☐ left-up
+	☐ right-left
+	☐ right-down
+	☐ right-up
+
+Test chamber:
