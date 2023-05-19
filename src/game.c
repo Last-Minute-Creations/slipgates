@@ -220,6 +220,11 @@ static void gameGsLoop(void) {
 		s_sBodyPlayer.fVelocityX = fix16_from_int(2);
 	}
 
+	if(keyUse(KEY_T)) {
+		s_sBodyPlayer.fPosX = fix16_from_int(uwCrossX);
+		s_sBodyPlayer.fPosY = fix16_from_int(uwCrossY);
+	}
+
 	bodySimulate(&s_sBodyPlayer);
 	bobPush(&s_sBodyPlayer.sBob);
 	bobPushingDone();
