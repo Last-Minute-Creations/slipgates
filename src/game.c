@@ -159,6 +159,8 @@ static void gameGsCreate(void) {
 }
 
 static void gameGsLoop(void) {
+	g_pCustom->color[0] = 0xF89;
+
 	if(keyUse(KEY_ESCAPE)) {
 		statePop(g_pGameStateManager);
 		return;
@@ -248,6 +250,7 @@ static void gameGsLoop(void) {
 	++s_uwGameFrame;
 	viewProcessManagers(s_pView);
 	copProcessBlocks();
+	g_pCustom->color[0] = 0x9F8;
 	systemIdleBegin();
 	vPortWaitForEnd(s_pVpMain);
 	systemIdleEnd();

@@ -45,6 +45,7 @@ void bodySimulate(tBodyBox *pBody) {
 	fix16_t fNewPosX = fix16_add(pBody->fPosX, pBody->fVelocityX);
 	fix16_t fNewPosY = fix16_add(pBody->fPosY, pBody->fVelocityY);
 	UWORD uwTop = fix16_to_int(fNewPosY);
+	UWORD uwMid = uwTop + pBody->ubHeight / 2 - 1;
 	UWORD uwBottom = uwTop + pBody->ubHeight - 1;
 	UWORD uwLeft = fix16_to_int(fNewPosX);
 	UWORD uwRight = uwLeft + pBody->ubWidth - 1;
@@ -55,6 +56,7 @@ void bodySimulate(tBodyBox *pBody) {
 		UWORD uwTileRight = (uwRight + 1) / MAP_TILE_SIZE;
 		if(
 			mapGetTileAt(uwTileRight, uwTop / MAP_TILE_SIZE) == TILE_WALL_1 ||
+			mapGetTileAt(uwTileRight, uwMid / MAP_TILE_SIZE) == TILE_WALL_1 ||
 			mapGetTileAt(uwTileRight, uwBottom / MAP_TILE_SIZE) == TILE_WALL_1
 		) {
 			uwLeft = uwTileRight * MAP_TILE_SIZE - pBody->ubWidth;
@@ -68,6 +70,7 @@ void bodySimulate(tBodyBox *pBody) {
 		UWORD uwTileLeft = (uwLeft - 1) / MAP_TILE_SIZE;
 		if(
 			mapGetTileAt(uwTileLeft, uwTop / MAP_TILE_SIZE) == TILE_WALL_1 ||
+			mapGetTileAt(uwTileLeft, uwMid / MAP_TILE_SIZE) == TILE_WALL_1 ||
 			mapGetTileAt(uwTileLeft, uwBottom / MAP_TILE_SIZE) == TILE_WALL_1
 		) {
 			uwLeft = (uwTileLeft + 1) * MAP_TILE_SIZE;

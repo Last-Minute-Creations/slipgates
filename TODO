@@ -4,7 +4,7 @@ General:
 	✔ 8x8 tileset @done(23-05-19 13:08)
 	✔ 8x16 character bounding box @done(23-05-19 13:08)
 	✔ Jumping @done(23-05-19 14:33)
-	☐ X collisions
+	✔ X collisions @done(23-05-19 15:57)
 	☐ Portal directions
 	☐ Entrance/exit tiles
 	☐ Basic cube
