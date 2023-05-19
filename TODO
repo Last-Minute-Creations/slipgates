@@ -38,17 +38,17 @@ Momentum, normal-wise:
 	✔ up-down @done(23-05-19 09:00)
 	✔ up-left @done(23-05-19 17:40)
 	✔ up-right @done(23-05-19 17:40)
-	☐ down-down
-	☐ down-up
-	☐ down-left
-	☐ down-right
-	☐ left-left
-	☐ left-right
+	✔ left-left @done(23-05-19 18:32)
+	✔ left-right @done(23-05-19 18:32)
 	☐ left-down
 	☐ left-up
 	☐ right-right
 	☐ right-left
 	☐ right-down
 	☐ right-up
+	☐ down-down
+	☐ down-up
+	☐ down-left
+	☐ down-right
 
 Test chambers:

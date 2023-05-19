@@ -44,18 +44,88 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
 					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
 				} break;
+				case DIRECTION_NONE:
+					break;
+			}
+			break;
+		case DIRECTION_DOWN:
+			switch(g_pSlipgates[!ubIndexSrc].eNormal) {
+				case DIRECTION_UP: {
+
+				} break;
+				case DIRECTION_DOWN: {
+
+				} break;
+				case DIRECTION_LEFT: {
+
+				} break;
+				case DIRECTION_RIGHT: {
+
+				} break;
 				case DIRECTION_NONE: {
 
 				} break;
 			}
 			break;
-		case DIRECTION_DOWN:
-			break;
 		case DIRECTION_LEFT:
+			switch(g_pSlipgates[!ubIndexSrc].eNormal) {
+				case DIRECTION_UP: {
+
+				} break;
+				case DIRECTION_DOWN: {
+
+				} break;
+				case DIRECTION_LEFT: {
+					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE - pBody->ubWidth);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					pBody->fVelocityX = -pBody->fVelocityX;
+				} break;
+				case DIRECTION_RIGHT: {
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+				} break;
+				case DIRECTION_NONE: {
+
+				} break;
+			}
 			break;
 		case DIRECTION_RIGHT:
+			switch(g_pSlipgates[!ubIndexSrc].eNormal) {
+				case DIRECTION_UP: {
+
+				} break;
+				case DIRECTION_DOWN: {
+
+				} break;
+				case DIRECTION_LEFT: {
+
+				} break;
+				case DIRECTION_RIGHT: {
+
+				} break;
+				case DIRECTION_NONE: {
+
+				} break;
+			}
 			break;
 		case DIRECTION_NONE:
+			switch(g_pSlipgates[!ubIndexSrc].eNormal) {
+				case DIRECTION_UP: {
+
+				} break;
+				case DIRECTION_DOWN: {
+
+				} break;
+				case DIRECTION_LEFT: {
+
+				} break;
+				case DIRECTION_RIGHT: {
+
+				} break;
+				case DIRECTION_NONE: {
+
+				} break;
+			}
 			break;
 	}
 }
@@ -64,7 +134,7 @@ void bodySimulate(tBodyBox *pBody) {
 	pBody->fVelocityY = fix16_clamp(fix16_add(pBody->fVelocityY, pBody->fAccelerationY), fix16_from_int(-7), fix16_from_int(7));
 
 	fix16_t fNewPosX = fix16_add(pBody->fPosX, pBody->fVelocityX);
-	fix16_t fNewPosY = fix16_add(pBody->fPosY, pBody->fVelocityY);
+	fix16_t fNewPosY = pBody->fPosY;
 	UWORD uwTop = fix16_to_int(fNewPosY);
 	UWORD uwMid = uwTop + pBody->ubHeight / 2 - 1;
 	UWORD uwBottom = uwTop + pBody->ubHeight - 1;
@@ -73,38 +143,80 @@ void bodySimulate(tBodyBox *pBody) {
 
 	pBody->isOnGround = 0;
 	if(pBody->fVelocityX > 0) {
-		// right
+		// moving right
 		UWORD uwTileRight = (uwRight + 1) / MAP_TILE_SIZE;
 		if(
 			mapGetTileAt(uwTileRight, uwTop / MAP_TILE_SIZE) == TILE_WALL_1 ||
 			mapGetTileAt(uwTileRight, uwMid / MAP_TILE_SIZE) == TILE_WALL_1 ||
 			mapGetTileAt(uwTileRight, uwBottom / MAP_TILE_SIZE) == TILE_WALL_1
 		) {
-			uwLeft = uwTileRight * MAP_TILE_SIZE - pBody->ubWidth;
-			uwRight = uwLeft + pBody->ubWidth - 1;
-			fNewPosX = fix16_from_int(uwLeft);
+			fNewPosX = fix16_from_int(uwTileRight * MAP_TILE_SIZE - pBody->ubWidth);
 			pBody->fVelocityX = 0;
+		}
+		else if(
+			mapGetTileAt(uwTileRight, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_1 &&
+			g_pSlipgates[0].eNormal == DIRECTION_LEFT
+		) {
+			// Slipgate A
+			moveBodyViaSlipgate(pBody, 0);
+			fNewPosX = pBody->fPosX;
+			fNewPosY = pBody->fPosY;
+		}
+		else if(
+			mapGetTileAt(uwTileRight, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_2 &&
+			g_pSlipgates[1].eNormal == DIRECTION_LEFT
+		) {
+			// Slipgate B
+			moveBodyViaSlipgate(pBody, 1);
+			fNewPosX = pBody->fPosX;
+			fNewPosY = pBody->fPosY;
 		}
 	}
 	else if(pBody->fVelocityX < 0) {
-		// left
+		// moving left
 		UWORD uwTileLeft = (uwLeft - 1) / MAP_TILE_SIZE;
 		if(
 			mapGetTileAt(uwTileLeft, uwTop / MAP_TILE_SIZE) == TILE_WALL_1 ||
 			mapGetTileAt(uwTileLeft, uwMid / MAP_TILE_SIZE) == TILE_WALL_1 ||
 			mapGetTileAt(uwTileLeft, uwBottom / MAP_TILE_SIZE) == TILE_WALL_1
 		) {
-			uwLeft = (uwTileLeft + 1) * MAP_TILE_SIZE;
-			uwRight = uwLeft + pBody->ubWidth - 1;
-			fNewPosX = fix16_from_int(uwLeft);
+			fNewPosX = fix16_from_int((uwTileLeft + 1) * MAP_TILE_SIZE);
 			pBody->fVelocityX = 0;
+		}
+		else if(
+			mapGetTileAt(uwTileLeft, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_1 &&
+			g_pSlipgates[0].eNormal == DIRECTION_RIGHT
+		) {
+			// Slipgate A
+			moveBodyViaSlipgate(pBody, 0);
+			fNewPosX = pBody->fPosX;
+			fNewPosY = pBody->fPosY;
+		}
+		else if(
+			mapGetTileAt(uwTileLeft, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_2 &&
+			g_pSlipgates[1].eNormal == DIRECTION_RIGHT
+		) {
+			// Slipgate B
+			moveBodyViaSlipgate(pBody, 1);
+			fNewPosX = pBody->fPosX;
+			fNewPosY = pBody->fPosY;
 		}
 	}
 
 	pBody->fPosX = fNewPosX;
+	pBody->fPosY = fNewPosY;
+	fNewPosY = fix16_add(fNewPosY, pBody->fVelocityY);
+
+	// Helper vars could be invalid at this point and manual fine-grained
+	// management of their updates is painful, so update all of them.
+	uwTop = fix16_to_int(fNewPosY);
+	uwMid = uwTop + pBody->ubHeight / 2 - 1;
+	uwBottom = uwTop + pBody->ubHeight - 1;
+	uwLeft = fix16_to_int(fNewPosX);
+	uwRight = uwLeft + pBody->ubWidth - 1;
 
 	if(pBody->fVelocityY > 0) {
-		// downwards
+		// falling down
 		UWORD uwTileBottom = (uwBottom + 1) / MAP_TILE_SIZE;
 		if(
 			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTileBottom) == TILE_WALL_1 ||
@@ -134,14 +246,13 @@ void bodySimulate(tBodyBox *pBody) {
 		}
 	}
 	else if(pBody->fVelocityY < 0) {
-		// upwards
+		// flying up
 		if(
 			mapIsTileSolid(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) ||
 			mapIsTileSolid(uwRight / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE)
 		) {
 			// collide with ceil
-			uwTop = ((uwTop / MAP_TILE_SIZE + 1) * MAP_TILE_SIZE);
-			fNewPosY = fix16_from_int(uwTop);
+			fNewPosY = fix16_from_int((uwTop / MAP_TILE_SIZE + 1) * MAP_TILE_SIZE);
 			// pBody->fVelocityY = 0;
 		}
 		// else if(mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) == TILE_SLIPGATE_1) {
