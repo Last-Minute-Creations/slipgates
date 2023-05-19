@@ -13,7 +13,7 @@
 #include "body_box.h"
 #include "map.h"
 
-static fix16_t s_fPlayerJumpVeloY = F16(-2);
+static fix16_t s_fPlayerJumpVeloY = F16(-3);
 
 static tView *s_pView;
 static tVPort *s_pVpMain;

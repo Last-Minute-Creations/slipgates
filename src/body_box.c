@@ -44,27 +44,56 @@ void bodySimulate(tBodyBox *pBody) {
 
 	fix16_t fNewPosX = fix16_add(pBody->fPosX, pBody->fVelocityX);
 	fix16_t fNewPosY = fix16_add(pBody->fPosY, pBody->fVelocityY);
-	UWORD uwTop = fix16_to_int(pBody->fPosY);
-	UWORD uwBottom = uwTop + pBody->ubHeight;
-	UWORD uwLeft = fix16_to_int(pBody->fPosX);
+	UWORD uwTop = fix16_to_int(fNewPosY);
+	UWORD uwBottom = uwTop + pBody->ubHeight - 1;
+	UWORD uwLeft = fix16_to_int(fNewPosX);
 	UWORD uwRight = uwLeft + pBody->ubWidth - 1;
 
 	pBody->isOnGround = 0;
+	if(pBody->fVelocityX > 0) {
+		// right
+		UWORD uwTileRight = (uwRight + 1) / MAP_TILE_SIZE;
+		if(
+			mapGetTileAt(uwTileRight, uwTop / MAP_TILE_SIZE) == TILE_WALL_1 ||
+			mapGetTileAt(uwTileRight, uwBottom / MAP_TILE_SIZE) == TILE_WALL_1
+		) {
+			uwLeft = uwTileRight * MAP_TILE_SIZE - pBody->ubWidth;
+			uwRight = uwLeft + pBody->ubWidth - 1;
+			fNewPosX = fix16_from_int(uwLeft);
+			pBody->fVelocityX = 0;
+		}
+	}
+	else if(pBody->fVelocityX < 0) {
+		// left
+		UWORD uwTileLeft = (uwLeft - 1) / MAP_TILE_SIZE;
+		if(
+			mapGetTileAt(uwTileLeft, uwTop / MAP_TILE_SIZE) == TILE_WALL_1 ||
+			mapGetTileAt(uwTileLeft, uwBottom / MAP_TILE_SIZE) == TILE_WALL_1
+		) {
+			uwLeft = (uwTileLeft + 1) * MAP_TILE_SIZE;
+			uwRight = uwLeft + pBody->ubWidth - 1;
+			fNewPosX = fix16_from_int(uwLeft);
+			pBody->fVelocityX = 0;
+		}
+	}
+
 	pBody->fPosX = fNewPosX;
 
 	if(pBody->fVelocityY > 0) {
+		// downwards
+		UWORD uwTileBottom = (uwBottom + 1) / MAP_TILE_SIZE;
 		if(
-			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwBottom / MAP_TILE_SIZE) == TILE_WALL_1 ||
-			mapGetTileAt(uwRight / MAP_TILE_SIZE, uwBottom / MAP_TILE_SIZE) == TILE_WALL_1
+			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTileBottom) == TILE_WALL_1 ||
+			mapGetTileAt(uwRight / MAP_TILE_SIZE, uwTileBottom) == TILE_WALL_1
 		) {
 			// collide with floor
-			uwTop = ((uwBottom / MAP_TILE_SIZE) * MAP_TILE_SIZE) - pBody->ubHeight;
+			uwTop = ((uwTileBottom) * MAP_TILE_SIZE) - pBody->ubHeight;
 			fNewPosY = fix16_from_int(uwTop);
 			pBody->fVelocityY = 0;
 			pBody->isOnGround = 1;
 		}
 		else if(
-			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwBottom / MAP_TILE_SIZE) == TILE_SLIPGATE_1 &&
+			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTileBottom) == TILE_SLIPGATE_1 &&
 			g_pSlipgates[0].eNormal == DIRECTION_UP
 		) {
 			// Slipgate A
@@ -72,7 +101,7 @@ void bodySimulate(tBodyBox *pBody) {
 			fNewPosY = pBody->fPosY;
 		}
 		else if(
-			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwBottom / MAP_TILE_SIZE) == TILE_SLIPGATE_2 &&
+			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTileBottom) == TILE_SLIPGATE_2 &&
 			g_pSlipgates[1].eNormal == DIRECTION_UP
 		) {
 			// Slipgate B
@@ -81,6 +110,7 @@ void bodySimulate(tBodyBox *pBody) {
 		}
 	}
 	else if(pBody->fVelocityY < 0) {
+		// upwards
 		if(
 			mapIsTileSolid(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) ||
 			mapIsTileSolid(uwRight / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE)
