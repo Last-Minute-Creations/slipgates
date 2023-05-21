@@ -16,10 +16,22 @@
 #include "slipgates.h"
 #include "body_box.h"
 #include "map.h"
+#include "game_math.h"
 
 #define PLAYER_VELO_DELTA_X_GROUND 3
 #define PLAYER_VELO_DELTA_X_AIR (fix16_one / 4)
+#define TRACER_SLIPGATE_SPEED 7
 
+typedef struct tTracer {
+	fix16_t fPosX;
+	fix16_t fPosY;
+	fix16_t fDeltaX;
+	fix16_t fDeltaY;
+	UBYTE isActive;
+	UBYTE ubIndex;
+} tTracer;
+
+static tTracer s_sTracerSlipgate;
 static fix16_t s_fPlayerJumpVeloY = F16(-3);
 
 static tView *s_pView;
@@ -44,6 +56,21 @@ static UBYTE playerCanJump(void) {
 	return s_sBodyPlayer.isOnGround;
 }
 
+static UBYTE playerTryShootSlipgateAt(UBYTE ubIndex, UBYTE ubAngle) {
+	if(s_sTracerSlipgate.isActive) {
+		return 0;
+	}
+
+	s_sTracerSlipgate.fPosX = s_sBodyPlayer.fPosX;
+	s_sTracerSlipgate.fPosY = s_sBodyPlayer.fPosY;
+	s_sTracerSlipgate.fDeltaX = ccos(ubAngle) * TRACER_SLIPGATE_SPEED;
+	s_sTracerSlipgate.fDeltaY = csin(ubAngle) * TRACER_SLIPGATE_SPEED;
+	s_sTracerSlipgate.isActive = 1;
+	s_sTracerSlipgate.ubIndex = ubIndex;
+
+	return 1;
+}
+
 static UBYTE tileGetColor(tTile eTile) {
 	switch (eTile)
 	{
@@ -64,21 +91,49 @@ static void drawTile(UBYTE ubTileX, UBYTE ubTileY) {
 		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
 		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
 	);
+
+	blitLine(
+		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
+	);
+	blitLine(
+		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
+	);
+	blitLine(
+		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
+	);
+	blitLine(
+		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
+	);
 }
 
 // TODO: refactor and move to map.c?
 static void drawMap(void) {
 	for(UBYTE ubTileX = 0; ubTileX < MAP_TILE_WIDTH; ++ubTileX) {
 		for(UBYTE ubTileY = 0; ubTileY < MAP_TILE_HEIGHT; ++ubTileY) {
-			UBYTE ubColor = tileGetColor(mapGetTileAt(ubTileX, ubTileY));
-			blitRect(
-				s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-				MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
-			);
-			blitRect(
-				s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-				MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
-			);
+			drawTile(ubTileX, ubTileY);
+		}
+	}
+}
+
+static void projectileSlipgateProcess(void) {
+	if(!s_sTracerSlipgate.isActive) {
+		return;
+	}
+
+	s_sTracerSlipgate.fPosX = fix16_add(s_sTracerSlipgate.fPosX, s_sTracerSlipgate.fDeltaX);
+	s_sTracerSlipgate.fPosY = fix16_add(s_sTracerSlipgate.fPosY, s_sTracerSlipgate.fDeltaY);
+
+	UWORD uwTileX = (UWORD)fix16_to_int(s_sTracerSlipgate.fPosX) / MAP_TILE_SIZE;
+	UWORD uwTileY = (UWORD)fix16_to_int(s_sTracerSlipgate.fPosY) / MAP_TILE_SIZE;
+
+	if(mapIsTileSolid(uwTileX, uwTileY)) {
+		s_sTracerSlipgate.isActive = 0;
+		if(mapTrySpawnSlipgate(s_sTracerSlipgate.ubIndex, uwTileX, uwTileY)) {
+			drawMap();
 		}
 	}
 }
@@ -93,6 +148,7 @@ static void loadLevel(UBYTE ubIndex) {
 		g_sCurrentLevel.fStartY,
 		8, 16
 	);
+	s_sTracerSlipgate.isActive = 0;
 	drawMap();
 	viewLoad(s_pView);
 }
@@ -121,6 +177,8 @@ static void saveLevel(UBYTE ubIndex) {
 }
 
 static void gameGsCreate(void) {
+	gameMathInit();
+
 	s_pView = viewCreate(0,
 		TAG_VIEW_COPLIST_MODE, COPPER_MODE_BLOCK,
 		TAG_VIEW_GLOBAL_PALETTE, 1,
@@ -160,7 +218,6 @@ static void gameGsCreate(void) {
 	spriteProcessChannel(0);
 	mouseSetBounds(MOUSE_PORT_1, 0, 0, SCREEN_PAL_WIDTH - 16, SCREEN_PAL_HEIGHT - 27);
 
-
 	systemUnuse();
 	loadLevel(0);
 }
@@ -194,16 +251,17 @@ static void gameGsLoop(void) {
 	UWORD uwCrossY = uwMouseY + 14;
 	s_pSpriteCrosshair->wX = uwMouseX;
 	s_pSpriteCrosshair->wY = uwMouseY;
+	UBYTE ubAimAngle = getAngleBetweenPoints(
+		fix16_to_int(s_sBodyPlayer.fPosX), fix16_to_int(s_sBodyPlayer.fPosY),
+		uwCrossX, uwCrossY
+	);
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
-		if(mapTrySpawnSlipgate(0, uwCrossX / MAP_TILE_SIZE, uwCrossY / MAP_TILE_SIZE)) {
-			drawMap();
-		}
+		playerTryShootSlipgateAt(0, ubAimAngle);
 	}
 	else if(mouseUse(MOUSE_PORT_1, MOUSE_RMB)) {
-		if(mapTrySpawnSlipgate(1, uwCrossX / MAP_TILE_SIZE, uwCrossY / MAP_TILE_SIZE)) {
-			drawMap();
-		}
+		playerTryShootSlipgateAt(1, ubAimAngle);
 	}
+	projectileSlipgateProcess();
 
 	// Level editor
 	if(keyCheck(KEY_Z)) {
