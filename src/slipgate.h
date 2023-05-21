@@ -11,6 +11,8 @@
 typedef struct tSlipgate {
 	UWORD uwTileX; // left tile
 	UWORD uwTileY; // top tile
+	UWORD uwOtherTileX; // other tile's X coord
+	UWORD uwOtherTileY; // other tile's Y coord
 	tDirection eNormal; // set to DIRECTION_NONE when is off
 } tSlipgate;
 

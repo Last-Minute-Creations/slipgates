@@ -108,6 +108,8 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
+		g_pSlipgates[ubIndex].uwOtherTileX = ubTileX;
+		g_pSlipgates[ubIndex].uwOtherTileY = ubTileY + 1;
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_LEFT;
 	}
 	else if(
@@ -117,6 +119,8 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
+		g_pSlipgates[ubIndex].uwOtherTileX = ubTileX;
+		g_pSlipgates[ubIndex].uwOtherTileY = ubTileY + 1;
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_RIGHT;
 	}
 	else if(
@@ -126,6 +130,8 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
+		g_pSlipgates[ubIndex].uwOtherTileX = ubTileX + 1;
+		g_pSlipgates[ubIndex].uwOtherTileY = ubTileY;
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_UP;
 	}
 	else if(
@@ -135,6 +141,8 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
+		g_pSlipgates[ubIndex].uwOtherTileX = ubTileX + 1;
+		g_pSlipgates[ubIndex].uwOtherTileY = ubTileY;
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_DOWN;
 	}
 

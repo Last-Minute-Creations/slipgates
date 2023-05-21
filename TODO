@@ -7,6 +7,7 @@ General:
 	✔ X collisions @done(23-05-19 15:57)
 	✔ Air control X @done(23-05-19 17:41)
 	✔ Basic shooting slipgates @done(23-05-21 17:41)
+	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
 	☐ Better shooting slipgates (raycast)
 	☐ Entrance/exit tiles
 	☐ Basic cube

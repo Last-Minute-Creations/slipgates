@@ -21,6 +21,7 @@
 #define PLAYER_VELO_DELTA_X_GROUND 3
 #define PLAYER_VELO_DELTA_X_AIR (fix16_one / 4)
 #define TRACER_SLIPGATE_SPEED 7
+#define TRACER_ITERATIONS_PER_FRAME 4
 
 typedef struct tTracer {
 	fix16_t fPosX;
@@ -124,16 +125,27 @@ static void projectileSlipgateProcess(void) {
 		return;
 	}
 
-	s_sTracerSlipgate.fPosX = fix16_add(s_sTracerSlipgate.fPosX, s_sTracerSlipgate.fDeltaX);
-	s_sTracerSlipgate.fPosY = fix16_add(s_sTracerSlipgate.fPosY, s_sTracerSlipgate.fDeltaY);
+	for(UBYTE i = TRACER_ITERATIONS_PER_FRAME; i--;) {
+		s_sTracerSlipgate.fPosX = fix16_add(s_sTracerSlipgate.fPosX, s_sTracerSlipgate.fDeltaX);
+		s_sTracerSlipgate.fPosY = fix16_add(s_sTracerSlipgate.fPosY, s_sTracerSlipgate.fDeltaY);
 
-	UWORD uwTileX = (UWORD)fix16_to_int(s_sTracerSlipgate.fPosX) / MAP_TILE_SIZE;
-	UWORD uwTileY = (UWORD)fix16_to_int(s_sTracerSlipgate.fPosY) / MAP_TILE_SIZE;
+		UWORD uwTileX = (UWORD)fix16_to_int(s_sTracerSlipgate.fPosX) / MAP_TILE_SIZE;
+		UWORD uwTileY = (UWORD)fix16_to_int(s_sTracerSlipgate.fPosY) / MAP_TILE_SIZE;
 
-	if(mapIsTileSolid(uwTileX, uwTileY)) {
-		s_sTracerSlipgate.isActive = 0;
-		if(mapTrySpawnSlipgate(s_sTracerSlipgate.ubIndex, uwTileX, uwTileY)) {
-			drawMap();
+		if(mapIsTileSolid(uwTileX, uwTileY)) {
+			s_sTracerSlipgate.isActive = 0;
+			UWORD uwSlipgateOldTile1X = g_pSlipgates[s_sTracerSlipgate.ubIndex].uwTileX;
+			UWORD uwSlipgateOldTile1Y = g_pSlipgates[s_sTracerSlipgate.ubIndex].uwTileY;
+			UWORD uwSlipgateOldTile2X = g_pSlipgates[s_sTracerSlipgate.ubIndex].uwOtherTileX;
+			UWORD uwSlipgateOldTile2Y = g_pSlipgates[s_sTracerSlipgate.ubIndex].uwOtherTileY;
+			// TODO: tile 2
+			if(mapTrySpawnSlipgate(s_sTracerSlipgate.ubIndex, uwTileX, uwTileY)) {
+				drawTile(uwSlipgateOldTile1X, uwSlipgateOldTile1Y);
+				drawTile(uwSlipgateOldTile2X, uwSlipgateOldTile2Y);
+				drawTile(g_pSlipgates[s_sTracerSlipgate.ubIndex].uwTileX, g_pSlipgates[s_sTracerSlipgate.ubIndex].uwTileY);
+				drawTile(g_pSlipgates[s_sTracerSlipgate.ubIndex].uwOtherTileX, g_pSlipgates[s_sTracerSlipgate.ubIndex].uwOtherTileY);
+				break;
+			}
 		}
 	}
 }
