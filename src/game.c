@@ -62,8 +62,8 @@ static UBYTE playerTryShootSlipgateAt(UBYTE ubIndex, UBYTE ubAngle) {
 		return 0;
 	}
 
-	s_sTracerSlipgate.fPosX = s_sBodyPlayer.fPosX;
-	s_sTracerSlipgate.fPosY = s_sBodyPlayer.fPosY;
+	s_sTracerSlipgate.fPosX = s_sBodyPlayer.fPosX + fix16_from_int(s_sBodyPlayer.ubWidth) / 2;
+	s_sTracerSlipgate.fPosY = s_sBodyPlayer.fPosY + fix16_from_int(s_sBodyPlayer.ubHeight) / 2;
 	s_sTracerSlipgate.fDeltaX = ccos(ubAngle) * TRACER_SLIPGATE_SPEED;
 	s_sTracerSlipgate.fDeltaY = csin(ubAngle) * TRACER_SLIPGATE_SPEED;
 	s_sTracerSlipgate.isActive = 1;
@@ -129,8 +129,14 @@ static void projectileSlipgateProcess(void) {
 		s_sTracerSlipgate.fPosX = fix16_add(s_sTracerSlipgate.fPosX, s_sTracerSlipgate.fDeltaX);
 		s_sTracerSlipgate.fPosY = fix16_add(s_sTracerSlipgate.fPosY, s_sTracerSlipgate.fDeltaY);
 
-		UWORD uwTileX = (UWORD)fix16_to_int(s_sTracerSlipgate.fPosX) / MAP_TILE_SIZE;
-		UWORD uwTileY = (UWORD)fix16_to_int(s_sTracerSlipgate.fPosY) / MAP_TILE_SIZE;
+		UWORD uwPosX = fix16_to_int(s_sTracerSlipgate.fPosX);
+		UWORD uwPosY = fix16_to_int(s_sTracerSlipgate.fPosY);
+
+		blitRect(s_pBufferMain->pBack, uwPosX - 1, uwPosY - 1, 3, 3, 8);
+		blitRect(s_pBufferMain->pFront, uwPosX - 1, uwPosY - 1, 3, 3, 8);
+
+		UWORD uwTileX = uwPosX / MAP_TILE_SIZE;
+		UWORD uwTileY = uwPosY / MAP_TILE_SIZE;
 
 		if(mapIsTileSolid(uwTileX, uwTileY)) {
 			s_sTracerSlipgate.isActive = 0;
