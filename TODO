@@ -9,9 +9,9 @@ General:
 	✔ Basic shooting slipgates @done(23-05-21 17:41)
 	✔ Better shooting slipgates (raycast) @done(23-05-22 18:44)
 	✔ Figure out the artstyle - quake 1-esque @done(23-05-22 19:07)
-	✔ Basic cube @done(23-05-22 19:53)
-	☐ Picking up cubes
-	☐ Collisions with cubes
+	✔ Basic box @done(23-05-22 19:53)
+	✔ Basic box pickup @done(23-05-22 21:13)
+	☐ Collisions with boxes
 	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
 	☐ Entrance/exit tiles
 	☐ Fix overlapping slipgates
@@ -22,12 +22,18 @@ General:
 	☐ Bigger max velocity
 	☐ Increase precision of trig tables for better aiming accuracy
 
+Box pickup refinements:
+	☐ Generalize (using collision tiles)
+	☐ Constrain range
+	☐ Velocity-based instead of position-based
+	☐ Turn off gravity during pickup
+
 Tiles:
-	☐ Red beam
-	☐ Blue beam
+	☐ Death (red) beam
+	☐ Impassable (blue) beam
 	☐ Togglable wall
 	☐ Button
-	☐ Electricity fields
+	☐ Electricity floor/ceil
 	☐ No-portal wall
 	☐ Spikes
 

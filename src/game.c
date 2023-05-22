@@ -50,6 +50,7 @@ static tBitMap *s_pBoxFrames;
 static tBitMap *s_pBoxMasks;
 static tBitMap *s_pBmCursor;
 static tBodyBox s_sBodyPlayer;
+static tBodyBox *s_pGrabbedBox;
 static tBodyBox s_sBodyBox;
 static tSprite *s_pSpriteCrosshair;
 
@@ -203,6 +204,7 @@ static void loadLevel(UBYTE ubIndex) {
 		g_sCurrentLevel.fStartY,
 		8, 16
 	);
+	s_pGrabbedBox = 0;
 	bodyInit(
 		&s_sBodyBox,
 		fix16_from_int(200),
@@ -316,6 +318,10 @@ static void gameGsLoop(void) {
 	tUwCoordYX sPosCross = getCrossPosition();
 	s_pSpriteCrosshair->wX = sPosCross.uwX - 8;
 	s_pSpriteCrosshair->wY = sPosCross.uwY - 14;
+	if(s_pGrabbedBox) {
+		s_pGrabbedBox->fPosX = fix16_from_int(sPosCross.uwX - s_pGrabbedBox->ubWidth / 2);
+		s_pGrabbedBox->fPosY = fix16_from_int(sPosCross.uwY - s_pGrabbedBox->ubHeight / 2);
+	}
 	UBYTE ubAimAngle = getAngleBetweenPoints(
 		fix16_to_int(s_sBodyPlayer.fPosX), fix16_to_int(s_sBodyPlayer.fPosY),
 		sPosCross.uwX, sPosCross.uwY
@@ -379,6 +385,22 @@ static void gameGsLoop(void) {
 	if(keyUse(KEY_Y)) {
 		s_sBodyBox.fPosX = fix16_from_int(sPosCross.uwX);
 		s_sBodyBox.fPosY = fix16_from_int(sPosCross.uwY);
+	}
+
+	if(keyUse(KEY_F)) {
+		UWORD uwBoxX = fix16_to_int(s_sBodyBox.fPosX);
+		UWORD uwBoxY = fix16_to_int(s_sBodyBox.fPosY);
+		if(s_pGrabbedBox) {
+			s_pGrabbedBox = 0;
+		}
+		else {
+			if(
+				uwBoxX <= sPosCross.uwX && sPosCross.uwX < uwBoxX + s_sBodyBox.ubWidth &&
+				uwBoxY <= sPosCross.uwY && sPosCross.uwY < uwBoxY + s_sBodyBox.ubHeight
+			) {
+				s_pGrabbedBox = &s_sBodyBox;
+			}
+		}
 	}
 
 	bodySimulate(&s_sBodyBox);
