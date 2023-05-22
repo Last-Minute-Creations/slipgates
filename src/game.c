@@ -23,16 +23,21 @@
 #define TRACER_SLIPGATE_SPEED 7
 #define TRACER_ITERATIONS_PER_FRAME 4
 
-typedef struct tTracer {
-	fix16_t fPosX;
-	fix16_t fPosY;
-	fix16_t fDeltaX;
-	fix16_t fDeltaY;
+// Based on http://www.cse.yorku.ca/~amana/research/grid.pdf
+typedef struct tTileTracer {
+	fix16_t fAccumulatorX; // Helper accumulator for X direction.
+	fix16_t fAccumulatorY; // Helper accumulator for Y direction.
+	fix16_t fAccumulatorDeltaX;
+	fix16_t fAccumulatorDeltaY;
+	UWORD uwTileX; // Current tracer pos, in X direction.
+	UWORD uwTileY; // Current tracer pos, in Y direction.
+	WORD wDeltaTileX;
+	WORD wDeltaTileY;
 	UBYTE isActive;
-	UBYTE ubIndex;
-} tTracer;
+	UBYTE ubIndex; // TODO: callback + data
+} tTileTracer;
 
-static tTracer s_sTracerSlipgate;
+static tTileTracer s_sTracerSlipgate;
 static fix16_t s_fPlayerJumpVeloY = F16(-3);
 
 static tView *s_pView;
@@ -57,15 +62,38 @@ static UBYTE playerCanJump(void) {
 	return s_sBodyPlayer.isOnGround;
 }
 
+static tUwCoordYX getCrossPosition(void) {
+	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
+	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
+	tUwCoordYX sPos = {.uwX = uwMouseX + 8, .uwY = uwMouseY + 14};
+	return sPos;
+}
+
 static UBYTE playerTryShootSlipgateAt(UBYTE ubIndex, UBYTE ubAngle) {
+	tUwCoordYX sDestinationPos = getCrossPosition();
+	UWORD uwSourceX = fix16_to_int(s_sBodyPlayer.fPosX) + s_sBodyPlayer.ubWidth / 2;
+	UWORD uwSourceY = fix16_to_int(s_sBodyPlayer.fPosY) + s_sBodyPlayer.ubHeight / 2;
+	WORD wDeltaX = sDestinationPos.uwX - uwSourceX;
+	WORD wDeltaY = sDestinationPos.uwY - uwSourceY;
+
 	if(s_sTracerSlipgate.isActive) {
 		return 0;
 	}
 
-	s_sTracerSlipgate.fPosX = s_sBodyPlayer.fPosX + fix16_from_int(s_sBodyPlayer.ubWidth) / 2;
-	s_sTracerSlipgate.fPosY = s_sBodyPlayer.fPosY + fix16_from_int(s_sBodyPlayer.ubHeight) / 2;
-	s_sTracerSlipgate.fDeltaX = ccos(ubAngle) * TRACER_SLIPGATE_SPEED;
-	s_sTracerSlipgate.fDeltaY = csin(ubAngle) * TRACER_SLIPGATE_SPEED;
+	s_sTracerSlipgate.wDeltaTileX = (wDeltaX > 0) - (wDeltaX < 0);
+	s_sTracerSlipgate.wDeltaTileY = (wDeltaY > 0) - (wDeltaY < 0);
+	UWORD uwNextTileX = uwSourceX / MAP_TILE_SIZE + s_sTracerSlipgate.wDeltaTileX;
+	UWORD uwNextTileY = uwSourceY / MAP_TILE_SIZE + s_sTracerSlipgate.wDeltaTileY;
+	s_sTracerSlipgate.fAccumulatorX = fix16_sub(fix16_from_int(uwNextTileX * MAP_TILE_SIZE), s_sBodyPlayer.fPosX);
+	s_sTracerSlipgate.fAccumulatorY = fix16_sub(fix16_from_int(uwNextTileY * MAP_TILE_SIZE), s_sBodyPlayer.fPosY);
+
+	fix16_t fSin = csin(ubAngle);
+	fix16_t fCos = ccos(ubAngle);
+	s_sTracerSlipgate.fAccumulatorDeltaX = (fCos == 0) ? fix16_from_int(32767) : (fix16_div(fix16_from_int(MAP_TILE_SIZE), ccos(ubAngle)));
+	s_sTracerSlipgate.fAccumulatorDeltaY = (fSin == 0) ? fix16_from_int(32767) : (fix16_div(fix16_from_int(MAP_TILE_SIZE), csin(ubAngle)));
+
+	s_sTracerSlipgate.uwTileX = uwSourceX / MAP_TILE_SIZE;
+	s_sTracerSlipgate.uwTileY = uwSourceY / MAP_TILE_SIZE;
 	s_sTracerSlipgate.isActive = 1;
 	s_sTracerSlipgate.ubIndex = ubIndex;
 
@@ -126,14 +154,20 @@ static void projectileSlipgateProcess(void) {
 	}
 
 	for(UBYTE i = TRACER_ITERATIONS_PER_FRAME; i--;) {
-		s_sTracerSlipgate.fPosX = fix16_add(s_sTracerSlipgate.fPosX, s_sTracerSlipgate.fDeltaX);
-		s_sTracerSlipgate.fPosY = fix16_add(s_sTracerSlipgate.fPosY, s_sTracerSlipgate.fDeltaY);
+		if(fix16_abs(s_sTracerSlipgate.fAccumulatorX) < fix16_abs(s_sTracerSlipgate.fAccumulatorY)) {
+			s_sTracerSlipgate.fAccumulatorX = fix16_add(s_sTracerSlipgate.fAccumulatorX, s_sTracerSlipgate.fAccumulatorDeltaX);
+			s_sTracerSlipgate.uwTileX += s_sTracerSlipgate.wDeltaTileX;
+		} else {
+			s_sTracerSlipgate.fAccumulatorY = fix16_add(s_sTracerSlipgate.fAccumulatorY, s_sTracerSlipgate.fAccumulatorDeltaY);
+			s_sTracerSlipgate.uwTileY += s_sTracerSlipgate.wDeltaTileY;
+		}
 
-		UWORD uwPosX = fix16_to_int(s_sTracerSlipgate.fPosX);
-		UWORD uwPosY = fix16_to_int(s_sTracerSlipgate.fPosY);
+		UWORD uwPosX = s_sTracerSlipgate.uwTileX * MAP_TILE_SIZE + 3;
+		UWORD uwPosY = s_sTracerSlipgate.uwTileY * MAP_TILE_SIZE + 3;
 
-		blitRect(s_pBufferMain->pBack, uwPosX - 1, uwPosY - 1, 3, 3, 8);
-		blitRect(s_pBufferMain->pFront, uwPosX - 1, uwPosY - 1, 3, 3, 8);
+		// Debug draw of tracer trajectory
+		// blitRect(s_pBufferMain->pBack, uwPosX, uwPosY, 2, 2, 8);
+		// blitRect(s_pBufferMain->pFront, uwPosX, uwPosY, 2, 2, 8);
 
 		UWORD uwTileX = uwPosX / MAP_TILE_SIZE;
 		UWORD uwTileY = uwPosY / MAP_TILE_SIZE;
@@ -263,15 +297,12 @@ static void gameGsLoop(void) {
 
  	bobBegin(s_pBufferMain->pBack);
 
-	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
-	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
-	UWORD uwCrossX = uwMouseX + 8;
-	UWORD uwCrossY = uwMouseY + 14;
-	s_pSpriteCrosshair->wX = uwMouseX;
-	s_pSpriteCrosshair->wY = uwMouseY;
+	tUwCoordYX sPosCross = getCrossPosition();
+	s_pSpriteCrosshair->wX = sPosCross.uwX - 8;
+	s_pSpriteCrosshair->wY = sPosCross.uwY - 14;
 	UBYTE ubAimAngle = getAngleBetweenPoints(
 		fix16_to_int(s_sBodyPlayer.fPosX), fix16_to_int(s_sBodyPlayer.fPosY),
-		uwCrossX, uwCrossY
+		sPosCross.uwX, sPosCross.uwY
 	);
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
 		playerTryShootSlipgateAt(0, ubAimAngle);
@@ -283,12 +314,12 @@ static void gameGsLoop(void) {
 
 	// Level editor
 	if(keyCheck(KEY_Z)) {
-		g_sCurrentLevel.pTiles[uwCrossX / MAP_TILE_SIZE][uwCrossY / MAP_TILE_SIZE] = TILE_WALL_1;
-		drawTile(uwCrossX / MAP_TILE_SIZE, uwCrossY / MAP_TILE_SIZE);
+		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_WALL_1;
+		drawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	else if(keyCheck(KEY_X)) {
-		g_sCurrentLevel.pTiles[uwCrossX / MAP_TILE_SIZE][uwCrossY / MAP_TILE_SIZE] = TILE_BG_1;
-		drawTile(uwCrossX / MAP_TILE_SIZE, uwCrossY / MAP_TILE_SIZE);
+		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_BG_1;
+		drawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	spriteProcess(s_pSpriteCrosshair);
 
@@ -326,8 +357,8 @@ static void gameGsLoop(void) {
 	}
 
 	if(keyUse(KEY_T)) {
-		s_sBodyPlayer.fPosX = fix16_from_int(uwCrossX);
-		s_sBodyPlayer.fPosY = fix16_from_int(uwCrossY);
+		s_sBodyPlayer.fPosX = fix16_from_int(sPosCross.uwX);
+		s_sBodyPlayer.fPosY = fix16_from_int(sPosCross.uwY);
 	}
 
 	bodySimulate(&s_sBodyPlayer);
