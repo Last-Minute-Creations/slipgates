@@ -82,15 +82,15 @@ static UBYTE playerTryShootSlipgateAt(UBYTE ubIndex, UBYTE ubAngle) {
 
 	s_sTracerSlipgate.wDeltaTileX = (wDeltaX > 0) - (wDeltaX < 0);
 	s_sTracerSlipgate.wDeltaTileY = (wDeltaY > 0) - (wDeltaY < 0);
-	UWORD uwNextTileX = uwSourceX / MAP_TILE_SIZE + s_sTracerSlipgate.wDeltaTileX;
-	UWORD uwNextTileY = uwSourceY / MAP_TILE_SIZE + s_sTracerSlipgate.wDeltaTileY;
+	UWORD uwNextTileX = uwSourceX / MAP_TILE_SIZE + 1;
+	UWORD uwNextTileY = uwSourceY / MAP_TILE_SIZE + 1;
 	s_sTracerSlipgate.fAccumulatorX = fix16_sub(fix16_from_int(uwNextTileX * MAP_TILE_SIZE), s_sBodyPlayer.fPosX);
 	s_sTracerSlipgate.fAccumulatorY = fix16_sub(fix16_from_int(uwNextTileY * MAP_TILE_SIZE), s_sBodyPlayer.fPosY);
 
 	fix16_t fSin = csin(ubAngle);
 	fix16_t fCos = ccos(ubAngle);
-	s_sTracerSlipgate.fAccumulatorDeltaX = (fCos == 0) ? fix16_from_int(32767) : (fix16_div(fix16_from_int(MAP_TILE_SIZE), ccos(ubAngle)));
-	s_sTracerSlipgate.fAccumulatorDeltaY = (fSin == 0) ? fix16_from_int(32767) : (fix16_div(fix16_from_int(MAP_TILE_SIZE), csin(ubAngle)));
+	s_sTracerSlipgate.fAccumulatorDeltaX = (fCos == 0) ? fix16_from_int(32767) : fix16_abs(fix16_div(fix16_from_int(MAP_TILE_SIZE), ccos(ubAngle)));
+	s_sTracerSlipgate.fAccumulatorDeltaY = (fSin == 0) ? fix16_from_int(32767) : fix16_abs(fix16_div(fix16_from_int(MAP_TILE_SIZE), csin(ubAngle)));
 
 	s_sTracerSlipgate.uwTileX = uwSourceX / MAP_TILE_SIZE;
 	s_sTracerSlipgate.uwTileY = uwSourceY / MAP_TILE_SIZE;
@@ -154,7 +154,7 @@ static void projectileSlipgateProcess(void) {
 	}
 
 	for(UBYTE i = TRACER_ITERATIONS_PER_FRAME; i--;) {
-		if(fix16_abs(s_sTracerSlipgate.fAccumulatorX) < fix16_abs(s_sTracerSlipgate.fAccumulatorY)) {
+		if(s_sTracerSlipgate.fAccumulatorX < s_sTracerSlipgate.fAccumulatorY) {
 			s_sTracerSlipgate.fAccumulatorX = fix16_add(s_sTracerSlipgate.fAccumulatorX, s_sTracerSlipgate.fAccumulatorDeltaX);
 			s_sTracerSlipgate.uwTileX += s_sTracerSlipgate.wDeltaTileX;
 		} else {
