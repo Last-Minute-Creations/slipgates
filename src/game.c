@@ -46,8 +46,11 @@ static tSimpleBufferManager *s_pBufferMain;
 
 static tBitMap *s_pPlayerFrames;
 static tBitMap *s_pPlayerMasks;
+static tBitMap *s_pBoxFrames;
+static tBitMap *s_pBoxMasks;
 static tBitMap *s_pBmCursor;
 static tBodyBox s_sBodyPlayer;
+static tBodyBox s_sBodyBox;
 static tSprite *s_pSpriteCrosshair;
 
 static UWORD s_uwGameFrame;
@@ -200,6 +203,12 @@ static void loadLevel(UBYTE ubIndex) {
 		g_sCurrentLevel.fStartY,
 		8, 16
 	);
+	bodyInit(
+		&s_sBodyBox,
+		fix16_from_int(200),
+		fix16_from_int(200),
+		8, 8
+	);
 	s_sTracerSlipgate.isActive = 0;
 	drawMap();
 	viewLoad(s_pView);
@@ -254,12 +263,19 @@ static void gameGsCreate(void) {
 
 	s_pPlayerFrames = bitmapCreateFromFile("data/player.bm", 0);
 	s_pPlayerMasks = bitmapCreateFromFile("data/player_mask.bm", 0);
+	s_pBoxFrames = bitmapCreateFromFile("data/box.bm", 0);
+	s_pBoxMasks = bitmapCreateFromFile("data/box_mask.bm", 0);
 	s_pBmCursor = bitmapCreateFromFile("data/cursor.bm", 0);
 
 	bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
 	bobInit(
 		&s_sBodyPlayer.sBob, 16, 16, 1,
 		s_pPlayerFrames->Planes[0], s_pPlayerMasks->Planes[0],
+		0, 0
+	);
+	bobInit(
+		&s_sBodyBox.sBob, 16, 8, 1,
+		s_pBoxFrames->Planes[0], s_pBoxMasks->Planes[0],
 		0, 0
 	);
 	bobReallocateBgBuffers();
@@ -360,7 +376,13 @@ static void gameGsLoop(void) {
 		s_sBodyPlayer.fPosX = fix16_from_int(sPosCross.uwX);
 		s_sBodyPlayer.fPosY = fix16_from_int(sPosCross.uwY);
 	}
+	if(keyUse(KEY_Y)) {
+		s_sBodyBox.fPosX = fix16_from_int(sPosCross.uwX);
+		s_sBodyBox.fPosY = fix16_from_int(sPosCross.uwY);
+	}
 
+	bodySimulate(&s_sBodyBox);
+	bobPush(&s_sBodyBox.sBob);
 	bodySimulate(&s_sBodyPlayer);
 	bobPush(&s_sBodyPlayer.sBob);
 	bobPushingDone();
@@ -400,6 +422,8 @@ static void gameGsDestroy(void) {
 	bobManagerDestroy();
 	bitmapDestroy(s_pPlayerFrames);
 	bitmapDestroy(s_pPlayerMasks);
+	bitmapDestroy(s_pBoxFrames);
+	bitmapDestroy(s_pBoxMasks);
 	bitmapDestroy(s_pBmCursor);
 }
 
