@@ -29,13 +29,12 @@ Box pickup refinements:
 	☐ Turn off gravity during pickup
 
 Tiles:
+	✔ No-portal wall @done(23-05-23 14:44)
+	✔ Impassable (blue) beam @done(23-05-23 15:02)
 	☐ Death (red) beam
-	☐ Impassable (blue) beam
-	☐ Togglable wall
-	☐ Button
 	☐ Electricity floor/ceil
-	☐ No-portal wall
-	☐ Spikes
+	☐ Button
+	☐ Togglable wall
 
 Misc objects:
 	☐ Lifts
