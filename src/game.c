@@ -108,6 +108,7 @@ static UBYTE tileGetColor(tTile eTile) {
 	switch (eTile)
 	{
 		case TILE_WALL_1: return 7;
+		case TILE_WALL_NO_SLIPGATE_1: return 3;
 		case TILE_SLIPGATE_1: return 8;
 		case TILE_SLIPGATE_2: return 13;
 		default: return 16;
@@ -176,7 +177,7 @@ static void projectileSlipgateProcess(void) {
 		UWORD uwTileX = uwPosX / MAP_TILE_SIZE;
 		UWORD uwTileY = uwPosY / MAP_TILE_SIZE;
 
-		if(mapIsTileSolid(uwTileX, uwTileY)) {
+		if(mapIsTileSolidForProjectiles(uwTileX, uwTileY)) {
 			s_sTracerSlipgate.isActive = 0;
 			UWORD uwSlipgateOldTile1X = g_pSlipgates[s_sTracerSlipgate.ubIndex].uwTileX;
 			UWORD uwSlipgateOldTile1Y = g_pSlipgates[s_sTracerSlipgate.ubIndex].uwTileY;
@@ -326,21 +327,25 @@ static void gameGsLoop(void) {
 		fix16_to_int(s_sBodyPlayer.fPosX), fix16_to_int(s_sBodyPlayer.fPosY),
 		sPosCross.uwX, sPosCross.uwY
 	);
-	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
+	projectileSlipgateProcess();
+	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB) || keyUse(KEY_Q)) {
 		playerTryShootSlipgateAt(0, ubAimAngle);
 	}
-	else if(mouseUse(MOUSE_PORT_1, MOUSE_RMB)) {
+	else if(mouseUse(MOUSE_PORT_1, MOUSE_RMB) || keyUse(KEY_E)) {
 		playerTryShootSlipgateAt(1, ubAimAngle);
 	}
-	projectileSlipgateProcess();
 
 	// Level editor
 	if(keyCheck(KEY_Z)) {
-		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_WALL_1;
+		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_BG_1;
 		drawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	else if(keyCheck(KEY_X)) {
-		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_BG_1;
+		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_WALL_1;
+		drawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+	}
+	else if(keyCheck(KEY_C)) {
+		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_WALL_NO_SLIPGATE_1;
 		drawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	spriteProcess(s_pSpriteCrosshair);

@@ -161,9 +161,9 @@ void bodySimulate(tBodyBox *pBody) {
 		// moving right
 		UWORD uwTileRight = (uwRight + 1) / MAP_TILE_SIZE;
 		if(
-			mapGetTileAt(uwTileRight, uwTop / MAP_TILE_SIZE) == TILE_WALL_1 ||
-			mapGetTileAt(uwTileRight, uwMid / MAP_TILE_SIZE) == TILE_WALL_1 ||
-			mapGetTileAt(uwTileRight, uwBottom / MAP_TILE_SIZE) == TILE_WALL_1
+			mapIsTileSolidForBodies(uwTileRight, uwTop / MAP_TILE_SIZE) ||
+			mapIsTileSolidForBodies(uwTileRight, uwMid / MAP_TILE_SIZE) ||
+			mapIsTileSolidForBodies(uwTileRight, uwBottom / MAP_TILE_SIZE)
 		) {
 			fNewPosX = fix16_from_int(uwTileRight * MAP_TILE_SIZE - pBody->ubWidth);
 			pBody->fVelocityX = 0;
@@ -191,9 +191,9 @@ void bodySimulate(tBodyBox *pBody) {
 		// moving left
 		UWORD uwTileLeft = (uwLeft - 1) / MAP_TILE_SIZE;
 		if(
-			mapGetTileAt(uwTileLeft, uwTop / MAP_TILE_SIZE) == TILE_WALL_1 ||
-			mapGetTileAt(uwTileLeft, uwMid / MAP_TILE_SIZE) == TILE_WALL_1 ||
-			mapGetTileAt(uwTileLeft, uwBottom / MAP_TILE_SIZE) == TILE_WALL_1
+			mapIsTileSolidForBodies(uwTileLeft, uwTop / MAP_TILE_SIZE) ||
+			mapIsTileSolidForBodies(uwTileLeft, uwMid / MAP_TILE_SIZE) ||
+			mapIsTileSolidForBodies(uwTileLeft, uwBottom / MAP_TILE_SIZE)
 		) {
 			fNewPosX = fix16_from_int((uwTileLeft + 1) * MAP_TILE_SIZE);
 			pBody->fVelocityX = 0;
@@ -234,8 +234,8 @@ void bodySimulate(tBodyBox *pBody) {
 		// falling down
 		UWORD uwTileBottom = (uwBottom + 1) / MAP_TILE_SIZE;
 		if(
-			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTileBottom) == TILE_WALL_1 ||
-			mapGetTileAt(uwRight / MAP_TILE_SIZE, uwTileBottom) == TILE_WALL_1
+			mapIsTileSolidForBodies(uwLeft / MAP_TILE_SIZE, uwTileBottom) ||
+			mapIsTileSolidForBodies(uwRight / MAP_TILE_SIZE, uwTileBottom)
 		) {
 			// collide with floor
 			uwTop = ((uwTileBottom) * MAP_TILE_SIZE) - pBody->ubHeight;
@@ -263,8 +263,8 @@ void bodySimulate(tBodyBox *pBody) {
 	else if(pBody->fVelocityY < 0) {
 		// flying up
 		if(
-			mapIsTileSolid(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) ||
-			mapIsTileSolid(uwRight / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE)
+			mapIsTileSolidForBodies(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) ||
+			mapIsTileSolidForBodies(uwRight / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE)
 		) {
 			// collide with ceil
 			fNewPosY = fix16_from_int((uwTop / MAP_TILE_SIZE + 1) * MAP_TILE_SIZE);

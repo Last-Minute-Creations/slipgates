@@ -7,17 +7,23 @@
 
 #include "slipgate.h"
 #include <fixmath/fix16.h>
+#include <ace/macros.h>
 
 #define MAP_TILE_SHIFT 3
 #define MAP_TILE_SIZE (1 << MAP_TILE_SHIFT)
 #define MAP_TILE_WIDTH 40
 #define MAP_TILE_HEIGHT 32
+#define MAP_TILE_MASK_SOLID_FOR_BODIES BV(7)
+#define MAP_TILE_MASK_SOLID_FOR_PROJECTILES BV(6)
+#define MAP_TILE_MASK_SLIPGATABLE BV(5)
+#define MAP_TILE_INDEX_MASK ~(MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_SLIPGATABLE)
 
 typedef enum tTile {
-	TILE_BG_1 = 0,
-	TILE_WALL_1 = 1,
-	TILE_SLIPGATE_1 = 2,
-	TILE_SLIPGATE_2 = 3,
+	TILE_BG_1               = 0,
+	TILE_SLIPGATE_1         = 1 | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_SLIPGATABLE,
+	TILE_SLIPGATE_2         = 2 | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_SLIPGATABLE,
+	TILE_WALL_NO_SLIPGATE_1 = 3 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES,
+	TILE_WALL_1             = 4 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_SLIPGATABLE,
 } tTile;
 
 typedef struct tLevel {
@@ -31,7 +37,13 @@ extern tLevel g_sCurrentLevel;
 
 void mapLoad(UBYTE ubIndex);
 
-UBYTE mapIsTileSolid(UBYTE ubTileX, UBYTE ubTileY);
+UBYTE mapIsTileEmpty(UBYTE ubTileX, UBYTE ubTileY);
+
+UBYTE mapIsTileSolidForProjectiles(UBYTE ubTileX, UBYTE ubTileY);
+
+UBYTE mapIsTileSolidForBodies(UBYTE ubTileX, UBYTE ubTileY);
+
+UBYTE mapIsTileSlipgatable(UBYTE ubTileX, UBYTE ubTileY);
 
 tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY);
 
