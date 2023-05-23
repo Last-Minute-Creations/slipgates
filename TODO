@@ -11,6 +11,7 @@ General:
 	✔ Figure out the artstyle - quake 1-esque @done(23-05-22 19:07)
 	✔ Basic box @done(23-05-22 19:53)
 	✔ Basic box pickup @done(23-05-22 21:13)
+	☐ Death and restart
 	☐ Collisions with boxes
 	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
 	☐ Entrance/exit tiles

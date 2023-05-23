@@ -17,25 +17,11 @@
 #include "body_box.h"
 #include "map.h"
 #include "game_math.h"
+#include "tile_tracer.h"
 
+// #define GAME_DRAW_GRID
 #define PLAYER_VELO_DELTA_X_GROUND 3
 #define PLAYER_VELO_DELTA_X_AIR (fix16_one / 4)
-#define TRACER_SLIPGATE_SPEED 7
-#define TRACER_ITERATIONS_PER_FRAME 4
-
-// Based on http://www.cse.yorku.ca/~amana/research/grid.pdf
-typedef struct tTileTracer {
-	fix16_t fAccumulatorX; // Helper accumulator for X direction.
-	fix16_t fAccumulatorY; // Helper accumulator for Y direction.
-	fix16_t fAccumulatorDeltaX;
-	fix16_t fAccumulatorDeltaY;
-	UWORD uwTileX; // Current tracer pos, in X direction.
-	UWORD uwTileY; // Current tracer pos, in Y direction.
-	WORD wDeltaTileX;
-	WORD wDeltaTileY;
-	UBYTE isActive;
-	UBYTE ubIndex; // TODO: callback + data
-} tTileTracer;
 
 static tTileTracer s_sTracerSlipgate;
 static fix16_t s_fPlayerJumpVeloY = F16(-3);
@@ -74,32 +60,14 @@ static tUwCoordYX getCrossPosition(void) {
 }
 
 static UBYTE playerTryShootSlipgateAt(UBYTE ubIndex, UBYTE ubAngle) {
-	tUwCoordYX sDestinationPos = getCrossPosition();
-	UWORD uwSourceX = fix16_to_int(s_sBodyPlayer.fPosX) + s_sBodyPlayer.ubWidth / 2;
-	UWORD uwSourceY = fix16_to_int(s_sBodyPlayer.fPosY) + s_sBodyPlayer.ubHeight / 2;
-	WORD wDeltaX = sDestinationPos.uwX - uwSourceX;
-	WORD wDeltaY = sDestinationPos.uwY - uwSourceY;
-
 	if(s_sTracerSlipgate.isActive) {
 		return 0;
 	}
 
-	s_sTracerSlipgate.wDeltaTileX = (wDeltaX > 0) - (wDeltaX < 0);
-	s_sTracerSlipgate.wDeltaTileY = (wDeltaY > 0) - (wDeltaY < 0);
-	UWORD uwNextTileX = uwSourceX / MAP_TILE_SIZE + 1;
-	UWORD uwNextTileY = uwSourceY / MAP_TILE_SIZE + 1;
-	s_sTracerSlipgate.fAccumulatorX = fix16_sub(fix16_from_int(uwNextTileX * MAP_TILE_SIZE), s_sBodyPlayer.fPosX);
-	s_sTracerSlipgate.fAccumulatorY = fix16_sub(fix16_from_int(uwNextTileY * MAP_TILE_SIZE), s_sBodyPlayer.fPosY);
-
-	fix16_t fSin = csin(ubAngle);
-	fix16_t fCos = ccos(ubAngle);
-	s_sTracerSlipgate.fAccumulatorDeltaX = (fCos == 0) ? fix16_from_int(32767) : fix16_abs(fix16_div(fix16_from_int(MAP_TILE_SIZE), ccos(ubAngle)));
-	s_sTracerSlipgate.fAccumulatorDeltaY = (fSin == 0) ? fix16_from_int(32767) : fix16_abs(fix16_div(fix16_from_int(MAP_TILE_SIZE), csin(ubAngle)));
-
-	s_sTracerSlipgate.uwTileX = uwSourceX / MAP_TILE_SIZE;
-	s_sTracerSlipgate.uwTileY = uwSourceY / MAP_TILE_SIZE;
-	s_sTracerSlipgate.isActive = 1;
-	s_sTracerSlipgate.ubIndex = ubIndex;
+	tUwCoordYX sDestinationPos = getCrossPosition();
+	UWORD uwSourceX = fix16_to_int(s_sBodyPlayer.fPosX) + s_sBodyPlayer.ubWidth / 2;
+	UWORD uwSourceY = fix16_to_int(s_sBodyPlayer.fPosY) + s_sBodyPlayer.ubHeight / 2;
+	tracerStart(&s_sTracerSlipgate, uwSourceX, uwSourceY, sDestinationPos.uwX, sDestinationPos.uwY, ubAngle, ubIndex);
 
 	return 1;
 }
@@ -116,7 +84,7 @@ static UBYTE tileGetColor(tTile eTile) {
 	}
 }
 
-static void drawTile(UBYTE ubTileX, UBYTE ubTileY) {
+void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	UBYTE ubColor = tileGetColor(mapGetTileAt(ubTileX, ubTileY));
 	blitRect(
 		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
@@ -127,6 +95,7 @@ static void drawTile(UBYTE ubTileX, UBYTE ubTileY) {
 		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
 	);
 
+#if defined(GAME_DRAW_GRID)
 	blitLine(
 		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
 		(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
@@ -143,55 +112,14 @@ static void drawTile(UBYTE ubTileX, UBYTE ubTileY) {
 		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
 		ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
 	);
+#endif
 }
 
 // TODO: refactor and move to map.c?
 static void drawMap(void) {
 	for(UBYTE ubTileX = 0; ubTileX < MAP_TILE_WIDTH; ++ubTileX) {
 		for(UBYTE ubTileY = 0; ubTileY < MAP_TILE_HEIGHT; ++ubTileY) {
-			drawTile(ubTileX, ubTileY);
-		}
-	}
-}
-
-static void projectileSlipgateProcess(void) {
-	if(!s_sTracerSlipgate.isActive) {
-		return;
-	}
-
-	for(UBYTE i = TRACER_ITERATIONS_PER_FRAME; i--;) {
-		if(s_sTracerSlipgate.fAccumulatorX < s_sTracerSlipgate.fAccumulatorY) {
-			s_sTracerSlipgate.fAccumulatorX = fix16_add(s_sTracerSlipgate.fAccumulatorX, s_sTracerSlipgate.fAccumulatorDeltaX);
-			s_sTracerSlipgate.uwTileX += s_sTracerSlipgate.wDeltaTileX;
-		} else {
-			s_sTracerSlipgate.fAccumulatorY = fix16_add(s_sTracerSlipgate.fAccumulatorY, s_sTracerSlipgate.fAccumulatorDeltaY);
-			s_sTracerSlipgate.uwTileY += s_sTracerSlipgate.wDeltaTileY;
-		}
-
-		UWORD uwPosX = s_sTracerSlipgate.uwTileX * MAP_TILE_SIZE + 3;
-		UWORD uwPosY = s_sTracerSlipgate.uwTileY * MAP_TILE_SIZE + 3;
-
-		// Debug draw of tracer trajectory
-		// blitRect(s_pBufferMain->pBack, uwPosX, uwPosY, 2, 2, 8);
-		// blitRect(s_pBufferMain->pFront, uwPosX, uwPosY, 2, 2, 8);
-
-		UWORD uwTileX = uwPosX / MAP_TILE_SIZE;
-		UWORD uwTileY = uwPosY / MAP_TILE_SIZE;
-
-		if(mapIsTileSolidForProjectiles(uwTileX, uwTileY)) {
-			s_sTracerSlipgate.isActive = 0;
-			UWORD uwSlipgateOldTile1X = g_pSlipgates[s_sTracerSlipgate.ubIndex].uwTileX;
-			UWORD uwSlipgateOldTile1Y = g_pSlipgates[s_sTracerSlipgate.ubIndex].uwTileY;
-			UWORD uwSlipgateOldTile2X = g_pSlipgates[s_sTracerSlipgate.ubIndex].uwOtherTileX;
-			UWORD uwSlipgateOldTile2Y = g_pSlipgates[s_sTracerSlipgate.ubIndex].uwOtherTileY;
-			// TODO: tile 2
-			if(mapTrySpawnSlipgate(s_sTracerSlipgate.ubIndex, uwTileX, uwTileY)) {
-				drawTile(uwSlipgateOldTile1X, uwSlipgateOldTile1Y);
-				drawTile(uwSlipgateOldTile2X, uwSlipgateOldTile2Y);
-				drawTile(g_pSlipgates[s_sTracerSlipgate.ubIndex].uwTileX, g_pSlipgates[s_sTracerSlipgate.ubIndex].uwTileY);
-				drawTile(g_pSlipgates[s_sTracerSlipgate.ubIndex].uwOtherTileX, g_pSlipgates[s_sTracerSlipgate.ubIndex].uwOtherTileY);
-				break;
-			}
+			gameDrawTile(ubTileX, ubTileY);
 		}
 	}
 }
@@ -213,7 +141,7 @@ static void loadLevel(UBYTE ubIndex) {
 		fix16_from_int(200),
 		8, 8
 	);
-	s_sTracerSlipgate.isActive = 0;
+	tracerInit(&s_sTracerSlipgate);
 	drawMap();
 	viewLoad(s_pView);
 }
@@ -328,7 +256,7 @@ static void gameGsLoop(void) {
 		fix16_to_int(s_sBodyPlayer.fPosX), fix16_to_int(s_sBodyPlayer.fPosY),
 		sPosCross.uwX, sPosCross.uwY
 	);
-	projectileSlipgateProcess();
+	tracerProcess(&s_sTracerSlipgate);
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB) || keyUse(KEY_Q)) {
 		playerTryShootSlipgateAt(0, ubAimAngle);
 	}
@@ -339,19 +267,19 @@ static void gameGsLoop(void) {
 	// Level editor
 	if(keyCheck(KEY_Z)) {
 		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_BG_1;
-		drawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	else if(keyCheck(KEY_X)) {
 		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_WALL_1;
-		drawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	else if(keyCheck(KEY_C)) {
 		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_WALL_NO_SLIPGATE_1;
-		drawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	else if(keyCheck(KEY_V)) {
 		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_FORCEFIELD_1;
-		drawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	spriteProcess(s_pSpriteCrosshair);
 

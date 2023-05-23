@@ -8,6 +8,7 @@
 #include <ace/managers/state.h>
 
 extern tState g_sStateGame;
-extern UBYTE g_pTiles[20][16]; // x,y
+
+void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY);
 
 #endif // SLIPGATES_GAME_H
