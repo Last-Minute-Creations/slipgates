@@ -21,10 +21,6 @@
 #include "player.h"
 
 // #define GAME_DRAW_GRID
-#define PLAYER_VELO_DELTA_X_GROUND 3
-#define PLAYER_VELO_DELTA_X_AIR (fix16_one / 4)
-
-static fix16_t s_fPlayerJumpVeloY = F16(-3);
 
 static tView *s_pView;
 static tVPort *s_pVpMain;
@@ -208,74 +204,7 @@ static void gameGsLoop(void) {
 	}
 	spriteProcess(s_pSpriteCrosshair);
 
-	// Player's grabbed box
-	if(s_sPlayer.pGrabbedBox) {
-		s_sPlayer.pGrabbedBox->fPosX = fix16_from_int(sPosCross.uwX - s_sPlayer.pGrabbedBox->ubWidth / 2);
-		s_sPlayer.pGrabbedBox->fPosY = fix16_from_int(sPosCross.uwY - s_sPlayer.pGrabbedBox->ubHeight / 2);
-	}
-
-	// Player shooting slipgates
-	UBYTE ubAimAngle = getAngleBetweenPoints(
-		fix16_to_int(s_sPlayer.sBody.fPosX), fix16_to_int(s_sPlayer.sBody.fPosY),
-		sPosCross.uwX, sPosCross.uwY
-	);
-	tracerProcess(&g_sTracerSlipgate);
-	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB) || keyUse(KEY_Q)) {
-		playerTryShootSlipgateAt(&s_sPlayer, 0, ubAimAngle);
-	}
-	else if(mouseUse(MOUSE_PORT_1, MOUSE_RMB) || keyUse(KEY_E)) {
-		playerTryShootSlipgateAt(&s_sPlayer, 1, ubAimAngle);
-	}
-
-	// Player movement
-	if(keyUse(KEY_W) && playerCanJump(&s_sPlayer)) {
-		s_sPlayer.sBody.fVelocityY = s_fPlayerJumpVeloY;
-	}
-
-	if(s_sPlayer.sBody.isOnGround) {
-		s_sPlayer.sBody.fVelocityX = 0;
-		if(keyCheck(KEY_A)) {
-			s_sPlayer.sBody.fVelocityX = fix16_from_int(-PLAYER_VELO_DELTA_X_GROUND);
-		}
-		else if(keyCheck(KEY_D)) {
-			s_sPlayer.sBody.fVelocityX = fix16_from_int(PLAYER_VELO_DELTA_X_GROUND);
-		}
-	}
-	else {
-		if(keyCheck(KEY_A)) {
-			if(s_sPlayer.sBody.fVelocityX >= 0) {
-				s_sPlayer.sBody.fVelocityX = fix16_sub(
-					s_sPlayer.sBody.fVelocityX,
-					PLAYER_VELO_DELTA_X_AIR
-				);
-			}
-		}
-		else if(keyCheck(KEY_D)) {
-			if(s_sPlayer.sBody.fVelocityX <= 0) {
-				s_sPlayer.sBody.fVelocityX = fix16_add(
-					s_sPlayer.sBody.fVelocityX,
-					PLAYER_VELO_DELTA_X_AIR
-				);
-			}
-		}
-	}
-
-	// Player pickup
-	if(keyUse(KEY_F)) {
-		UWORD uwBoxX = fix16_to_int(s_sBodyBox.fPosX);
-		UWORD uwBoxY = fix16_to_int(s_sBodyBox.fPosY);
-		if(s_sPlayer.pGrabbedBox) {
-			s_sPlayer.pGrabbedBox = 0;
-		}
-		else {
-			if(
-				uwBoxX <= sPosCross.uwX && sPosCross.uwX < uwBoxX + s_sBodyBox.ubWidth &&
-				uwBoxY <= sPosCross.uwY && sPosCross.uwY < uwBoxY + s_sBodyBox.ubHeight
-			) {
-				s_sPlayer.pGrabbedBox = &s_sBodyBox;
-			}
-		}
-	}
+	playerProcess(&s_sPlayer);
 
 	// Debug stuff
 	if(keyUse(KEY_T)) {
@@ -370,6 +299,10 @@ tUwCoordYX gameGetCrossPosition(void) {
 	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
 	tUwCoordYX sPos = {.uwX = uwMouseX + 8, .uwY = uwMouseY + 14};
 	return sPos;
+}
+
+tBodyBox *gameGetBox(void) {
+	return &s_sBodyBox;
 }
 
 //-------------------------------------------------------------------- GAMESTATE

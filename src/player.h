@@ -13,10 +13,10 @@ typedef struct tPlayer {
 	UBYTE ubHealth;
 } tPlayer;
 
-UBYTE playerCanJump(tPlayer *pPlayer);
-
 UBYTE playerTryShootSlipgateAt(tPlayer *pPlayer, UBYTE ubIndex, UBYTE ubAngle);
 
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY);
+
+void playerProcess(tPlayer *pPlayer);
 
 #endif // SLIPGATES_PLAYER_H
