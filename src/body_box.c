@@ -287,3 +287,8 @@ void bodySimulate(tBodyBox *pBody) {
 	pBody->sBob.sPos.uwX = fix16_to_int(pBody->fPosX);
 	pBody->sBob.sPos.uwY = fix16_to_int(pBody->fPosY);
 }
+
+void bodyTeleport(tBodyBox *pBody, UWORD uwX, UWORD uwY) {
+	pBody->fPosX = fix16_from_int(uwX);
+	pBody->fPosY = fix16_from_int(uwY);
+}

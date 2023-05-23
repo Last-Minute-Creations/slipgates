@@ -18,12 +18,12 @@
 #include "map.h"
 #include "game_math.h"
 #include "tile_tracer.h"
+#include "player.h"
 
 // #define GAME_DRAW_GRID
 #define PLAYER_VELO_DELTA_X_GROUND 3
 #define PLAYER_VELO_DELTA_X_AIR (fix16_one / 4)
 
-static tTileTracer s_sTracerSlipgate;
 static fix16_t s_fPlayerJumpVeloY = F16(-3);
 
 static tView *s_pView;
@@ -35,8 +35,7 @@ static tBitMap *s_pPlayerMasks;
 static tBitMap *s_pBoxFrames;
 static tBitMap *s_pBoxMasks;
 static tBitMap *s_pBmCursor;
-static tBodyBox s_sBodyPlayer;
-static tBodyBox *s_pGrabbedBox;
+static tPlayer s_sPlayer;
 static tBodyBox s_sBodyBox;
 static tSprite *s_pSpriteCrosshair;
 
@@ -48,29 +47,7 @@ static UWORD s_uwGameFrame;
 // static char s_szAccelerationX[13];
 // static char s_szAccelerationY[13];
 
-static UBYTE playerCanJump(void) {
-	return s_sBodyPlayer.isOnGround;
-}
-
-static tUwCoordYX getCrossPosition(void) {
-	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
-	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
-	tUwCoordYX sPos = {.uwX = uwMouseX + 8, .uwY = uwMouseY + 14};
-	return sPos;
-}
-
-static UBYTE playerTryShootSlipgateAt(UBYTE ubIndex, UBYTE ubAngle) {
-	if(s_sTracerSlipgate.isActive) {
-		return 0;
-	}
-
-	tUwCoordYX sDestinationPos = getCrossPosition();
-	UWORD uwSourceX = fix16_to_int(s_sBodyPlayer.fPosX) + s_sBodyPlayer.ubWidth / 2;
-	UWORD uwSourceY = fix16_to_int(s_sBodyPlayer.fPosY) + s_sBodyPlayer.ubHeight / 2;
-	tracerStart(&s_sTracerSlipgate, uwSourceX, uwSourceY, sDestinationPos.uwX, sDestinationPos.uwY, ubAngle, ubIndex);
-
-	return 1;
-}
+tTileTracer g_sTracerSlipgate;
 
 static UBYTE tileGetColor(tTile eTile) {
 	switch (eTile)
@@ -82,37 +59,6 @@ static UBYTE tileGetColor(tTile eTile) {
 		case TILE_FORCEFIELD_1: return 5;
 		default: return 16;
 	}
-}
-
-void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
-	UBYTE ubColor = tileGetColor(mapGetTileAt(ubTileX, ubTileY));
-	blitRect(
-		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
-	);
-	blitRect(
-		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
-	);
-
-#if defined(GAME_DRAW_GRID)
-	blitLine(
-		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
-	);
-	blitLine(
-		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
-	);
-	blitLine(
-		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
-	);
-	blitLine(
-		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
-	);
-#endif
 }
 
 // TODO: refactor and move to map.c?
@@ -128,20 +74,14 @@ static void loadLevel(UBYTE ubIndex) {
 	viewLoad(0);
 	s_uwGameFrame = 0;
 	mapLoad(ubIndex);
-	bodyInit(
-		&s_sBodyPlayer,
-		g_sCurrentLevel.fStartX,
-		g_sCurrentLevel.fStartY,
-		8, 16
-	);
-	s_pGrabbedBox = 0;
+	playerReset(&s_sPlayer, g_sCurrentLevel.fStartX, g_sCurrentLevel.fStartY);
 	bodyInit(
 		&s_sBodyBox,
 		fix16_from_int(200),
 		fix16_from_int(200),
 		8, 8
 	);
-	tracerInit(&s_sTracerSlipgate);
+	tracerInit(&g_sTracerSlipgate);
 	drawMap();
 	viewLoad(s_pView);
 }
@@ -154,8 +94,8 @@ static void saveLevel(UBYTE ubIndex) {
 	sprintf(szName, "level%03hhu.dat", ubIndex);
 	systemUse();
 	tFile *pFile = fileOpen(szName, "wb");
-	fileWrite(pFile, &s_sBodyPlayer.fPosX, sizeof(s_sBodyPlayer.fPosX));
-	fileWrite(pFile, &s_sBodyPlayer.fPosY, sizeof(s_sBodyPlayer.fPosY));
+	fileWrite(pFile, &s_sPlayer.sBody.fPosX, sizeof(s_sPlayer.sBody.fPosX));
+	fileWrite(pFile, &s_sPlayer.sBody.fPosY, sizeof(s_sPlayer.sBody.fPosY));
 	fileWrite(pFile, &cNewLine, sizeof(cNewLine));
 
 	for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
@@ -201,7 +141,7 @@ static void gameGsCreate(void) {
 
 	bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
 	bobInit(
-		&s_sBodyPlayer.sBob, 16, 16, 1,
+		&s_sPlayer.sBody.sBob, 16, 16, 1,
 		s_pPlayerFrames->Planes[0], s_pPlayerMasks->Planes[0],
 		0, 0
 	);
@@ -245,24 +185,9 @@ static void gameGsLoop(void) {
 
  	bobBegin(s_pBufferMain->pBack);
 
-	tUwCoordYX sPosCross = getCrossPosition();
+	tUwCoordYX sPosCross = gameGetCrossPosition();
 	s_pSpriteCrosshair->wX = sPosCross.uwX - 8;
 	s_pSpriteCrosshair->wY = sPosCross.uwY - 14;
-	if(s_pGrabbedBox) {
-		s_pGrabbedBox->fPosX = fix16_from_int(sPosCross.uwX - s_pGrabbedBox->ubWidth / 2);
-		s_pGrabbedBox->fPosY = fix16_from_int(sPosCross.uwY - s_pGrabbedBox->ubHeight / 2);
-	}
-	UBYTE ubAimAngle = getAngleBetweenPoints(
-		fix16_to_int(s_sBodyPlayer.fPosX), fix16_to_int(s_sBodyPlayer.fPosY),
-		sPosCross.uwX, sPosCross.uwY
-	);
-	tracerProcess(&s_sTracerSlipgate);
-	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB) || keyUse(KEY_Q)) {
-		playerTryShootSlipgateAt(0, ubAimAngle);
-	}
-	else if(mouseUse(MOUSE_PORT_1, MOUSE_RMB) || keyUse(KEY_E)) {
-		playerTryShootSlipgateAt(1, ubAimAngle);
-	}
 
 	// Level editor
 	if(keyCheck(KEY_Z)) {
@@ -283,77 +208,96 @@ static void gameGsLoop(void) {
 	}
 	spriteProcess(s_pSpriteCrosshair);
 
-	// Player
-	if(keyUse(KEY_W) && playerCanJump()) {
-		s_sBodyPlayer.fVelocityY = s_fPlayerJumpVeloY;
+	// Player's grabbed box
+	if(s_sPlayer.pGrabbedBox) {
+		s_sPlayer.pGrabbedBox->fPosX = fix16_from_int(sPosCross.uwX - s_sPlayer.pGrabbedBox->ubWidth / 2);
+		s_sPlayer.pGrabbedBox->fPosY = fix16_from_int(sPosCross.uwY - s_sPlayer.pGrabbedBox->ubHeight / 2);
 	}
 
-	if(s_sBodyPlayer.isOnGround) {
-		s_sBodyPlayer.fVelocityX = 0;
+	// Player shooting slipgates
+	UBYTE ubAimAngle = getAngleBetweenPoints(
+		fix16_to_int(s_sPlayer.sBody.fPosX), fix16_to_int(s_sPlayer.sBody.fPosY),
+		sPosCross.uwX, sPosCross.uwY
+	);
+	tracerProcess(&g_sTracerSlipgate);
+	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB) || keyUse(KEY_Q)) {
+		playerTryShootSlipgateAt(&s_sPlayer, 0, ubAimAngle);
+	}
+	else if(mouseUse(MOUSE_PORT_1, MOUSE_RMB) || keyUse(KEY_E)) {
+		playerTryShootSlipgateAt(&s_sPlayer, 1, ubAimAngle);
+	}
+
+	// Player movement
+	if(keyUse(KEY_W) && playerCanJump(&s_sPlayer)) {
+		s_sPlayer.sBody.fVelocityY = s_fPlayerJumpVeloY;
+	}
+
+	if(s_sPlayer.sBody.isOnGround) {
+		s_sPlayer.sBody.fVelocityX = 0;
 		if(keyCheck(KEY_A)) {
-			s_sBodyPlayer.fVelocityX = fix16_from_int(-PLAYER_VELO_DELTA_X_GROUND);
+			s_sPlayer.sBody.fVelocityX = fix16_from_int(-PLAYER_VELO_DELTA_X_GROUND);
 		}
 		else if(keyCheck(KEY_D)) {
-			s_sBodyPlayer.fVelocityX = fix16_from_int(PLAYER_VELO_DELTA_X_GROUND);
+			s_sPlayer.sBody.fVelocityX = fix16_from_int(PLAYER_VELO_DELTA_X_GROUND);
 		}
 	}
 	else {
 		if(keyCheck(KEY_A)) {
-			if(s_sBodyPlayer.fVelocityX >= 0) {
-				s_sBodyPlayer.fVelocityX = fix16_sub(
-					s_sBodyPlayer.fVelocityX,
+			if(s_sPlayer.sBody.fVelocityX >= 0) {
+				s_sPlayer.sBody.fVelocityX = fix16_sub(
+					s_sPlayer.sBody.fVelocityX,
 					PLAYER_VELO_DELTA_X_AIR
 				);
 			}
 		}
 		else if(keyCheck(KEY_D)) {
-			if(s_sBodyPlayer.fVelocityX <= 0) {
-				s_sBodyPlayer.fVelocityX = fix16_add(
-					s_sBodyPlayer.fVelocityX,
+			if(s_sPlayer.sBody.fVelocityX <= 0) {
+				s_sPlayer.sBody.fVelocityX = fix16_add(
+					s_sPlayer.sBody.fVelocityX,
 					PLAYER_VELO_DELTA_X_AIR
 				);
 			}
 		}
 	}
 
-	if(keyUse(KEY_T)) {
-		s_sBodyPlayer.fPosX = fix16_from_int(sPosCross.uwX);
-		s_sBodyPlayer.fPosY = fix16_from_int(sPosCross.uwY);
-	}
-	if(keyUse(KEY_Y)) {
-		s_sBodyBox.fPosX = fix16_from_int(sPosCross.uwX);
-		s_sBodyBox.fPosY = fix16_from_int(sPosCross.uwY);
-	}
-
+	// Player pickup
 	if(keyUse(KEY_F)) {
 		UWORD uwBoxX = fix16_to_int(s_sBodyBox.fPosX);
 		UWORD uwBoxY = fix16_to_int(s_sBodyBox.fPosY);
-		if(s_pGrabbedBox) {
-			s_pGrabbedBox = 0;
+		if(s_sPlayer.pGrabbedBox) {
+			s_sPlayer.pGrabbedBox = 0;
 		}
 		else {
 			if(
 				uwBoxX <= sPosCross.uwX && sPosCross.uwX < uwBoxX + s_sBodyBox.ubWidth &&
 				uwBoxY <= sPosCross.uwY && sPosCross.uwY < uwBoxY + s_sBodyBox.ubHeight
 			) {
-				s_pGrabbedBox = &s_sBodyBox;
+				s_sPlayer.pGrabbedBox = &s_sBodyBox;
 			}
 		}
 	}
 
+	// Debug stuff
+	if(keyUse(KEY_T)) {
+		bodyTeleport(&s_sPlayer.sBody, sPosCross.uwX, sPosCross.uwY);
+	}
+	if(keyUse(KEY_Y)) {
+		bodyTeleport(&s_sBodyBox, sPosCross.uwX, sPosCross.uwY);
+	}
+
 	bodySimulate(&s_sBodyBox);
 	bobPush(&s_sBodyBox.sBob);
-	bodySimulate(&s_sBodyPlayer);
-	bobPush(&s_sBodyPlayer.sBob);
+	bodySimulate(&s_sPlayer.sBody);
+	bobPush(&s_sPlayer.sBody.sBob);
 	bobPushingDone();
 	bobEnd();
 
-	// fix16_to_str(s_sBodyPlayer.fPosX, s_szPosX, 2);
-	// fix16_to_str(s_sBodyPlayer.fPosY, s_szPosY, 2);
-	// fix16_to_str(s_sBodyPlayer.fVelocityX, s_szVelocityX, 2);
-	// fix16_to_str(s_sBodyPlayer.fVelocityY, s_szVelocityY, 2);
-	// fix16_to_str(s_sBodyPlayer.fAccelerationX, s_szAccelerationX, 2);
-	// fix16_to_str(s_sBodyPlayer.fAccelerationY, s_szAccelerationY, 2);
+	// fix16_to_str(s_sPlayer.sBody.fPosX, s_szPosX, 2);
+	// fix16_to_str(s_sPlayer.sBody.fPosY, s_szPosY, 2);
+	// fix16_to_str(s_sPlayer.sBody.fVelocityX, s_szVelocityX, 2);
+	// fix16_to_str(s_sPlayer.sBody.fVelocityY, s_szVelocityY, 2);
+	// fix16_to_str(s_sPlayer.sBody.fAccelerationX, s_szAccelerationX, 2);
+	// fix16_to_str(s_sPlayer.sBody.fAccelerationY, s_szAccelerationY, 2);
 
 	// logWrite(
 	// 	"GF %hu end, pos %s,%s v %s,%s a %s,%s",
@@ -386,5 +330,48 @@ static void gameGsDestroy(void) {
 	bitmapDestroy(s_pBoxMasks);
 	bitmapDestroy(s_pBmCursor);
 }
+
+//------------------------------------------------------------------- PUBLIC FNS
+
+// TODO: replace with tile draw queue
+void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
+	UBYTE ubColor = tileGetColor(mapGetTileAt(ubTileX, ubTileY));
+	blitRect(
+		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
+	);
+	blitRect(
+		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
+	);
+
+#if defined(GAME_DRAW_GRID)
+	blitLine(
+		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
+	);
+	blitLine(
+		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
+	);
+	blitLine(
+		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
+	);
+	blitLine(
+		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+		ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
+	);
+#endif
+}
+
+tUwCoordYX gameGetCrossPosition(void) {
+	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
+	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
+	tUwCoordYX sPos = {.uwX = uwMouseX + 8, .uwY = uwMouseY + 14};
+	return sPos;
+}
+
+//-------------------------------------------------------------------- GAMESTATE
 
 tState g_sStateGame = { .cbCreate = gameGsCreate, .cbLoop = gameGsLoop, .cbDestroy = gameGsDestroy };

@@ -21,7 +21,10 @@ typedef struct tBodyBox {
 	UBYTE isOnGround;
 } tBodyBox;
 
-void bodySimulate(tBodyBox *pBody);
 void bodyInit(tBodyBox *pBody, fix16_t fPosX, fix16_t fPosY, UBYTE ubWidth, UBYTE ubHeight);
+
+void bodySimulate(tBodyBox *pBody);
+
+void bodyTeleport(tBodyBox *pBody, UWORD uwX, UWORD uwY);
 
 #endif // SLIPGATES_BODY_BOX_H

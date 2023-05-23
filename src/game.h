@@ -6,9 +6,13 @@
 #define SLIPGATES_GAME_H
 
 #include <ace/managers/state.h>
+#include "tile_tracer.h"
 
 extern tState g_sStateGame;
+extern tTileTracer g_sTracerSlipgate;
 
 void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY);
+
+tUwCoordYX gameGetCrossPosition(void);
 
 #endif // SLIPGATES_GAME_H
