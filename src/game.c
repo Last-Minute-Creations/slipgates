@@ -53,6 +53,7 @@ static UBYTE tileGetColor(tTile eTile) {
 		case TILE_SLIPGATE_1: return 8;
 		case TILE_SLIPGATE_2: return 13;
 		case TILE_FORCEFIELD_1: return 5;
+		case TILE_DEATH_FIELD_1: return 2;
 		default: return 16;
 	}
 }
@@ -200,6 +201,10 @@ static void gameGsLoop(void) {
 	}
 	else if(keyCheck(KEY_V)) {
 		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_FORCEFIELD_1;
+		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+	}
+	else if(keyCheck(KEY_B)) {
+		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_DEATH_FIELD_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	spriteProcess(s_pSpriteCrosshair);

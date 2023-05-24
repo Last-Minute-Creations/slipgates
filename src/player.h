@@ -10,7 +10,7 @@
 typedef struct tPlayer {
 	tBodyBox sBody;
 	tBodyBox *pGrabbedBox;
-	UBYTE ubHealth;
+	BYTE bHealth;
 } tPlayer;
 
 UBYTE playerTryShootSlipgateAt(tPlayer *pPlayer, UBYTE ubIndex, UBYTE ubAngle);

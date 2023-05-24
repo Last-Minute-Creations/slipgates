@@ -7,6 +7,11 @@
 
 #include <fixmath/fix16.h>
 #include <ace/managers/bob.h>
+#include "map.h"
+
+typedef void (*tCollisionHandler)(
+	tTile eTile, UBYTE ubTileX, UBYTE ubTileY, void *pData
+);
 
 typedef struct tBodyBox {
 	tBob sBob;
@@ -16,9 +21,12 @@ typedef struct tBodyBox {
 	fix16_t fVelocityY;
 	fix16_t fAccelerationX;
 	fix16_t fAccelerationY;
+	tCollisionHandler onCollided;
+	void *pOnCollidedData;
 	UBYTE ubWidth;
 	UBYTE ubHeight;
 	UBYTE isOnGround;
+	UBYTE isAlive;
 } tBodyBox;
 
 void bodyInit(tBodyBox *pBody, fix16_t fPosX, fix16_t fPosY, UBYTE ubWidth, UBYTE ubHeight);

@@ -4,14 +4,27 @@
 
 #include "body_box.h"
 #include "game.h"
-#include "map.h"
 
-void bodyInit(tBodyBox *pBody, fix16_t fPosX, fix16_t fPosY, UBYTE ubWidth, UBYTE ubHeight) {
+static UBYTE bodyCheckCollision(tBodyBox *pBody, UBYTE ubTileX, UBYTE ubTileY) {
+	tTile eTile = mapGetTileAt(ubTileX, ubTileY);
+	if(mapTileIsSolidForBodies(eTile)) {
+		if(pBody->onCollided) {
+			pBody->onCollided(eTile, ubTileX, ubTileY, pBody->pOnCollidedData);
+		}
+		return 1;
+	}
+	return 0;
+}
+
+void bodyInit(
+	tBodyBox *pBody, fix16_t fPosX, fix16_t fPosY, UBYTE ubWidth, UBYTE ubHeight
+) {
 	pBody->fPosX = fPosX;
 	pBody->fPosY = fPosY;
 	pBody->ubWidth = ubWidth;
 	pBody->ubHeight = ubHeight;
 	pBody->fAccelerationY = fix16_one / 4; // gravity
+	pBody->onCollided = 0;
 }
 
 void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
@@ -146,7 +159,10 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 }
 
 void bodySimulate(tBodyBox *pBody) {
-	pBody->fVelocityY = fix16_clamp(fix16_add(pBody->fVelocityY, pBody->fAccelerationY), fix16_from_int(-7), fix16_from_int(7));
+	pBody->fVelocityY = fix16_clamp(
+		fix16_add(pBody->fVelocityY, pBody->fAccelerationY),
+		fix16_from_int(-7), fix16_from_int(7)
+	);
 
 	fix16_t fNewPosX = fix16_add(pBody->fPosX, pBody->fVelocityX);
 	fix16_t fNewPosY = pBody->fPosY;
@@ -160,10 +176,11 @@ void bodySimulate(tBodyBox *pBody) {
 	if(pBody->fVelocityX > 0) {
 		// moving right
 		UWORD uwTileRight = (uwRight + 1) / MAP_TILE_SIZE;
+
 		if(
-			mapIsTileSolidForBodies(uwTileRight, uwTop / MAP_TILE_SIZE) ||
-			mapIsTileSolidForBodies(uwTileRight, uwMid / MAP_TILE_SIZE) ||
-			mapIsTileSolidForBodies(uwTileRight, uwBottom / MAP_TILE_SIZE)
+			bodyCheckCollision(pBody, uwTileRight, uwTop / MAP_TILE_SIZE) ||
+			bodyCheckCollision(pBody, uwTileRight, uwMid / MAP_TILE_SIZE) ||
+			bodyCheckCollision(pBody, uwTileRight, uwBottom / MAP_TILE_SIZE)
 		) {
 			fNewPosX = fix16_from_int(uwTileRight * MAP_TILE_SIZE - pBody->ubWidth);
 			pBody->fVelocityX = 0;
@@ -191,9 +208,9 @@ void bodySimulate(tBodyBox *pBody) {
 		// moving left
 		UWORD uwTileLeft = (uwLeft - 1) / MAP_TILE_SIZE;
 		if(
-			mapIsTileSolidForBodies(uwTileLeft, uwTop / MAP_TILE_SIZE) ||
-			mapIsTileSolidForBodies(uwTileLeft, uwMid / MAP_TILE_SIZE) ||
-			mapIsTileSolidForBodies(uwTileLeft, uwBottom / MAP_TILE_SIZE)
+			bodyCheckCollision(pBody, uwTileLeft, uwTop / MAP_TILE_SIZE) ||
+			bodyCheckCollision(pBody, uwTileLeft, uwMid / MAP_TILE_SIZE) ||
+			bodyCheckCollision(pBody, uwTileLeft, uwBottom / MAP_TILE_SIZE)
 		) {
 			fNewPosX = fix16_from_int((uwTileLeft + 1) * MAP_TILE_SIZE);
 			pBody->fVelocityX = 0;
@@ -234,8 +251,8 @@ void bodySimulate(tBodyBox *pBody) {
 		// falling down
 		UWORD uwTileBottom = (uwBottom + 1) / MAP_TILE_SIZE;
 		if(
-			mapIsTileSolidForBodies(uwLeft / MAP_TILE_SIZE, uwTileBottom) ||
-			mapIsTileSolidForBodies(uwRight / MAP_TILE_SIZE, uwTileBottom)
+			bodyCheckCollision(pBody, uwLeft / MAP_TILE_SIZE, uwTileBottom) ||
+			bodyCheckCollision(pBody, uwRight / MAP_TILE_SIZE, uwTileBottom)
 		) {
 			// collide with floor
 			uwTop = ((uwTileBottom) * MAP_TILE_SIZE) - pBody->ubHeight;
@@ -263,8 +280,8 @@ void bodySimulate(tBodyBox *pBody) {
 	else if(pBody->fVelocityY < 0) {
 		// flying up
 		if(
-			mapIsTileSolidForBodies(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) ||
-			mapIsTileSolidForBodies(uwRight / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE)
+			bodyCheckCollision(pBody, uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) ||
+			bodyCheckCollision(pBody, uwRight / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE)
 		) {
 			// collide with ceil
 			fNewPosY = fix16_from_int((uwTop / MAP_TILE_SIZE + 1) * MAP_TILE_SIZE);

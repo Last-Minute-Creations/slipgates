@@ -16,7 +16,8 @@
 #define MAP_TILE_MASK_SOLID_FOR_BODIES BV(7)
 #define MAP_TILE_MASK_SOLID_FOR_PROJECTILES BV(6)
 #define MAP_TILE_MASK_SLIPGATABLE BV(5)
-#define MAP_TILE_INDEX_MASK ~(MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_SLIPGATABLE)
+#define MAP_TILE_MASK_LETHAL BV(4)
+#define MAP_TILE_INDEX_MASK ~(MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_SLIPGATABLE | MAP_TILE_MASK_LETHAL)
 
 typedef enum tTile {
 	TILE_BG_1               = 0,
@@ -25,6 +26,7 @@ typedef enum tTile {
 	TILE_WALL_NO_SLIPGATE_1 = 3 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES,
 	TILE_WALL_1             = 4 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_SLIPGATABLE,
 	TILE_FORCEFIELD_1       = 5 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SLIPGATABLE,
+	TILE_DEATH_FIELD_1      = 6 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_LETHAL,
 } tTile;
 
 typedef struct tLevel {
@@ -38,15 +40,25 @@ extern tLevel g_sCurrentLevel;
 
 void mapLoad(UBYTE ubIndex);
 
-UBYTE mapIsTileEmpty(UBYTE ubTileX, UBYTE ubTileY);
-
-UBYTE mapIsTileSolidForProjectiles(UBYTE ubTileX, UBYTE ubTileY);
-
-UBYTE mapIsTileSolidForBodies(UBYTE ubTileX, UBYTE ubTileY);
-
-UBYTE mapIsTileSlipgatable(UBYTE ubTileX, UBYTE ubTileY);
+//----------------------------------------------------------------- MAP CHECKERS
 
 tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY);
+
+UBYTE mapIsTileEmptyAt(UBYTE ubTileX, UBYTE ubTileY);
+
+UBYTE mapIsTileSolidForProjectilesAt(UBYTE ubTileX, UBYTE ubTileY);
+
+UBYTE mapIsTileSolidForBodiesAt(UBYTE ubTileX, UBYTE ubTileY);
+
+UBYTE mapIsTileSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY);
+
+//---------------------------------------------------------------- TILE CHECKERS
+
+UBYTE mapTileIsSolidForBodies(tTile eTile);
+
+UBYTE mapTileIsLethal(tTile eTile);
+
+//-------------------------------------------------------------------- SLIPGATES
 
 void mapCloseSlipgates(void);
 

@@ -17,8 +17,21 @@ static fix16_t s_fPlayerJumpVeloY = F16(-3);
 
 //------------------------------------------------------------------ PRIVATE FNS
 
+static void playerDamage(tPlayer *pPlayer, UBYTE ubAmount) {
+	pPlayer->bHealth = MAX(0, pPlayer->bHealth - ubAmount);
+}
+
 static UBYTE playerCanJump(tPlayer *pPlayer) {
 	return pPlayer->sBody.isOnGround;
+}
+
+static void playerOnCollided(
+	tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY, void *pData
+) {
+	if(mapTileIsLethal(eTile)) {
+		tPlayer *pPlayer = pData;
+		playerDamage(pPlayer, 100);
+	}
 }
 
 //------------------------------------------------------------------- PUBLIC FNS
@@ -43,12 +56,14 @@ UBYTE playerTryShootSlipgateAt(
 
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	bodyInit(&pPlayer->sBody, fPosX, fPosY, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT);
+	pPlayer->sBody.onCollided = playerOnCollided;
+	pPlayer->sBody.pOnCollidedData = pPlayer;
 	pPlayer->pGrabbedBox = 0;
-	pPlayer->ubHealth = 1;
+	pPlayer->bHealth = 1;
 }
 
 void playerProcess(tPlayer *pPlayer) {
-	if(!pPlayer->ubHealth) {
+	if(!pPlayer->bHealth) {
 		return;
 	}
 
