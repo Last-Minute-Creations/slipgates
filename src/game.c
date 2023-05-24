@@ -36,6 +36,7 @@ static tBodyBox s_sBodyBox;
 static tSprite *s_pSpriteCrosshair;
 
 static UWORD s_uwGameFrame;
+static UBYTE s_ubCurrentLevel;
 // static char s_szPosX[13];
 // static char s_szPosY[13];
 // static char s_szVelocityX[13];
@@ -69,6 +70,7 @@ static void drawMap(void) {
 
 static void loadLevel(UBYTE ubIndex) {
 	viewLoad(0);
+	s_ubCurrentLevel = ubIndex;
 	s_uwGameFrame = 0;
 	mapLoad(ubIndex);
 	playerReset(&s_sPlayer, g_sCurrentLevel.fStartX, g_sCurrentLevel.fStartY);
@@ -217,6 +219,9 @@ static void gameGsLoop(void) {
 	}
 	if(keyUse(KEY_Y)) {
 		bodyTeleport(&s_sBodyBox, sPosCross.uwX, sPosCross.uwY);
+	}
+	if(keyUse(KEY_G)) {
+		loadLevel(s_ubCurrentLevel);
 	}
 
 	bodySimulate(&s_sBodyBox);
