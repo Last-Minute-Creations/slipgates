@@ -13,6 +13,9 @@ General:
 	✔ Basic box pickup @done(23-05-22 21:13)
 	✔ Health system @done(23-05-24 14:32)
 	✔ Restarting map @done(23-05-24 16:09)
+	✔ Transitions between levels @done(23-05-25 09:44)
+	☐ Menu
+	☐ Outro screen
 	☐ Collisions with boxes
 	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
 	☐ Entrance/exit tiles
@@ -42,8 +45,8 @@ Misc objects:
 	☐ Lifts
 	☐ Crushers
 	☐ Energy ball
-	☐ Entrance
 	☐ Doors
+	☐ Entrance door
 
 Momentum, normal-wise:
 	✔ up-up @done(23-05-19 09:00)

@@ -37,6 +37,9 @@ static void playerOnCollided(
 		tPlayer *pPlayer = pData;
 		playerDamage(pPlayer, 100);
 	}
+	else if(mapTileIsExit(eTile)) {
+		gameMarkExitReached();
+	}
 }
 
 //------------------------------------------------------------------- PUBLIC FNS

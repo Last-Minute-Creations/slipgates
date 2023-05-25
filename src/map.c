@@ -102,6 +102,10 @@ UBYTE mapTileIsLethal(tTile eTile) {
 	return (eTile & MAP_TILE_MASK_LETHAL) != 0;
 }
 
+UBYTE mapTileIsExit(tTile eTile) {
+	return (eTile & MAP_TILE_MASK_EXIT) != 0;
+}
+
 //-------------------------------------------------------------------- SLIPGATES
 
 void mapCloseSlipgates(void) {

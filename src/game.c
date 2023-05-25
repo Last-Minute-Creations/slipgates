@@ -20,7 +20,14 @@
 #include "tile_tracer.h"
 #include "player.h"
 
+// DEBUG SWITCHES
 // #define GAME_DRAW_GRID
+
+typedef enum tExitState {
+	EXIT_NONE,
+	EXIT_RESTART,
+	EXIT_NEXT,
+} tExitState;
 
 static tView *s_pView;
 static tVPort *s_pVpMain;
@@ -38,6 +45,7 @@ static tSprite *s_pSpriteCrosshair;
 static UBYTE s_isPressing;
 static UWORD s_uwGameFrame;
 static UBYTE s_ubCurrentLevel;
+static tExitState s_eExitState;
 // static char s_szPosX[13];
 // static char s_szPosY[13];
 // static char s_szVelocityX[13];
@@ -56,6 +64,7 @@ static UBYTE tileGetColor(tTile eTile) {
 		case TILE_SLIPGATE_2: return 13;
 		case TILE_FORCEFIELD_1: return 5;
 		case TILE_DEATH_FIELD_1: return 2;
+		case TILE_EXIT_1: return 14;
 		default: return 16;
 	}
 }
@@ -69,7 +78,10 @@ static void drawMap(void) {
 	}
 }
 
-static void onBoxCollided(UNUSED_ARG tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY, UNUSED_ARG void *pData) {
+static void onBoxCollided(
+	UNUSED_ARG tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY,
+	UNUSED_ARG void *pData
+) {
 	s_isPressing = 1;
 }
 
@@ -78,7 +90,9 @@ static void loadLevel(UBYTE ubIndex) {
 	s_ubCurrentLevel = ubIndex;
 	s_uwGameFrame = 0;
 	s_isPressing = 0;
+	s_eExitState = EXIT_NONE;
 	mapLoad(ubIndex);
+	bobDiscardUndraw();
 	playerReset(&s_sPlayer, g_sCurrentLevel.fStartX, g_sCurrentLevel.fStartY);
 	bodyInit(
 		&s_sBodyBox,
@@ -168,6 +182,16 @@ static void gameGsCreate(void) {
 static void gameGsLoop(void) {
 	g_pCustom->color[0] = 0xF89;
 
+	if(s_eExitState != EXIT_NONE) {
+		if(s_eExitState == EXIT_NEXT) {
+			loadLevel(++s_ubCurrentLevel);
+		}
+		else if(s_eExitState == EXIT_RESTART) {
+			loadLevel(s_ubCurrentLevel);
+		}
+		return;
+	}
+
 	if(keyUse(KEY_ESCAPE)) {
 		statePop(g_pGameStateManager);
 		return;
@@ -215,6 +239,10 @@ static void gameGsLoop(void) {
 		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_DEATH_FIELD_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
+	else if(keyCheck(KEY_N)) {
+		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_EXIT_1;
+		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+	}
 	spriteProcess(s_pSpriteCrosshair);
 
 	playerProcess(&s_sPlayer);
@@ -227,7 +255,7 @@ static void gameGsLoop(void) {
 		bodyTeleport(&s_sBodyBox, sPosCross.uwX, sPosCross.uwY);
 	}
 	if(keyUse(KEY_G)) {
-		loadLevel(s_ubCurrentLevel);
+		s_eExitState = EXIT_RESTART;
 	}
 
 	bodySimulate(&s_sBodyBox);
@@ -321,6 +349,10 @@ tUwCoordYX gameGetCrossPosition(void) {
 
 tBodyBox *gameGetBox(void) {
 	return &s_sBodyBox;
+}
+
+void gameMarkExitReached(void) {
+	s_eExitState = EXIT_NEXT;
 }
 
 //-------------------------------------------------------------------- GAMESTATE

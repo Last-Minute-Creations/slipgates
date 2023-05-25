@@ -18,4 +18,6 @@ tUwCoordYX gameGetCrossPosition(void);
 
 tBodyBox *gameGetBox(void);
 
+void gameMarkExitReached(void);
+
 #endif // SLIPGATES_GAME_H
