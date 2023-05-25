@@ -55,15 +55,13 @@ void mapLoad(UBYTE ubIndex) {
 		tFile *pFile = fileOpen(szName, "rb");
 		fileRead(pFile, &g_sCurrentLevel.fStartX, sizeof(g_sCurrentLevel.fStartX));
 		fileRead(pFile, &g_sCurrentLevel.fStartY, sizeof(g_sCurrentLevel.fStartY));
-		fileSeek(pFile, sizeof(UBYTE), SEEK_CUR); // skip newline
 
 		for(UBYTE y = 0; y < MAP_TILE_HEIGHT; ++y) {
 			for(UBYTE x = 0; x < MAP_TILE_WIDTH; ++x) {
-				UBYTE ubGlyph;
-				fileRead(pFile, &ubGlyph, sizeof(ubGlyph));
-				g_sCurrentLevel.pTiles[x][y] = ubGlyph - '0';
+				UWORD uwTileCode;
+				fileRead(pFile, &uwTileCode, sizeof(uwTileCode));
+				g_sCurrentLevel.pTiles[x][y] = uwTileCode;
 			}
-			fileSeek(pFile, sizeof(UBYTE), SEEK_CUR); // skip newline
 		}
 		fileClose(pFile);
 		systemUnuse();

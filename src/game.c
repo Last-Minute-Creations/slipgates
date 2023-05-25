@@ -96,20 +96,17 @@ static void saveLevel(UBYTE ubIndex) {
 	mapCloseSlipgates();
 
 	char szName[13];
-	char cNewLine = '\n';
 	sprintf(szName, "level%03hhu.dat", ubIndex);
 	systemUse();
 	tFile *pFile = fileOpen(szName, "wb");
 	fileWrite(pFile, &s_sPlayer.sBody.fPosX, sizeof(s_sPlayer.sBody.fPosX));
 	fileWrite(pFile, &s_sPlayer.sBody.fPosY, sizeof(s_sPlayer.sBody.fPosY));
-	fileWrite(pFile, &cNewLine, sizeof(cNewLine));
 
 	for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
 		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
-			UBYTE ubGlyph = '0' + mapGetTileAt(ubX, ubY);
-			fileWrite(pFile, &ubGlyph, sizeof(ubGlyph));
+			UWORD uwTileCode = mapGetTileAt(ubX, ubY);
+			fileWrite(pFile, &uwTileCode, sizeof(uwTileCode));
 		}
-		fileWrite(pFile, &cNewLine, sizeof(cNewLine));
 	}
 	fileClose(pFile);
 	systemUnuse();
