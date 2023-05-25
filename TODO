@@ -20,8 +20,9 @@ General:
 	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
 	☐ Entrance/exit tiles
 	☐ Fix overlapping slipgates
-	☐ Abyss
-	☐ Cube spawner
+	☐ Abyss (kills players and boxes)
+	☐ Make sure lethal blocks doesn't kill and collide with boxes
+	☐ Cube spawner (1 chamber)
 	☐ Basic turrets
 	☐ Multi-bob character body
 	☐ Bigger max velocity
@@ -37,15 +38,17 @@ Tiles:
 	✔ No-portal wall @done(23-05-23 14:44)
 	✔ Impassable (blue) beam @done(23-05-23 15:02)
 	✔ Death (red) beam @done(23-05-24 14:31)
-	☐ Electricity floor/ceil
-	☐ Button
-	☐ Togglable wall
+	✔ Button @done(23-05-25 20:36)
+	☐ Electricity floor/ceil (7 chambers)
+	☐ Togglable wall (3 chambers)
 
 Misc objects:
-	☐ Lifts
-	☐ Crushers
-	☐ Energy ball
-	☐ Doors
+	✔ Doors (17 chambers) @done(23-05-25 20:33)
+	☐ ANDed doors
+	☐ Generalize, configurable interaction relations
+	☐ Energy ball (10 chambers)
+	☐ Lifts (4 chambers)
+	☐ Crushers (3 chambers)
 	☐ Entrance door
 
 Momentum, normal-wise:

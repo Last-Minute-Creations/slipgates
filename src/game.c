@@ -42,7 +42,6 @@ static tPlayer s_sPlayer;
 static tBodyBox s_sBodyBox;
 static tSprite *s_pSpriteCrosshair;
 
-static UBYTE s_isPressing;
 static UWORD s_uwGameFrame;
 static UBYTE s_ubCurrentLevel;
 static tExitState s_eExitState;
@@ -65,6 +64,8 @@ static UBYTE tileGetColor(tTile eTile) {
 		case TILE_FORCEFIELD_1: return 5;
 		case TILE_DEATH_FIELD_1: return 2;
 		case TILE_EXIT_1: return 14;
+		case TILE_BUTTON_1: return 12;
+		case TILE_GATE_1: return 11;
 		default: return 16;
 	}
 }
@@ -82,14 +83,15 @@ static void onBoxCollided(
 	UNUSED_ARG tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY,
 	UNUSED_ARG void *pData
 ) {
-	s_isPressing = 1;
+	if(eTile == TILE_BUTTON_1) {
+		mapInteractAt(ubTileX, ubTileY);
+	}
 }
 
 static void loadLevel(UBYTE ubIndex) {
 	viewLoad(0);
 	s_ubCurrentLevel = ubIndex;
 	s_uwGameFrame = 0;
-	s_isPressing = 0;
 	s_eExitState = EXIT_NONE;
 	mapLoad(ubIndex);
 	bobDiscardUndraw();
@@ -210,10 +212,9 @@ static void gameGsLoop(void) {
 		}
 	}
 
-	s_isPressing = 0;
-
  	bobBegin(s_pBufferMain->pBack);
 
+	mapProcess();
 	tUwCoordYX sPosCross = gameGetCrossPosition();
 	s_pSpriteCrosshair->wX = sPosCross.uwX - 8;
 	s_pSpriteCrosshair->wY = sPosCross.uwY - 14;
@@ -243,6 +244,14 @@ static void gameGsLoop(void) {
 		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_EXIT_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
+	else if(keyCheck(KEY_M)) {
+		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_BUTTON_1;
+		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+	}
+	else if(keyCheck(KEY_COMMA)) {
+		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_GATE_1;
+		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+	}
 	spriteProcess(s_pSpriteCrosshair);
 
 	playerProcess(&s_sPlayer);
@@ -264,8 +273,6 @@ static void gameGsLoop(void) {
 	bobPush(&s_sPlayer.sBody.sBob);
 	bobPushingDone();
 	bobEnd();
-
-	blitRect(s_pBufferMain->pBack, 20, 20, 8, 8, s_isPressing ? 13 : 8);
 
 	// fix16_to_str(s_sPlayer.sBody.fPosX, s_szPosX, 2);
 	// fix16_to_str(s_sPlayer.sBody.fPosY, s_szPosY, 2);

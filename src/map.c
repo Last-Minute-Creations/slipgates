@@ -6,8 +6,20 @@
 #include <bartman/gcc8_c_support.h>
 #include <ace/utils/file.h>
 #include <ace/managers/system.h>
+#include "game.h"
+
+#define MAP_INTERACTION_TARGET_MAX 2
+
+typedef struct tInteraction {
+	tUbCoordYX pDoorTiles[MAP_INTERACTION_TARGET_MAX];
+	UBYTE ubTargetCount;
+	UBYTE isActive;
+	UBYTE wasActive;
+} tInteraction;
 
 //----------------------------------------------------------------- PRIVATE VARS
+
+static tInteraction s_sInteraction;
 
 //------------------------------------------------------------ PRIVATE FUNCTIONS
 
@@ -30,6 +42,11 @@ static void setSlipgateTiles(const tSlipgate *pSlipgate, tTile eTile) {
 //------------------------------------------------------------- PUBLIC FUNCTIONS
 
 void mapLoad(UBYTE ubIndex) {
+	// Reset all interactions
+	s_sInteraction.isActive = 0;
+	s_sInteraction.wasActive = 0;
+	s_sInteraction.ubTargetCount = 0;
+
 	if(ubIndex == 0) {
 		// hadcoded level
 		memset(&g_sCurrentLevel, 0, sizeof(g_sCurrentLevel));
@@ -56,11 +73,22 @@ void mapLoad(UBYTE ubIndex) {
 		fileRead(pFile, &g_sCurrentLevel.fStartX, sizeof(g_sCurrentLevel.fStartX));
 		fileRead(pFile, &g_sCurrentLevel.fStartY, sizeof(g_sCurrentLevel.fStartY));
 
-		for(UBYTE y = 0; y < MAP_TILE_HEIGHT; ++y) {
-			for(UBYTE x = 0; x < MAP_TILE_WIDTH; ++x) {
+		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
+			for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
 				UWORD uwTileCode;
 				fileRead(pFile, &uwTileCode, sizeof(uwTileCode));
-				g_sCurrentLevel.pTiles[x][y] = uwTileCode;
+				g_sCurrentLevel.pTiles[ubX][ubY] = uwTileCode;
+
+				if(uwTileCode == TILE_GATE_1) {
+					if(s_sInteraction.ubTargetCount >= MAP_INTERACTION_TARGET_MAX) {
+						logWrite("ERR: Interaction target limit reached!");
+					}
+					else {
+						s_sInteraction.pDoorTiles[s_sInteraction.ubTargetCount].ubX = ubX;
+						s_sInteraction.pDoorTiles[s_sInteraction.ubTargetCount].ubY = ubY;
+						++s_sInteraction.ubTargetCount;
+					}
+				}
 			}
 		}
 		fileClose(pFile);
@@ -68,6 +96,35 @@ void mapLoad(UBYTE ubIndex) {
 	}
 	g_pSlipgates[0].eNormal = DIRECTION_NONE;
 	g_pSlipgates[1].eNormal = DIRECTION_NONE;
+}
+
+void mapProcess(void) {
+	// Process effects of all interactions
+	if(s_sInteraction.isActive) {
+		if(!s_sInteraction.wasActive) {
+			for(UBYTE i = 0; i < s_sInteraction.ubTargetCount; ++i) {
+				g_sCurrentLevel.pTiles[s_sInteraction.pDoorTiles[i].ubX][s_sInteraction.pDoorTiles[i].ubY] = TILE_BG_1;
+				gameDrawTile(s_sInteraction.pDoorTiles[i].ubX, s_sInteraction.pDoorTiles[i].ubY);
+			}
+			s_sInteraction.wasActive = 1;
+		}
+
+		// Reset interaction for refresh by body collisions
+		s_sInteraction.isActive = 0;
+	}
+	else {
+		if(s_sInteraction.wasActive) {
+			for(UBYTE i = 0; i < s_sInteraction.ubTargetCount; ++i) {
+				g_sCurrentLevel.pTiles[s_sInteraction.pDoorTiles[i].ubX][s_sInteraction.pDoorTiles[i].ubY] = TILE_GATE_1;
+				gameDrawTile(s_sInteraction.pDoorTiles[i].ubX, s_sInteraction.pDoorTiles[i].ubY);
+			}
+			s_sInteraction.wasActive = 0;
+		}
+	}
+}
+
+void mapInteractAt(UNUSED_ARG UBYTE ubX, UNUSED_ARG UBYTE ubY) {
+	s_sInteraction.isActive = 1;
 }
 
 //----------------------------------------------------------------- MAP CHECKERS

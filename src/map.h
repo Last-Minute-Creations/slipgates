@@ -5,9 +5,9 @@
 #ifndef SLIPGATES_MAP_H
 #define SLIPGATES_MAP_H
 
-#include "slipgate.h"
 #include <fixmath/fix16.h>
 #include <ace/macros.h>
+#include "slipgate.h"
 
 #define MAP_TILE_SHIFT 3
 #define MAP_TILE_SIZE (1 << MAP_TILE_SHIFT)
@@ -29,6 +29,8 @@ typedef enum tTile {
 	TILE_FORCEFIELD_1       = 5 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SLIPGATABLE,
 	TILE_DEATH_FIELD_1      = 6 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_LETHAL,
 	TILE_EXIT_1             = 7 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_EXIT,
+	TILE_BUTTON_1           = 8 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES,
+	TILE_GATE_1             = 9 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES
 } tTile;
 
 typedef struct tLevel {
@@ -41,6 +43,10 @@ extern tSlipgate g_pSlipgates[2];
 extern tLevel g_sCurrentLevel;
 
 void mapLoad(UBYTE ubIndex);
+
+void mapProcess(void);
+
+void mapInteractAt(UBYTE ubX, UBYTE ubY);
 
 //----------------------------------------------------------------- MAP CHECKERS
 
