@@ -35,6 +35,7 @@ static tPlayer s_sPlayer;
 static tBodyBox s_sBodyBox;
 static tSprite *s_pSpriteCrosshair;
 
+static UBYTE s_isPressing;
 static UWORD s_uwGameFrame;
 static UBYTE s_ubCurrentLevel;
 // static char s_szPosX[13];
@@ -68,10 +69,15 @@ static void drawMap(void) {
 	}
 }
 
+static void onBoxCollided(UNUSED_ARG tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY, UNUSED_ARG void *pData) {
+	s_isPressing = 1;
+}
+
 static void loadLevel(UBYTE ubIndex) {
 	viewLoad(0);
 	s_ubCurrentLevel = ubIndex;
 	s_uwGameFrame = 0;
+	s_isPressing = 0;
 	mapLoad(ubIndex);
 	playerReset(&s_sPlayer, g_sCurrentLevel.fStartX, g_sCurrentLevel.fStartY);
 	bodyInit(
@@ -80,6 +86,7 @@ static void loadLevel(UBYTE ubIndex) {
 		fix16_from_int(200),
 		8, 8
 	);
+	s_sBodyBox.onCollided = onBoxCollided;
 	tracerInit(&g_sTracerSlipgate);
 	drawMap();
 	viewLoad(s_pView);
@@ -182,6 +189,8 @@ static void gameGsLoop(void) {
 		}
 	}
 
+	s_isPressing = 0;
+
  	bobBegin(s_pBufferMain->pBack);
 
 	tUwCoordYX sPosCross = gameGetCrossPosition();
@@ -230,6 +239,8 @@ static void gameGsLoop(void) {
 	bobPush(&s_sPlayer.sBody.sBob);
 	bobPushingDone();
 	bobEnd();
+
+	blitRect(s_pBufferMain->pBack, 20, 20, 8, 8, s_isPressing ? 13 : 8);
 
 	// fix16_to_str(s_sPlayer.sBody.fPosX, s_szPosX, 2);
 	// fix16_to_str(s_sPlayer.sBody.fPosY, s_szPosY, 2);
