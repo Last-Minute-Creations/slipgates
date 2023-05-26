@@ -134,18 +134,20 @@ void playerProcess(tPlayer *pPlayer) {
 	// Player pickup
 	if(keyUse(KEY_F)) {
 		// TODO: generalize using collision tilemap
-		tBodyBox *pBox = gameGetBox();
-		UWORD uwBoxX = fix16_to_int(pBox->fPosX);
-		UWORD uwBoxY = fix16_to_int(pBox->fPosY);
 		if(pPlayer->pGrabbedBox) {
 			pPlayer->pGrabbedBox = 0;
 		}
 		else {
-			if(
-				uwBoxX <= sPosCross.uwX && sPosCross.uwX < uwBoxX + pBox->ubWidth &&
-				uwBoxY <= sPosCross.uwY && sPosCross.uwY < uwBoxY + pBox->ubHeight
-			) {
-				pPlayer->pGrabbedBox = pBox;
+			tBodyBox *pBox = gameGetBoxAt(sPosCross.uwX, sPosCross.uwY);
+			if(pBox) {
+				UWORD uwBoxX = fix16_to_int(pBox->fPosX);
+				UWORD uwBoxY = fix16_to_int(pBox->fPosY);
+				if(
+					uwBoxX <= sPosCross.uwX && sPosCross.uwX < uwBoxX + pBox->ubWidth &&
+					uwBoxY <= sPosCross.uwY && sPosCross.uwY < uwBoxY + pBox->ubHeight
+				) {
+					pPlayer->pGrabbedBox = pBox;
+				}
 			}
 		}
 	}

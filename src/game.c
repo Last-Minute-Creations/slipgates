@@ -20,6 +20,8 @@
 #include "tile_tracer.h"
 #include "player.h"
 
+#define GAME_BOXES_MAX 5
+
 // DEBUG SWITCHES
 // #define GAME_DRAW_GRID
 #define GAME_EDITOR_ENABLED
@@ -40,7 +42,8 @@ static tBitMap *s_pBoxFrames;
 static tBitMap *s_pBoxMasks;
 static tBitMap *s_pBmCursor;
 static tPlayer s_sPlayer;
-static tBodyBox s_sBodyBox;
+static tBodyBox s_pBoxBodies[GAME_BOXES_MAX];
+static UBYTE s_ubBoxCount;
 static tSprite *s_pSpriteCrosshair;
 
 static UWORD s_uwGameFrame;
@@ -112,13 +115,10 @@ static void loadLevel(UBYTE ubIndex) {
 	mapLoad(ubIndex);
 	bobDiscardUndraw();
 	playerReset(&s_sPlayer, g_sCurrentLevel.fStartX, g_sCurrentLevel.fStartY);
-	bodyInit(
-		&s_sBodyBox,
-		fix16_from_int(200),
-		fix16_from_int(200),
-		8, 8
-	);
-	s_sBodyBox.onCollided = onBoxCollided;
+	for(UBYTE i = 0; i < GAME_BOXES_MAX; ++i) {
+		bodyInit(&s_pBoxBodies[i], 0, 0, 8, 8);
+		s_pBoxBodies[i].onCollided = onBoxCollided;
+	}
 	tracerInit(&g_sTracerSlipgate);
 	drawMap();
 	viewLoad(s_pView);
@@ -188,14 +188,15 @@ static void gameGsCreate(void) {
 	bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
 	bobInit(
 		&s_sPlayer.sBody.sBob, 16, 16, 1,
-		s_pPlayerFrames->Planes[0], s_pPlayerMasks->Planes[0],
-		0, 0
+		s_pPlayerFrames->Planes[0], s_pPlayerMasks->Planes[0], 0, 0
 	);
-	bobInit(
-		&s_sBodyBox.sBob, 16, 8, 1,
-		s_pBoxFrames->Planes[0], s_pBoxMasks->Planes[0],
-		0, 0
-	);
+	for(UBYTE i = 0; i < GAME_BOXES_MAX; ++i) {
+		bobInit(
+			&s_pBoxBodies[i].sBob, 16, 8, 1,
+			s_pBoxFrames->Planes[0], s_pBoxMasks->Planes[0], 0, 0
+		);
+	}
+
 	bobReallocateBgBuffers();
 
 	spriteManagerCreate(s_pView, 0);
@@ -326,7 +327,9 @@ static void gameGsLoop(void) {
 		bodyTeleport(&s_sPlayer.sBody, sPosCross.uwX, sPosCross.uwY);
 	}
 	if(keyUse(KEY_Y)) {
-		bodyTeleport(&s_sBodyBox, sPosCross.uwX, sPosCross.uwY);
+		if(s_ubBoxCount < GAME_BOXES_MAX) {
+			bodyTeleport(&s_pBoxBodies[s_ubBoxCount++], sPosCross.uwX, sPosCross.uwY);
+		}
 	}
 #endif
 
@@ -337,8 +340,10 @@ static void gameGsLoop(void) {
 		s_eExitState = EXIT_RESTART;
 	}
 
-	bodySimulate(&s_sBodyBox);
-	bobPush(&s_sBodyBox.sBob);
+	for(UBYTE i = 0; i < s_ubBoxCount; ++i) {
+		bodySimulate(&s_pBoxBodies[i]);
+		bobPush(&s_pBoxBodies[i].sBob);
+	}
 	bodySimulate(&s_sPlayer.sBody);
 	bobPush(&s_sPlayer.sBody.sBob);
 	bobPushingDone();
@@ -411,6 +416,21 @@ static void gameDrawTileInteractionMask(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubMa
 	}
 }
 
+tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY) {
+	for(UBYTE i = 0; i < s_ubBoxCount; ++i) {
+		tBodyBox *pBox = &s_pBoxBodies[i];
+		UWORD uwBoxX = fix16_to_int(pBox->fPosX);
+		UWORD uwBoxY = fix16_to_int(pBox->fPosY);
+		if(
+			uwBoxX < uwX && uwX < uwBoxX + pBox->ubWidth &&
+			uwBoxY < uwY && uwY < uwBoxY + pBox->ubHeight
+		) {
+			return pBox;
+		}
+	}
+	return 0;
+}
+
 //------------------------------------------------------------------- PUBLIC FNS
 
 // TODO: replace with tile draw queue
@@ -464,10 +484,6 @@ tUwCoordYX gameGetCrossPosition(void) {
 	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
 	tUwCoordYX sPos = {.uwX = uwMouseX + 8, .uwY = uwMouseY + 14};
 	return sPos;
-}
-
-tBodyBox *gameGetBox(void) {
-	return &s_sBodyBox;
 }
 
 void gameMarkExitReached(void) {

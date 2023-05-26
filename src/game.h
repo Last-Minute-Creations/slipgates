@@ -16,7 +16,7 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY);
 
 tUwCoordYX gameGetCrossPosition(void);
 
-tBodyBox *gameGetBox(void);
+tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY);
 
 void gameMarkExitReached(void);
 
