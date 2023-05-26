@@ -20,8 +20,6 @@
 #include "tile_tracer.h"
 #include "player.h"
 
-#define GAME_BOXES_MAX 5
-
 // DEBUG SWITCHES
 // #define GAME_DRAW_GRID
 #define GAME_EDITOR_ENABLED
@@ -42,8 +40,7 @@ static tBitMap *s_pBoxFrames;
 static tBitMap *s_pBoxMasks;
 static tBitMap *s_pBmCursor;
 static tPlayer s_sPlayer;
-static tBodyBox s_pBoxBodies[GAME_BOXES_MAX];
-static UBYTE s_ubBoxCount;
+static tBodyBox s_pBoxBodies[MAP_BOXES_MAX];
 static tSprite *s_pSpriteCrosshair;
 
 static UWORD s_uwGameFrame;
@@ -114,45 +111,31 @@ static void loadLevel(UBYTE ubIndex) {
 	s_eExitState = EXIT_NONE;
 	mapLoad(ubIndex);
 	bobDiscardUndraw();
-	playerReset(&s_sPlayer, g_sCurrentLevel.fStartX, g_sCurrentLevel.fStartY);
-	for(UBYTE i = 0; i < GAME_BOXES_MAX; ++i) {
+	playerReset(&s_sPlayer, g_sCurrentLevel.sSpawnPos.fX, g_sCurrentLevel.sSpawnPos.fY);
+	for(UBYTE i = 0; i < MAP_BOXES_MAX; ++i) {
 		bodyInit(&s_pBoxBodies[i], 0, 0, 8, 8);
 		s_pBoxBodies[i].onCollided = onBoxCollided;
 	}
+	for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {
+		s_pBoxBodies[i].fPosX = g_sCurrentLevel.pBoxSpawns[i].fX;
+		s_pBoxBodies[i].fPosY = g_sCurrentLevel.pBoxSpawns[i].fY;
+	}
+
 	tracerInit(&g_sTracerSlipgate);
 	drawMap();
 	viewLoad(s_pView);
 }
 
 static void saveLevel(UBYTE ubIndex) {
-	mapCloseSlipgates();
+	g_sCurrentLevel.sSpawnPos.fX = s_sPlayer.sBody.fPosX;
+	g_sCurrentLevel.sSpawnPos.fY = s_sPlayer.sBody.fPosY;
 
-	char szName[13];
-	sprintf(szName, "level%03hhu.dat", ubIndex);
-	systemUse();
-	tFile *pFile = fileOpen(szName, "wb");
-	fileWrite(pFile, &s_sPlayer.sBody.fPosX, sizeof(s_sPlayer.sBody.fPosX));
-	fileWrite(pFile, &s_sPlayer.sBody.fPosY, sizeof(s_sPlayer.sBody.fPosY));
-
-	for(UBYTE ubInteractionIndex = 0; ubInteractionIndex < MAP_INTERACTIONS_MAX; ++ubInteractionIndex) {
-		tInteraction *pInteraction = mapGetInteractionByIndex(ubInteractionIndex);
-		fileWrite(pFile, &pInteraction->ubTargetCount, sizeof(pInteraction->ubTargetCount));
-		fileWrite(pFile, &pInteraction->ubButtonMask, sizeof(pInteraction->ubButtonMask));
-		fileWrite(pFile, &pInteraction->wasActive, sizeof(pInteraction->wasActive));
-		for(UBYTE ubTargetIndex = 0; ubTargetIndex < pInteraction->ubTargetCount; ++ubTargetIndex) {
-			tUbCoordYX *pTileCoord = &pInteraction->pTargetTiles[ubTargetIndex];
-			fileWrite(pFile, &pTileCoord->uwYX, sizeof(pTileCoord->uwYX));
-		}
+	for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {
+		g_sCurrentLevel.pBoxSpawns[i].fX = s_pBoxBodies[i].fPosX;
+		g_sCurrentLevel.pBoxSpawns[i].fY = s_pBoxBodies[i].fPosY;
 	}
 
-	for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
-		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
-			UWORD uwTileCode = mapGetTileAt(ubX, ubY);
-			fileWrite(pFile, &uwTileCode, sizeof(uwTileCode));
-		}
-	}
-	fileClose(pFile);
-	systemUnuse();
+	mapSave(ubIndex);
 }
 
 static void gameGsCreate(void) {
@@ -190,7 +173,7 @@ static void gameGsCreate(void) {
 		&s_sPlayer.sBody.sBob, 16, 16, 1,
 		s_pPlayerFrames->Planes[0], s_pPlayerMasks->Planes[0], 0, 0
 	);
-	for(UBYTE i = 0; i < GAME_BOXES_MAX; ++i) {
+	for(UBYTE i = 0; i < MAP_BOXES_MAX; ++i) {
 		bobInit(
 			&s_pBoxBodies[i].sBob, 16, 8, 1,
 			s_pBoxFrames->Planes[0], s_pBoxMasks->Planes[0], 0, 0
@@ -327,8 +310,8 @@ static void gameGsLoop(void) {
 		bodyTeleport(&s_sPlayer.sBody, sPosCross.uwX, sPosCross.uwY);
 	}
 	if(keyUse(KEY_Y)) {
-		if(s_ubBoxCount < GAME_BOXES_MAX) {
-			bodyTeleport(&s_pBoxBodies[s_ubBoxCount++], sPosCross.uwX, sPosCross.uwY);
+		if(g_sCurrentLevel.ubBoxCount < MAP_BOXES_MAX) {
+			bodyTeleport(&s_pBoxBodies[g_sCurrentLevel.ubBoxCount++], sPosCross.uwX, sPosCross.uwY);
 		}
 	}
 #endif
@@ -340,7 +323,7 @@ static void gameGsLoop(void) {
 		s_eExitState = EXIT_RESTART;
 	}
 
-	for(UBYTE i = 0; i < s_ubBoxCount; ++i) {
+	for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {
 		bodySimulate(&s_pBoxBodies[i]);
 		bobPush(&s_pBoxBodies[i].sBob);
 	}
@@ -417,7 +400,7 @@ static void gameDrawTileInteractionMask(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubMa
 }
 
 tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY) {
-	for(UBYTE i = 0; i < s_ubBoxCount; ++i) {
+	for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {
 		tBodyBox *pBox = &s_pBoxBodies[i];
 		UWORD uwBoxX = fix16_to_int(pBox->fPosX);
 		UWORD uwBoxY = fix16_to_int(pBox->fPosY);

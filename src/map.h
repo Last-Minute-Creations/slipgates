@@ -15,6 +15,7 @@
 #define MAP_TILE_WIDTH 40
 #define MAP_TILE_HEIGHT 32
 #define MAP_INTERACTIONS_MAX 4
+#define MAP_BOXES_MAX 5
 #define MAP_TILE_MASK_SOLID_FOR_BODIES BV(15)
 #define MAP_TILE_MASK_SOLID_FOR_PROJECTILES BV(14)
 #define MAP_TILE_MASK_SLIPGATABLE BV(13)
@@ -43,16 +44,24 @@ typedef enum tTile {
 	TILE_GATE_1             = 16 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES,
 } tTile;
 
+typedef struct tFix16Coord {
+	fix16_t fX;
+	fix16_t fY;
+} tFix16Coord;
+
 typedef struct tLevel {
-	fix16_t fStartX;
-	fix16_t fStartY;
+	tFix16Coord sSpawnPos;
 	tTile pTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
+	tFix16Coord pBoxSpawns[MAP_BOXES_MAX];
+	UBYTE ubBoxCount;
 } tLevel;
 
 extern tSlipgate g_pSlipgates[2];
 extern tLevel g_sCurrentLevel;
 
 void mapLoad(UBYTE ubIndex);
+
+void mapSave(UBYTE ubIndex);
 
 void mapProcess(void);
 
@@ -87,8 +96,6 @@ UBYTE mapTileIsExit(tTile eTile);
 UBYTE mapTileIsButton(tTile eTile);
 
 //-------------------------------------------------------------------- SLIPGATES
-
-void mapCloseSlipgates(void);
 
 UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY);
 

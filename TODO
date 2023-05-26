@@ -15,7 +15,7 @@ General:
 	✔ Restarting map @done(23-05-24 16:09)
 	✔ Transitions between levels @done(23-05-25 09:44)
 	✔ Button interactions with player @done(23-05-26 16:11)
-	☐ Variable box amount in map
+	✔ Variable box amount in map @done(23-05-26 20:26)
 	☐ Menu
 	☐ Outro screen
 	☐ Collisions with boxes
@@ -31,10 +31,11 @@ General:
 	☐ Increase precision of trig tables for better aiming accuracy
 
 Box pickup refinements:
-	☐ Generalize (using collision tiles)
+	✔ Generalize @done(23-05-26 20:26)
 	☐ Constrain range
 	☐ Velocity-based instead of position-based
 	☐ Turn off gravity during pickup
+	☐ Collision tiles?
 
 Tiles:
 	✔ No-portal wall @done(23-05-23 14:44)

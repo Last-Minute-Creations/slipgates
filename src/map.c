@@ -32,6 +32,17 @@ static void setSlipgateTiles(const tSlipgate *pSlipgate, tTile eTile) {
 	}
 }
 
+static void mapCloseSlipgates(void) {
+	if(g_pSlipgates[0].eNormal != DIRECTION_NONE) {
+		setSlipgateTiles(&g_pSlipgates[0], TILE_WALL_1);
+		g_pSlipgates[0].eNormal = DIRECTION_NONE;
+	}
+	if(g_pSlipgates[1].eNormal != DIRECTION_NONE) {
+		setSlipgateTiles(&g_pSlipgates[1], TILE_WALL_1);
+		g_pSlipgates[1].eNormal = DIRECTION_NONE;
+	}
+}
+
 //------------------------------------------------------------- PUBLIC FUNCTIONS
 
 void mapLoad(UBYTE ubIndex) {
@@ -52,16 +63,16 @@ void mapLoad(UBYTE ubIndex) {
 			g_sCurrentLevel.pTiles[MAP_TILE_WIDTH - 2][ubY] = TILE_WALL_1;
 			g_sCurrentLevel.pTiles[MAP_TILE_WIDTH - 1][ubY] = TILE_WALL_1;
 		}
-		g_sCurrentLevel.fStartX = fix16_from_int(100);
-		g_sCurrentLevel.fStartY = fix16_from_int(100);
+		g_sCurrentLevel.sSpawnPos.fX = fix16_from_int(100);
+		g_sCurrentLevel.sSpawnPos.fY = fix16_from_int(100);
 	}
 	else {
 		char szName[13];
 		sprintf(szName, "level%03hhu.dat", ubIndex);
 		systemUse();
 		tFile *pFile = fileOpen(szName, "rb");
-		fileRead(pFile, &g_sCurrentLevel.fStartX, sizeof(g_sCurrentLevel.fStartX));
-		fileRead(pFile, &g_sCurrentLevel.fStartY, sizeof(g_sCurrentLevel.fStartY));
+		fileRead(pFile, &g_sCurrentLevel.sSpawnPos.fX, sizeof(g_sCurrentLevel.sSpawnPos.fX));
+		fileRead(pFile, &g_sCurrentLevel.sSpawnPos.fY, sizeof(g_sCurrentLevel.sSpawnPos.fY));
 
 		for(UBYTE ubInteractionIndex = 0; ubInteractionIndex < MAP_INTERACTIONS_MAX; ++ubInteractionIndex) {
 			tInteraction *pInteraction = &s_pInteractions[ubInteractionIndex];
@@ -72,6 +83,12 @@ void mapLoad(UBYTE ubIndex) {
 				tUbCoordYX *pTileCoord = &pInteraction->pTargetTiles[ubTargetIndex];
 				fileRead(pFile, &pTileCoord->uwYX, sizeof(pTileCoord->uwYX));
 			}
+		}
+
+		fileRead(pFile, &g_sCurrentLevel.ubBoxCount, sizeof(g_sCurrentLevel.ubBoxCount));
+		for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {
+			fileRead(pFile, &g_sCurrentLevel.pBoxSpawns[i].fX, sizeof(g_sCurrentLevel.pBoxSpawns[i].fX));
+			fileRead(pFile, &g_sCurrentLevel.pBoxSpawns[i].fY, sizeof(g_sCurrentLevel.pBoxSpawns[i].fY));
 		}
 
 		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
@@ -89,6 +106,43 @@ void mapLoad(UBYTE ubIndex) {
 	g_pSlipgates[0].eNormal = DIRECTION_NONE;
 	g_pSlipgates[1].eNormal = DIRECTION_NONE;
 	s_ubCurrentInteraction = 0;
+}
+
+void mapSave(UBYTE ubIndex) {
+	mapCloseSlipgates();
+
+	char szName[13];
+	sprintf(szName, "level%03hhu.dat", ubIndex);
+	systemUse();
+	tFile *pFile = fileOpen(szName, "wb");
+	fileWrite(pFile, &g_sCurrentLevel.sSpawnPos.fX, sizeof(g_sCurrentLevel.sSpawnPos.fX));
+	fileWrite(pFile, &g_sCurrentLevel.sSpawnPos.fY, sizeof(g_sCurrentLevel.sSpawnPos.fY));
+
+	for(UBYTE ubInteractionIndex = 0; ubInteractionIndex < MAP_INTERACTIONS_MAX; ++ubInteractionIndex) {
+		tInteraction *pInteraction = mapGetInteractionByIndex(ubInteractionIndex);
+		fileWrite(pFile, &pInteraction->ubTargetCount, sizeof(pInteraction->ubTargetCount));
+		fileWrite(pFile, &pInteraction->ubButtonMask, sizeof(pInteraction->ubButtonMask));
+		fileWrite(pFile, &pInteraction->wasActive, sizeof(pInteraction->wasActive));
+		for(UBYTE ubTargetIndex = 0; ubTargetIndex < pInteraction->ubTargetCount; ++ubTargetIndex) {
+			tUbCoordYX *pTileCoord = &pInteraction->pTargetTiles[ubTargetIndex];
+			fileWrite(pFile, &pTileCoord->uwYX, sizeof(pTileCoord->uwYX));
+		}
+	}
+
+	fileWrite(pFile, &g_sCurrentLevel.ubBoxCount, sizeof(g_sCurrentLevel.ubBoxCount));
+	for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {
+		fileWrite(pFile, &g_sCurrentLevel.pBoxSpawns[i].fX, sizeof(g_sCurrentLevel.pBoxSpawns[i].fX));
+		fileWrite(pFile, &g_sCurrentLevel.pBoxSpawns[i].fY, sizeof(g_sCurrentLevel.pBoxSpawns[i].fY));
+	}
+
+	for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
+		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
+			UWORD uwTileCode = mapGetTileAt(ubX, ubY);
+			fileWrite(pFile, &uwTileCode, sizeof(uwTileCode));
+		}
+	}
+	fileClose(pFile);
+	systemUnuse();
 }
 
 void mapProcess(void) {
@@ -192,17 +246,6 @@ UBYTE mapTileIsButton(tTile eTile) {
 }
 
 //-------------------------------------------------------------------- SLIPGATES
-
-void mapCloseSlipgates(void) {
-	if(g_pSlipgates[0].eNormal != DIRECTION_NONE) {
-		setSlipgateTiles(&g_pSlipgates[0], TILE_WALL_1);
-		g_pSlipgates[0].eNormal = DIRECTION_NONE;
-	}
-	if(g_pSlipgates[1].eNormal != DIRECTION_NONE) {
-		setSlipgateTiles(&g_pSlipgates[1], TILE_WALL_1);
-		g_pSlipgates[1].eNormal = DIRECTION_NONE;
-	}
-}
 
 UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 	if(!mapIsTileSlipgatableAt(ubTileX, ubTileY)) {
