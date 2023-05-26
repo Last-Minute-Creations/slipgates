@@ -44,8 +44,8 @@ Tiles:
 
 Misc objects:
 	✔ Doors (17 chambers) @done(23-05-25 20:33)
-	☐ ANDed doors
-	☐ Generalize, configurable interaction relations
+	✔ ANDed doors @done(23-05-26 15:47)
+	✔ Generalize, configurable interaction relations @done(23-05-26 15:47)
 	☐ Energy ball (10 chambers)
 	☐ Lifts (4 chambers)
 	☐ Crushers (3 chambers)

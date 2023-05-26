@@ -134,7 +134,7 @@ static void saveLevel(UBYTE ubIndex) {
 	fileWrite(pFile, &s_sPlayer.sBody.fPosX, sizeof(s_sPlayer.sBody.fPosX));
 	fileWrite(pFile, &s_sPlayer.sBody.fPosY, sizeof(s_sPlayer.sBody.fPosY));
 
-	for(UBYTE ubInteractionIndex = 0; ubInteractionIndex < 4; ++ubInteractionIndex) {
+	for(UBYTE ubInteractionIndex = 0; ubInteractionIndex < MAP_INTERACTIONS_MAX; ++ubInteractionIndex) {
 		tInteraction *pInteraction = mapGetInteractionByIndex(ubInteractionIndex);
 		fileWrite(pFile, &pInteraction->ubTargetCount, sizeof(pInteraction->ubTargetCount));
 		fileWrite(pFile, &pInteraction->ubButtonMask, sizeof(pInteraction->ubButtonMask));
@@ -295,26 +295,30 @@ static void gameGsLoop(void) {
 		*pTileUnderCursor = TILE_GATE_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
-	else if(keyUse(KEY_1) && *pTileUnderCursor == TILE_GATE_1) {
-		if(keyCheck(KEY_CONTROL)) {
-			// Add/remove tile to/from interaction group
-			tInteraction *pInteraction = mapGetInteractionByIndex(0);
-			interactionToggleTile(pInteraction, sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
-			gameDrawInteractionTiles(pInteraction);
-		}
-		else {
-			// change interaction group's activation mask
-			tInteraction *pInteraction = mapGetInteractionByTile(
-				sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE
-			);
-			if(pInteraction) {
-				pInteraction->ubButtonMask ^= BV(0);
+
+	for(UBYTE i = 0; i < MAP_INTERACTIONS_MAX; ++i) {
+		if(keyUse(KEY_1 + i) && *pTileUnderCursor == TILE_GATE_1) {
+			if(keyCheck(KEY_CONTROL)) {
+				// Add/remove tile to/from interaction group
+				tInteraction *pInteraction = mapGetInteractionByIndex(i);
+				interactionToggleTile(pInteraction, sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 				gameDrawInteractionTiles(pInteraction);
 			}
-		}
+			else {
+				// change interaction group's activation mask
+				tInteraction *pInteraction = mapGetInteractionByTile(
+					sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE
+				);
+				if(pInteraction) {
+					pInteraction->ubButtonMask ^= BV(i);
+					gameDrawInteractionTiles(pInteraction);
+				}
+			}
 
-		// Could be no longer part of interaction
-		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+			// Could be no longer part of interaction
+			gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+			break;
+		}
 	}
 
 	// Debug stuff

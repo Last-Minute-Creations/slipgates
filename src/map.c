@@ -8,8 +8,6 @@
 #include <ace/managers/system.h>
 #include "game.h"
 
-#define MAP_INTERACTIONS_MAX 4
-
 //----------------------------------------------------------------- PRIVATE VARS
 
 static tInteraction s_pInteractions[MAP_INTERACTIONS_MAX];
