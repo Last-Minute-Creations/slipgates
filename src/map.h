@@ -18,6 +18,7 @@
 #define MAP_TILE_MASK_SLIPGATABLE BV(13)
 #define MAP_TILE_MASK_LETHAL BV(12)
 #define MAP_TILE_MASK_EXIT BV(11)
+#define MAP_TILE_MASK_BUTTON BV(10)
 #define MAP_TILE_INDEX_MASK ~(MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_SLIPGATABLE | MAP_TILE_MASK_LETHAL | MAP_TILE_MASK_EXIT)
 
 typedef enum tTile {
@@ -29,7 +30,7 @@ typedef enum tTile {
 	TILE_FORCEFIELD_1       = 5 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SLIPGATABLE,
 	TILE_DEATH_FIELD_1      = 6 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_LETHAL,
 	TILE_EXIT_1             = 7 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_EXIT,
-	TILE_BUTTON_1           = 8 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES,
+	TILE_BUTTON_1           = 8 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES | MAP_TILE_MASK_BUTTON,
 	TILE_GATE_1             = 9 | MAP_TILE_MASK_SOLID_FOR_BODIES | MAP_TILE_MASK_SOLID_FOR_PROJECTILES
 } tTile;
 
@@ -46,7 +47,7 @@ void mapLoad(UBYTE ubIndex);
 
 void mapProcess(void);
 
-void mapInteractAt(UBYTE ubX, UBYTE ubY);
+void mapPressButtonAt(UBYTE ubX, UBYTE ubY);
 
 //----------------------------------------------------------------- MAP CHECKERS
 
@@ -67,6 +68,8 @@ UBYTE mapTileIsSolidForBodies(tTile eTile);
 UBYTE mapTileIsLethal(tTile eTile);
 
 UBYTE mapTileIsExit(tTile eTile);
+
+UBYTE mapTileIsButton(tTile eTile);
 
 //-------------------------------------------------------------------- SLIPGATES
 
