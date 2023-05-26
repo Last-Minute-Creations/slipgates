@@ -64,8 +64,17 @@ static UBYTE tileGetColor(tTile eTile) {
 		case TILE_FORCEFIELD_1: return 5;
 		case TILE_DEATH_FIELD_1: return 2;
 		case TILE_EXIT_1: return 14;
-		case TILE_BUTTON_1: return 12;
-		case TILE_GATE_1: return 11;
+		case TILE_BUTTON_1:
+		case TILE_BUTTON_2:
+		case TILE_BUTTON_3:
+		case TILE_BUTTON_4:
+		case TILE_BUTTON_5:
+		case TILE_BUTTON_6:
+		case TILE_BUTTON_7:
+		case TILE_BUTTON_8:
+			return 12;
+		case TILE_GATE_1:
+			return 11;
 		default: return 16;
 	}
 }
@@ -220,36 +229,51 @@ static void gameGsLoop(void) {
 	s_pSpriteCrosshair->wY = sPosCross.uwY - 14;
 
 	// Level editor
+	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE];
 	if(keyCheck(KEY_Z)) {
-		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_BG_1;
+		*pTileUnderCursor = TILE_BG_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	else if(keyCheck(KEY_X)) {
-		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_WALL_1;
+		*pTileUnderCursor = TILE_WALL_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	else if(keyCheck(KEY_C)) {
-		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_WALL_NO_SLIPGATE_1;
+		*pTileUnderCursor = TILE_WALL_NO_SLIPGATE_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	else if(keyCheck(KEY_V)) {
-		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_FORCEFIELD_1;
+		*pTileUnderCursor = TILE_FORCEFIELD_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	else if(keyCheck(KEY_B)) {
-		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_DEATH_FIELD_1;
+		*pTileUnderCursor = TILE_DEATH_FIELD_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	else if(keyCheck(KEY_N)) {
-		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_EXIT_1;
+		*pTileUnderCursor = TILE_EXIT_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	else if(keyCheck(KEY_M)) {
-		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_BUTTON_1;
-		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		if(mapTileIsButton(*pTileUnderCursor)) {
+			if(keyUse(KEY_M)) {
+				if(*pTileUnderCursor == TILE_BUTTON_8) {
+					*pTileUnderCursor = TILE_BUTTON_1;
+				}
+				else {
+					++*pTileUnderCursor;
+				}
+				gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+			}
+		}
+		else {
+			keyUse(KEY_M); // prevent double-processing of same tile
+			*pTileUnderCursor = TILE_BUTTON_1;
+			gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		}
 	}
 	else if(keyCheck(KEY_COMMA)) {
-		g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE] = TILE_GATE_1;
+		*pTileUnderCursor = TILE_GATE_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
 	spriteProcess(s_pSpriteCrosshair);
@@ -317,7 +341,8 @@ static void gameGsDestroy(void) {
 
 // TODO: replace with tile draw queue
 void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
-	UBYTE ubColor = tileGetColor(mapGetTileAt(ubTileX, ubTileY));
+	tTile eTile = mapGetTileAt(ubTileX, ubTileY);
+	UBYTE ubColor = tileGetColor(eTile);
 	blitRect(
 		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
 		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
@@ -326,6 +351,24 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
 		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
 	);
+
+	if(mapTileIsButton(eTile)) {
+		UBYTE ubButtonIndex = eTile - TILE_BUTTON_1;
+		UBYTE ubIndicatorX = 1 + (ubButtonIndex % 3) * 2;
+		UBYTE ubIndicatorY = 1 + (ubButtonIndex / 3) * 2;
+		blitRect(
+			s_pBufferMain->pBack,
+			ubTileX * MAP_TILE_SIZE + ubIndicatorX,
+			ubTileY * MAP_TILE_SIZE + ubIndicatorY,
+			1, 1, 1
+		);
+		blitRect(
+			s_pBufferMain->pFront,
+			ubTileX * MAP_TILE_SIZE + ubIndicatorX,
+			ubTileY * MAP_TILE_SIZE + ubIndicatorY,
+			1, 1, 1
+		);
+	}
 
 #if defined(GAME_DRAW_GRID)
 	blitLine(
