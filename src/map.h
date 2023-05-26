@@ -8,6 +8,7 @@
 #include <fixmath/fix16.h>
 #include <ace/macros.h>
 #include "slipgate.h"
+#include "interaction.h"
 
 #define MAP_TILE_SHIFT 3
 #define MAP_TILE_SIZE (1 << MAP_TILE_SHIFT)
@@ -55,6 +56,12 @@ void mapLoad(UBYTE ubIndex);
 void mapProcess(void);
 
 void mapPressButtonAt(UBYTE ubX, UBYTE ubY);
+
+//----------------------------------------------------------------- INTERACTIONS
+
+tInteraction *mapGetInteractionByIndex(UBYTE ubInteractionIndex);
+
+tInteraction *mapGetInteractionByTile(UBYTE ubTileX, UBYTE ubTileY);
 
 //----------------------------------------------------------------- MAP CHECKERS
 

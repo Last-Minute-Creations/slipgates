@@ -8,21 +8,12 @@
 #include <ace/managers/system.h>
 #include "game.h"
 
-#define MAP_INTERACTION_TARGET_MAX 2
-#define MAP_INTERACTIONS_MAX 1
-
-typedef struct tInteraction {
-	tUbCoordYX pDoorTiles[MAP_INTERACTION_TARGET_MAX];
-	UBYTE ubTargetCount;
-	UBYTE ubButtonMask;
-	UBYTE wasActive;
-} tInteraction;
+#define MAP_INTERACTIONS_MAX 4
 
 //----------------------------------------------------------------- PRIVATE VARS
 
 static tInteraction s_pInteractions[MAP_INTERACTIONS_MAX];
 static UBYTE s_ubButtonPressMask;
-static UBYTE s_ubInteractionCount;
 static UBYTE s_ubCurrentInteraction;
 
 //------------------------------------------------------------ PRIVATE FUNCTIONS
@@ -46,7 +37,7 @@ static void setSlipgateTiles(const tSlipgate *pSlipgate, tTile eTile) {
 //------------------------------------------------------------- PUBLIC FUNCTIONS
 
 void mapLoad(UBYTE ubIndex) {
-	s_ubInteractionCount = 0;
+	memset(s_pInteractions, 0, sizeof(s_pInteractions));
 
 	if(ubIndex == 0) {
 		// hadcoded level
@@ -74,28 +65,22 @@ void mapLoad(UBYTE ubIndex) {
 		fileRead(pFile, &g_sCurrentLevel.fStartX, sizeof(g_sCurrentLevel.fStartX));
 		fileRead(pFile, &g_sCurrentLevel.fStartY, sizeof(g_sCurrentLevel.fStartY));
 
-		// TODO: read interaction count/masks and initialize in loop
-		s_ubInteractionCount = 1;
-		s_pInteractions[0].ubButtonMask = 0b00000001;
-		s_pInteractions[0].wasActive = 0;
-		s_pInteractions[0].ubTargetCount = 0;
+		for(UBYTE ubInteractionIndex = 0; ubInteractionIndex < MAP_INTERACTIONS_MAX; ++ubInteractionIndex) {
+			tInteraction *pInteraction = &s_pInteractions[ubInteractionIndex];
+			fileRead(pFile, &pInteraction->ubTargetCount, sizeof(pInteraction->ubTargetCount));
+			fileRead(pFile, &pInteraction->ubButtonMask, sizeof(pInteraction->ubButtonMask));
+			fileRead(pFile, &pInteraction->wasActive, sizeof(pInteraction->wasActive));
+			for(UBYTE ubTargetIndex = 0; ubTargetIndex < pInteraction->ubTargetCount; ++ubTargetIndex) {
+				tUbCoordYX *pTileCoord = &pInteraction->pTargetTiles[ubTargetIndex];
+				fileRead(pFile, &pTileCoord->uwYX, sizeof(pTileCoord->uwYX));
+			}
+		}
 
 		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
 			for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
 				UWORD uwTileCode;
 				fileRead(pFile, &uwTileCode, sizeof(uwTileCode));
 				g_sCurrentLevel.pTiles[ubX][ubY] = uwTileCode;
-
-				if(uwTileCode == TILE_GATE_1) {
-					if(s_pInteractions[0].ubTargetCount >= MAP_INTERACTION_TARGET_MAX) {
-						logWrite("ERR: Interaction target limit reached!");
-					}
-					else {
-						s_pInteractions[0].pDoorTiles[s_pInteractions[0].ubTargetCount].ubX = ubX;
-						s_pInteractions[0].pDoorTiles[s_pInteractions[0].ubTargetCount].ubY = ubY;
-						++s_pInteractions[0].ubTargetCount;
-					}
-				}
 			}
 		}
 
@@ -110,16 +95,16 @@ void mapLoad(UBYTE ubIndex) {
 
 void mapProcess(void) {
 	tInteraction *pInteraction = &s_pInteractions[s_ubCurrentInteraction];
-	if(++s_ubCurrentInteraction >= s_ubInteractionCount) {
-		s_ubCurrentInteraction = 0;
-	}
 
 	// Process effects of next interaction
-	if((pInteraction->ubButtonMask & s_ubButtonPressMask) == pInteraction->ubButtonMask) {
+	if(
+		pInteraction->ubButtonMask &&
+		(pInteraction->ubButtonMask & s_ubButtonPressMask) == pInteraction->ubButtonMask
+	) {
 		if(!pInteraction->wasActive) {
 			for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
-				g_sCurrentLevel.pTiles[pInteraction->pDoorTiles[i].ubX][pInteraction->pDoorTiles[i].ubY] = TILE_BG_1;
-				gameDrawTile(pInteraction->pDoorTiles[i].ubX, pInteraction->pDoorTiles[i].ubY);
+				g_sCurrentLevel.pTiles[pInteraction->pTargetTiles[i].ubX][pInteraction->pTargetTiles[i].ubY] = TILE_BG_1;
+				gameDrawTile(pInteraction->pTargetTiles[i].ubX, pInteraction->pTargetTiles[i].ubY);
 			}
 			pInteraction->wasActive = 1;
 		}
@@ -127,11 +112,15 @@ void mapProcess(void) {
 	else {
 		if(pInteraction->wasActive) {
 			for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
-				g_sCurrentLevel.pTiles[pInteraction->pDoorTiles[i].ubX][pInteraction->pDoorTiles[i].ubY] = TILE_GATE_1;
-				gameDrawTile(pInteraction->pDoorTiles[i].ubX, pInteraction->pDoorTiles[i].ubY);
+				g_sCurrentLevel.pTiles[pInteraction->pTargetTiles[i].ubX][pInteraction->pTargetTiles[i].ubY] = TILE_GATE_1;
+				gameDrawTile(pInteraction->pTargetTiles[i].ubX, pInteraction->pTargetTiles[i].ubY);
 			}
 			pInteraction->wasActive = 0;
 		}
+	}
+
+	if(++s_ubCurrentInteraction >= MAP_INTERACTIONS_MAX) {
+		s_ubCurrentInteraction = 0;
 	}
 
 	// Reset button mask for refresh by body collisions
@@ -143,6 +132,24 @@ void mapPressButtonAt(UNUSED_ARG UBYTE ubX, UNUSED_ARG UBYTE ubY) {
 	if(mapTileIsButton(eTile)) {
 		s_ubButtonPressMask |= BV(eTile - TILE_BUTTON_1);
 	}
+}
+
+//----------------------------------------------------------------- INTERACTIONS
+
+tInteraction *mapGetInteractionByIndex(UBYTE ubInteractionIndex) {
+	return &s_pInteractions[ubInteractionIndex];
+}
+
+tInteraction *mapGetInteractionByTile(UBYTE ubTileX, UBYTE ubTileY) {
+	for(UBYTE i = 0; i < MAP_INTERACTIONS_MAX; ++ i) {
+		UBYTE ubTileIndex = interactionGetTileIndex(
+			&s_pInteractions[i], ubTileX, ubTileY
+		);
+		if(ubTileIndex != INTERACTION_TILE_INDEX_INVALID) {
+			return &s_pInteractions[i];
+		}
+	}
+	return 0;
 }
 
 //----------------------------------------------------------------- MAP CHECKERS

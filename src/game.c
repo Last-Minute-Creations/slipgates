@@ -22,6 +22,7 @@
 
 // DEBUG SWITCHES
 // #define GAME_DRAW_GRID
+#define GAME_EDITOR_ENABLED
 
 typedef enum tExitState {
 	EXIT_NONE,
@@ -88,6 +89,12 @@ static void drawMap(void) {
 	}
 }
 
+static void gameDrawInteractionTiles(const tInteraction *pInteraction) {
+	for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
+		gameDrawTile(pInteraction->pTargetTiles[i].ubX, pInteraction->pTargetTiles[i].ubY);
+	}
+}
+
 static void onBoxCollided(
 	UNUSED_ARG tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY,
 	UNUSED_ARG void *pData
@@ -126,6 +133,17 @@ static void saveLevel(UBYTE ubIndex) {
 	tFile *pFile = fileOpen(szName, "wb");
 	fileWrite(pFile, &s_sPlayer.sBody.fPosX, sizeof(s_sPlayer.sBody.fPosX));
 	fileWrite(pFile, &s_sPlayer.sBody.fPosY, sizeof(s_sPlayer.sBody.fPosY));
+
+	for(UBYTE ubInteractionIndex = 0; ubInteractionIndex < 4; ++ubInteractionIndex) {
+		tInteraction *pInteraction = mapGetInteractionByIndex(ubInteractionIndex);
+		fileWrite(pFile, &pInteraction->ubTargetCount, sizeof(pInteraction->ubTargetCount));
+		fileWrite(pFile, &pInteraction->ubButtonMask, sizeof(pInteraction->ubButtonMask));
+		fileWrite(pFile, &pInteraction->wasActive, sizeof(pInteraction->wasActive));
+		for(UBYTE ubTargetIndex = 0; ubTargetIndex < pInteraction->ubTargetCount; ++ubTargetIndex) {
+			tUbCoordYX *pTileCoord = &pInteraction->pTargetTiles[ubTargetIndex];
+			fileWrite(pFile, &pTileCoord->uwYX, sizeof(pTileCoord->uwYX));
+		}
+	}
 
 	for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
 		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
@@ -229,6 +247,7 @@ static void gameGsLoop(void) {
 	s_pSpriteCrosshair->wY = sPosCross.uwY - 14;
 
 	// Level editor
+#if defined(GAME_EDITOR_ENABLED)
 	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE];
 	if(keyCheck(KEY_Z)) {
 		*pTileUnderCursor = TILE_BG_1;
@@ -276,9 +295,27 @@ static void gameGsLoop(void) {
 		*pTileUnderCursor = TILE_GATE_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
-	spriteProcess(s_pSpriteCrosshair);
+	else if(keyUse(KEY_1) && *pTileUnderCursor == TILE_GATE_1) {
+		if(keyCheck(KEY_CONTROL)) {
+			// Add/remove tile to/from interaction group
+			tInteraction *pInteraction = mapGetInteractionByIndex(0);
+			interactionToggleTile(pInteraction, sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+			gameDrawInteractionTiles(pInteraction);
+		}
+		else {
+			// change interaction group's activation mask
+			tInteraction *pInteraction = mapGetInteractionByTile(
+				sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE
+			);
+			if(pInteraction) {
+				pInteraction->ubButtonMask ^= BV(0);
+				gameDrawInteractionTiles(pInteraction);
+			}
+		}
 
-	playerProcess(&s_sPlayer);
+		// Could be no longer part of interaction
+		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+	}
 
 	// Debug stuff
 	if(keyUse(KEY_T)) {
@@ -287,6 +324,11 @@ static void gameGsLoop(void) {
 	if(keyUse(KEY_Y)) {
 		bodyTeleport(&s_sBodyBox, sPosCross.uwX, sPosCross.uwY);
 	}
+#endif
+
+	spriteProcess(s_pSpriteCrosshair);
+	playerProcess(&s_sPlayer);
+
 	if(keyUse(KEY_G)) {
 		s_eExitState = EXIT_RESTART;
 	}
@@ -337,6 +379,34 @@ static void gameGsDestroy(void) {
 	bitmapDestroy(s_pBmCursor);
 }
 
+static void gameDrawTileInteractionMask(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubMask) {
+	UBYTE ubBitIndex = 0;
+	blitRect(s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE + 1, ubTileY * MAP_TILE_SIZE + 1, 6, 6, 15);
+	blitRect(s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE + 1, ubTileY * MAP_TILE_SIZE + 1, 6, 6, 15);
+
+	while(ubMask) {
+		if(ubMask & 1) {
+			UBYTE ubIndicatorX = 1 + (ubBitIndex % 3) * 2;
+			UBYTE ubIndicatorY = 1 + (ubBitIndex / 3) * 2;
+			blitRect(
+				s_pBufferMain->pBack,
+				ubTileX * MAP_TILE_SIZE + ubIndicatorX,
+				ubTileY * MAP_TILE_SIZE + ubIndicatorY,
+				1, 1, 1
+			);
+			blitRect(
+				s_pBufferMain->pFront,
+				ubTileX * MAP_TILE_SIZE + ubIndicatorX,
+				ubTileY * MAP_TILE_SIZE + ubIndicatorY,
+				1, 1, 1
+			);
+		}
+
+		++ubBitIndex;
+		ubMask >>= 1;
+	}
+}
+
 //------------------------------------------------------------------- PUBLIC FNS
 
 // TODO: replace with tile draw queue
@@ -352,23 +422,18 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
 	);
 
+#if defined(GAME_EDITOR_ENABLED)
 	if(mapTileIsButton(eTile)) {
 		UBYTE ubButtonIndex = eTile - TILE_BUTTON_1;
-		UBYTE ubIndicatorX = 1 + (ubButtonIndex % 3) * 2;
-		UBYTE ubIndicatorY = 1 + (ubButtonIndex / 3) * 2;
-		blitRect(
-			s_pBufferMain->pBack,
-			ubTileX * MAP_TILE_SIZE + ubIndicatorX,
-			ubTileY * MAP_TILE_SIZE + ubIndicatorY,
-			1, 1, 1
-		);
-		blitRect(
-			s_pBufferMain->pFront,
-			ubTileX * MAP_TILE_SIZE + ubIndicatorX,
-			ubTileY * MAP_TILE_SIZE + ubIndicatorY,
-			1, 1, 1
-		);
+		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(ubButtonIndex));
 	}
+	else {
+		tInteraction *pInteraction = mapGetInteractionByTile(ubTileX, ubTileY);
+		if(pInteraction) {
+			gameDrawTileInteractionMask(ubTileX, ubTileY, pInteraction->ubButtonMask);
+		}
+	}
+#endif
 
 #if defined(GAME_DRAW_GRID)
 	blitLine(
