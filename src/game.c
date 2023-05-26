@@ -99,7 +99,7 @@ static void onBoxCollided(
 	UNUSED_ARG tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY,
 	UNUSED_ARG void *pData
 ) {
-	if(eTile == TILE_BUTTON_1) {
+	if(mapTileIsButton(eTile)) {
 		mapPressButtonAt(ubTileX, ubTileY);
 	}
 }

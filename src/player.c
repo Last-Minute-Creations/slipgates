@@ -40,6 +40,9 @@ static void playerOnCollided(
 	else if(mapTileIsExit(eTile)) {
 		gameMarkExitReached();
 	}
+	else if(mapTileIsButton(eTile)) {
+		mapPressButtonAt(ubTileX, ubTileY);
+	}
 }
 
 //------------------------------------------------------------------- PUBLIC FNS

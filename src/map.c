@@ -125,11 +125,12 @@ void mapProcess(void) {
 	s_ubButtonPressMask = 0;
 }
 
-void mapPressButtonAt(UNUSED_ARG UBYTE ubX, UNUSED_ARG UBYTE ubY) {
+void mapPressButtonAt(UBYTE ubX, UBYTE ubY) {
 	tTile eTile = g_sCurrentLevel.pTiles[ubX][ubY];
-	if(mapTileIsButton(eTile)) {
-		s_ubButtonPressMask |= BV(eTile - TILE_BUTTON_1);
+	if(!mapTileIsButton(eTile)) {
+		logWrite("ERR: Tile %d at %hhu,%hhu is not a button!\n", eTile, ubX, ubY);
 	}
+	s_ubButtonPressMask |= BV(eTile - TILE_BUTTON_1);
 }
 
 //----------------------------------------------------------------- INTERACTIONS
