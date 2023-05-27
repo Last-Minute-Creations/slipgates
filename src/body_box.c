@@ -7,7 +7,7 @@
 
 static UBYTE bodyCheckCollision(tBodyBox *pBody, UBYTE ubTileX, UBYTE ubTileY) {
 	tTile eTile = mapGetTileAt(ubTileX, ubTileY);
-	if(mapTileIsSolidForBodies(eTile)) {
+	if(pBody->cbTileCollisionCheck(eTile)) {
 		if(pBody->onCollided) {
 			pBody->onCollided(eTile, ubTileX, ubTileY, pBody->pOnCollidedData);
 		}

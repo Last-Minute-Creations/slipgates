@@ -118,6 +118,7 @@ static void loadLevel(UBYTE ubIndex) {
 	playerReset(&s_sPlayer, g_sCurrentLevel.sSpawnPos.fX, g_sCurrentLevel.sSpawnPos.fY);
 	for(UBYTE i = 0; i < MAP_BOXES_MAX; ++i) {
 		bodyInit(&s_pBoxBodies[i], 0, 0, 8, 8);
+		s_pBoxBodies[i].cbTileCollisionCheck = mapTileIsCollidingWithBoxes;
 		s_pBoxBodies[i].onCollided = onBoxCollided;
 	}
 	for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {

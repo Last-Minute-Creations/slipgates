@@ -53,22 +53,22 @@ void bouncerInit(UBYTE ubSpawnerTileX, UBYTE ubSpawnerTileY) {
 	UWORD uwBouncerSpawnX = ubSpawnerTileX * MAP_TILE_SIZE;
 	UWORD uwBouncerSpawnY = ubSpawnerTileY * MAP_TILE_SIZE;
 
-	if(!mapIsSolidForBodiesAt(ubSpawnerTileX - 1, ubSpawnerTileY)) {
+	if(!mapIsCollidingWithProjectilesAt(ubSpawnerTileX - 1, ubSpawnerTileY)) {
 		uwBouncerSpawnX -= MAP_TILE_SIZE;
 		s_fSpawnVelocityX = fix16_from_int(-BOUNCER_VELOCITY);
 		s_fSpawnVelocityY = 0;
 	}
-	else if(!mapIsSolidForBodiesAt(ubSpawnerTileX + 1, ubSpawnerTileY)) {
+	else if(!mapIsCollidingWithProjectilesAt(ubSpawnerTileX + 1, ubSpawnerTileY)) {
 		uwBouncerSpawnX += MAP_TILE_SIZE;
 		s_fSpawnVelocityX = fix16_from_int(BOUNCER_VELOCITY);
 		s_fSpawnVelocityY = 0;
 	}
-	else if(!mapIsSolidForBodiesAt(ubSpawnerTileX, ubSpawnerTileY - 1)) {
+	else if(!mapIsCollidingWithProjectilesAt(ubSpawnerTileX, ubSpawnerTileY - 1)) {
 		uwBouncerSpawnY -= MAP_TILE_SIZE;
 		s_fSpawnVelocityX = 0;
 		s_fSpawnVelocityY = fix16_from_int(-BOUNCER_VELOCITY);
 	}
-	else if(!mapIsSolidForBodiesAt(ubSpawnerTileX, ubSpawnerTileY + 1)) {
+	else if(!mapIsCollidingWithProjectilesAt(ubSpawnerTileX, ubSpawnerTileY + 1)) {
 		uwBouncerSpawnY += MAP_TILE_SIZE;
 		s_fSpawnVelocityX = 0;
 		s_fSpawnVelocityY = fix16_from_int(BOUNCER_VELOCITY);
@@ -77,6 +77,7 @@ void bouncerInit(UBYTE ubSpawnerTileX, UBYTE ubSpawnerTileY) {
 	s_fSpawnPositionY = fix16_from_int(uwBouncerSpawnY);
 
 	bodyInit(&s_sBodyBouncer, s_fSpawnPositionX, s_fSpawnPositionY, 8, 8);
+	s_sBodyBouncer.cbTileCollisionCheck = mapTileIsCollidingWithProjectiles;
 	s_sBodyBouncer.onCollided = onBouncerCollided;
 	s_sBodyBouncer.fAccelerationY = 0;
 	s_hasBouncerNewVelocity = 0;

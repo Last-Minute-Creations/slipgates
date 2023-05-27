@@ -227,12 +227,8 @@ UBYTE mapIsEmptyAt(UBYTE ubTileX, UBYTE ubTileY) {
 	return g_sCurrentLevel.pTiles[ubTileX][ubTileY] == TILE_BG_1;
 }
 
-UBYTE mapIsSolidForBodiesAt(UBYTE ubTileX, UBYTE ubTileY) {
-	return mapTileIsSolidForBodies(g_sCurrentLevel.pTiles[ubTileX][ubTileY]);
-}
-
-UBYTE mapIsSolidForProjectilesAt(UBYTE ubTileX, UBYTE ubTileY) {
-	return (g_sCurrentLevel.pTiles[ubTileX][ubTileY] & MAP_LAYER_SOLID_FOR_PROJECTILES) != 0;
+UBYTE mapIsCollidingWithProjectilesAt(UBYTE ubTileX, UBYTE ubTileY) {
+	return mapTileIsCollidingWithProjectiles(g_sCurrentLevel.pTiles[ubTileX][ubTileY]);
 }
 
 UBYTE mapIsSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY) {
@@ -241,12 +237,24 @@ UBYTE mapIsSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY) {
 
 //---------------------------------------------------------------- TILE CHECKERS
 
-UBYTE mapTileIsSolidForBodies(tTile eTile) {
-	return (eTile & MAP_LAYER_SOLID_FOR_BODIES) != 0;
+UBYTE mapTileIsCollidingWithBoxes(tTile eTile) {
+	return (eTile & (MAP_LAYER_WALLS | MAP_LAYER_FORCE_FIELDS)) != 0;
+}
+
+UBYTE mapTileIsCollidingWithProjectiles(tTile eTile) {
+	return (eTile & MAP_LAYER_WALLS) != 0;
+}
+
+UBYTE mapTileIsCollidingWithPlayers(tTile eTile) {
+	return (eTile & (MAP_LAYER_WALLS | MAP_LAYER_LETHALS | MAP_LAYER_FORCE_FIELDS)) != 0;
+}
+
+UBYTE mapTileIsSlipgate(tTile eTile) {
+	return (eTile & MAP_LAYER_SLIPGATES) != 0;
 }
 
 UBYTE mapTileIsLethal(tTile eTile) {
-	return (eTile & MAP_LAYER_LETHAL) != 0;
+	return (eTile & MAP_LAYER_LETHALS) != 0;
 }
 
 UBYTE mapTileIsExit(tTile eTile) {

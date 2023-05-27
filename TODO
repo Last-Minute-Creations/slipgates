@@ -17,7 +17,10 @@ General:
 	✔ Button interactions with player @done(23-05-26 16:11)
 	✔ Variable box amount in map @done(23-05-26 20:26)
 	✔ Exit tiles @done(23-05-27 09:27)
-	☐ Collisions with boxes
+	✔ Projectiles doesn't collide with force/lethal iles @done(23-05-27 14:41)
+	✔ Boxes doesn't collide with lethal tiles @done(23-05-27 14:41)
+	✔ Bouncers doesn't collide with force/lethal tiles @done(23-05-27 14:41)
+	☐ Collisions between objects
 	☐ Edit mode
 	☐ Faster map restarts without file reload
 	☐ Menu
@@ -25,21 +28,19 @@ General:
 	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
 	☐ Entrance tiles
 	☐ Fix overlapping slipgates
-	☐ Abyss (kills players and boxes)
+	☐ Abyss - tile that kills players and objects, invisible 3 rows under map?
 	☐ Basic turrets (11 chambers)
-	☐ Cube spawner (1 chamber)
 	☐ Multi-bob character body
 	☐ Bigger max velocity
 	☐ Increase precision of trig tables for better aiming accuracy
 	☐ Treat unpaired slipgate as a wall
+	✘ Collision tiles? @cancelled(23-05-27 12:12)
 
 Boxes:
 	✔ Generalize @done(23-05-26 20:26)
 	☐ Constrain range
-	☐ Velocity-based instead of position-based
+	☐ Velocity-based dragging instead of position-based
 	☐ Turn off gravity during pickup
-	☐ Make sure lethal/force tiles doesn't destroy and collide with boxes
-	✘ Collision tiles? @cancelled(23-05-27 12:12)
 
 Tiles:
 	✔ No-portal wall @done(23-05-23 14:44)
@@ -64,6 +65,7 @@ Misc objects:
 	☐ Lifts (4 chambers)
 	☐ Crushers (3 chambers)
 	☐ Entrance door
+	☐ Box spawner (1 chamber)
 
 Momentum, normal-wise:
 	✔ up-up @done(23-05-19 09:00)

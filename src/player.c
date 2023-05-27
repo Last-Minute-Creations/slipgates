@@ -67,6 +67,7 @@ UBYTE playerTryShootSlipgateAt(
 
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	bodyInit(&pPlayer->sBody, fPosX, fPosY, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT);
+	pPlayer->sBody.cbTileCollisionCheck = mapTileIsCollidingWithPlayers;
 	pPlayer->sBody.onCollided = playerOnCollided;
 	pPlayer->sBody.pOnCollidedData = pPlayer;
 	pPlayer->pGrabbedBox = 0;
