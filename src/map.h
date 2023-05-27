@@ -90,7 +90,9 @@ tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY);
 
 UBYTE mapIsEmptyAt(UBYTE ubTileX, UBYTE ubTileY);
 
-UBYTE mapIsCollidingWithProjectilesAt(UBYTE ubTileX, UBYTE ubTileY);
+UBYTE mapIsCollidingWithPortalProjectilesAt(UBYTE ubTileX, UBYTE ubTileY);
+
+UBYTE mapIsCollidingWithBouncersAt(UBYTE ubTileX, UBYTE ubTileY);
 
 UBYTE mapIsSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY);
 
@@ -98,7 +100,9 @@ UBYTE mapIsSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY);
 
 UBYTE mapTileIsCollidingWithBoxes(tTile eTile);
 
-UBYTE mapTileIsCollidingWithProjectiles(tTile eTile);
+UBYTE mapTileIsCollidingWithPortalProjectiles(tTile eTile);
+
+UBYTE mapTileIsCollidingWithBouncers(tTile eTile);
 
 UBYTE mapTileIsCollidingWithPlayers(tTile eTile);
 

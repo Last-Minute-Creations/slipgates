@@ -32,7 +32,7 @@ static UBYTE bouncerCollisionHandler(
 	tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY,
 	UNUSED_ARG void *pData
 ) {
-	UBYTE isColliding = mapTileIsCollidingWithProjectiles(eTile);
+	UBYTE isColliding = mapTileIsCollidingWithBouncers(eTile);
 	if(isColliding) {
 		if(eTile == TILE_RECEIVER) {
 			s_eBouncerState = BOUNCER_STATE_RECEIVER_REACHED;
@@ -57,22 +57,22 @@ void bouncerInit(UBYTE ubSpawnerTileX, UBYTE ubSpawnerTileY) {
 	UWORD uwBouncerSpawnX = ubSpawnerTileX * MAP_TILE_SIZE;
 	UWORD uwBouncerSpawnY = ubSpawnerTileY * MAP_TILE_SIZE;
 
-	if(!mapIsCollidingWithProjectilesAt(ubSpawnerTileX - 1, ubSpawnerTileY)) {
+	if(!mapIsCollidingWithBouncersAt(ubSpawnerTileX - 1, ubSpawnerTileY)) {
 		uwBouncerSpawnX -= MAP_TILE_SIZE;
 		s_fSpawnVelocityX = fix16_from_int(-BOUNCER_VELOCITY);
 		s_fSpawnVelocityY = 0;
 	}
-	else if(!mapIsCollidingWithProjectilesAt(ubSpawnerTileX + 1, ubSpawnerTileY)) {
+	else if(!mapIsCollidingWithBouncersAt(ubSpawnerTileX + 1, ubSpawnerTileY)) {
 		uwBouncerSpawnX += MAP_TILE_SIZE;
 		s_fSpawnVelocityX = fix16_from_int(BOUNCER_VELOCITY);
 		s_fSpawnVelocityY = 0;
 	}
-	else if(!mapIsCollidingWithProjectilesAt(ubSpawnerTileX, ubSpawnerTileY - 1)) {
+	else if(!mapIsCollidingWithBouncersAt(ubSpawnerTileX, ubSpawnerTileY - 1)) {
 		uwBouncerSpawnY -= MAP_TILE_SIZE;
 		s_fSpawnVelocityX = 0;
 		s_fSpawnVelocityY = fix16_from_int(-BOUNCER_VELOCITY);
 	}
-	else if(!mapIsCollidingWithProjectilesAt(ubSpawnerTileX, ubSpawnerTileY + 1)) {
+	else if(!mapIsCollidingWithBouncersAt(ubSpawnerTileX, ubSpawnerTileY + 1)) {
 		uwBouncerSpawnY += MAP_TILE_SIZE;
 		s_fSpawnVelocityX = 0;
 		s_fSpawnVelocityY = fix16_from_int(BOUNCER_VELOCITY);

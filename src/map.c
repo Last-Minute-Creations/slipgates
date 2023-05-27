@@ -227,8 +227,12 @@ UBYTE mapIsEmptyAt(UBYTE ubTileX, UBYTE ubTileY) {
 	return g_sCurrentLevel.pTiles[ubTileX][ubTileY] == TILE_BG_1;
 }
 
-UBYTE mapIsCollidingWithProjectilesAt(UBYTE ubTileX, UBYTE ubTileY) {
-	return mapTileIsCollidingWithProjectiles(g_sCurrentLevel.pTiles[ubTileX][ubTileY]);
+UBYTE mapIsCollidingWithPortalProjectilesAt(UBYTE ubTileX, UBYTE ubTileY) {
+	return mapTileIsCollidingWithPortalProjectiles(g_sCurrentLevel.pTiles[ubTileX][ubTileY]);
+}
+
+UBYTE mapIsCollidingWithBouncersAt(UBYTE ubTileX, UBYTE ubTileY) {
+	return mapTileIsCollidingWithBouncers(g_sCurrentLevel.pTiles[ubTileX][ubTileY]);
 }
 
 UBYTE mapIsSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY) {
@@ -241,8 +245,12 @@ UBYTE mapTileIsCollidingWithBoxes(tTile eTile) {
 	return (eTile & (MAP_LAYER_WALLS | MAP_LAYER_FORCE_FIELDS)) != 0;
 }
 
-UBYTE mapTileIsCollidingWithProjectiles(tTile eTile) {
-	return (eTile & MAP_LAYER_WALLS) != 0;
+UBYTE mapTileIsCollidingWithPortalProjectiles(tTile eTile) {
+	return (eTile & (MAP_LAYER_WALLS | MAP_LAYER_SLIPGATES)) != 0;
+}
+
+UBYTE mapTileIsCollidingWithBouncers(tTile eTile) {
+	return (eTile & (MAP_LAYER_WALLS)) != 0;
 }
 
 UBYTE mapTileIsCollidingWithPlayers(tTile eTile) {

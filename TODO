@@ -25,7 +25,6 @@ General:
 	☐ Faster map restarts without file reload
 	☐ Menu
 	☐ Outro screen
-	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
 	☐ Entrance tiles
 	☐ Fix overlapping slipgates
 	☐ Abyss - tile that kills players and objects, invisible 3 rows under map?
@@ -34,6 +33,7 @@ General:
 	☐ Bigger max velocity
 	☐ Increase precision of trig tables for better aiming accuracy
 	☐ Treat unpaired slipgate as a wall
+	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
 	✘ Collision tiles? @cancelled(23-05-27 12:12)
 
 Boxes:
