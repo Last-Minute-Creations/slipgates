@@ -20,6 +20,9 @@
 #include "tile_tracer.h"
 #include "player.h"
 
+#define GAME_BOUNCER_LIFE_COOLDOWN 500
+#define GAME_BOUNCER_SPAWN_COOLDOWN 75
+
 // DEBUG SWITCHES
 // #define GAME_DRAW_GRID
 #define GAME_EDITOR_ENABLED
@@ -29,6 +32,12 @@ typedef enum tExitState {
 	EXIT_RESTART,
 	EXIT_NEXT,
 } tExitState;
+
+typedef enum tBouncerState {
+	BOUNCER_STATE_WAITING_FOR_SPAWN,
+	BOUNCER_STATE_MOVING,
+	BOUNCER_STATE_RECEIVER_REACHED,
+} tBouncerState;
 
 static tView *s_pView;
 static tVPort *s_pVpMain;
@@ -49,7 +58,8 @@ static tBodyBox s_sBodyBouncer;
 static UBYTE s_hasBouncerNewVelocity;
 static fix16_t s_fNewBouncerVelocityX;
 static fix16_t s_fNewBouncerVelocityY;
-static UBYTE s_isReceiverReached;
+static tBouncerState s_eBouncerState;
+static UWORD s_uwBouncerCooldown;
 
 static UWORD s_uwGameFrame;
 static UBYTE s_ubCurrentLevel;
@@ -116,7 +126,7 @@ static void onBouncerCollided(
 	UNUSED_ARG void *pData
 ) {
 	if(eTile == TILE_RECEIVER) {
-		s_isReceiverReached = 1;
+		s_eBouncerState = BOUNCER_STATE_RECEIVER_REACHED;
 	}
 	else {
 		s_hasBouncerNewVelocity = 1;
@@ -147,7 +157,8 @@ static void loadLevel(UBYTE ubIndex) {
 	s_sBodyBouncer.fAccelerationY = 0;
 	s_sBodyBouncer.fVelocityX = fix16_from_int(2);
 	s_hasBouncerNewVelocity = 0;
-	s_isReceiverReached = 0;
+	s_eBouncerState = BOUNCER_STATE_WAITING_FOR_SPAWN;
+	s_uwBouncerCooldown = 1;
 
 	tracerInit(&g_sTracerSlipgate);
 	drawMap();
@@ -369,16 +380,29 @@ static void gameGsLoop(void) {
 		bobPush(&s_pBoxBodies[i].sBob);
 	}
 
-	if(s_isReceiverReached) {
+	if(s_eBouncerState == BOUNCER_STATE_RECEIVER_REACHED) {
 		mapPressButtonIndex(3);
 	}
+	else if(s_eBouncerState == BOUNCER_STATE_WAITING_FOR_SPAWN) {
+		if(--s_uwBouncerCooldown == 0) {
+			// TODO: spawn next to spawner
+			s_uwBouncerCooldown = GAME_BOUNCER_LIFE_COOLDOWN;
+			s_eBouncerState = BOUNCER_STATE_MOVING;
+		}
+	}
 	else {
-		bodySimulate(&s_sBodyBouncer);
-		bobPush(&s_sBodyBouncer.sBob);
-		if(s_hasBouncerNewVelocity) {
-			s_sBodyBouncer.fVelocityX = s_fNewBouncerVelocityX;
-			s_sBodyBouncer.fVelocityY = s_fNewBouncerVelocityY;
-			s_hasBouncerNewVelocity = 0;
+		if(--s_uwBouncerCooldown == 0) {
+			s_uwBouncerCooldown = GAME_BOUNCER_SPAWN_COOLDOWN;
+			s_eBouncerState = BOUNCER_STATE_WAITING_FOR_SPAWN;
+		}
+		else {
+			bodySimulate(&s_sBodyBouncer);
+			bobPush(&s_sBodyBouncer.sBob);
+			if(s_hasBouncerNewVelocity) {
+				s_sBodyBouncer.fVelocityX = s_fNewBouncerVelocityX;
+				s_sBodyBouncer.fVelocityY = s_fNewBouncerVelocityY;
+				s_hasBouncerNewVelocity = 0;
+			}
 		}
 	}
 

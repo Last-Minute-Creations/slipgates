@@ -51,8 +51,8 @@ Tiles:
 Energy ball (10 chambers):
 	✔ Bounce from walls @done(23-05-27 09:26)
 	✔ Receiver button @done(23-05-27 10:31)
+	✔ Limited lifespan and respawns @done(23-05-27 11:51)
 	☐ Spawner
-	☐ Limited lifespan and respawns
 	☐ Collision with objects - kill player
 
 Misc objects:
