@@ -27,29 +27,29 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 		case DIRECTION_UP:
 			switch(g_pSlipgates[!ubIndexSrc].eNormal) {
 				case DIRECTION_UP: {
-					WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE);
+					WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE);
 					pBody->fPosX = fix16_add(pBody->fPosX, fix16_from_int(wDeltaX));
 					pBody->fVelocityY = -pBody->fVelocityY;
 					// Be sure to teleport exactly at same height, otherwise U-loop will increase velocity
-					UWORD wDeltaY = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileY * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					UWORD wDeltaY = -(WORD)(g_pSlipgates[ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 					pBody->fPosY = fix16_add(pBody->fPosY, fix16_from_int(wDeltaY));
 				} break;
 				case DIRECTION_DOWN: {
-					WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE);
+					WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE);
 					pBody->fPosX = fix16_add(pBody->fPosX, fix16_from_int(wDeltaX));
-					pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileY + 1) * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubY + 1) * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_LEFT: {
 					pBody->fVelocityX = -pBody->fVelocityY;
 					pBody->fVelocityY = 0; // faster / easier to control (?) than swapped variant
-					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE - pBody->ubWidth);
-					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE - pBody->ubWidth);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_RIGHT: {
 					pBody->fVelocityX = pBody->fVelocityY;
 					pBody->fVelocityY = 0; // faster / easier to control (?) than swapped variant
-					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
-					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubX + 1) * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_NONE:
 					break;
@@ -58,29 +58,29 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 		case DIRECTION_DOWN:
 			switch(g_pSlipgates[!ubIndexSrc].eNormal) {
 				case DIRECTION_UP: {
-					WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE);
+					WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE);
 					pBody->fPosX = fix16_add(pBody->fPosX, fix16_from_int(wDeltaX));
-					pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileY) * MAP_TILE_SIZE - pBody->ubHeight);
+					pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubY) * MAP_TILE_SIZE - pBody->ubHeight);
 				} break;
 				case DIRECTION_DOWN: {
-					WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE);
+					WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE);
 					pBody->fPosX = fix16_add(pBody->fPosX, fix16_from_int(wDeltaX));
 					pBody->fVelocityY = -pBody->fVelocityY;
 					// Be sure to teleport exactly at same height, otherwise U-loop will increase velocity
-					UWORD wDeltaY = -(WORD)(g_pSlipgates[ubIndexSrc].uwTileY * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					UWORD wDeltaY = -(WORD)(g_pSlipgates[ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 					pBody->fPosY = fix16_add(pBody->fPosY, fix16_from_int(wDeltaY));
 				} break;
 				case DIRECTION_LEFT: {
 					pBody->fVelocityX = pBody->fVelocityY;
 					pBody->fVelocityY = 0; // faster / easier to control (?) than swapped variant
-					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX) * MAP_TILE_SIZE - pBody->ubWidth);
-					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubX) * MAP_TILE_SIZE - pBody->ubWidth);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_RIGHT: {
 					pBody->fVelocityX = -pBody->fVelocityY;
 					pBody->fVelocityY = 0; // faster / easier to control (?) than swapped variant
-					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
-					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubX + 1) * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_NONE:
 					break;
@@ -91,23 +91,23 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 				case DIRECTION_UP: {
 					pBody->fVelocityY = -pBody->fVelocityX;
 					pBody->fVelocityX = 0; // faster / easier to control (?) than swapped variant
-					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
-					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE - pBody->ubHeight);
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubX + 1) * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE - pBody->ubHeight);
 				} break;
 				case DIRECTION_DOWN: {
 					pBody->fVelocityY = pBody->fVelocityX;
 					pBody->fVelocityX = 0; // faster / easier to control (?) than swapped variant
-					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
-					pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileY + 1) * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubX + 1) * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubY + 1) * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_LEFT: {
 					pBody->fVelocityX = -pBody->fVelocityX;
-					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE - pBody->ubWidth);
-					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE - pBody->ubWidth);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_RIGHT: {
-					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
-					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubX + 1) * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_NONE: {
 
@@ -119,23 +119,23 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 				case DIRECTION_UP: {
 					pBody->fVelocityY = pBody->fVelocityX;
 					pBody->fVelocityX = 0; // faster / easier to control (?) than swapped variant
-					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE);
-					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE - pBody->ubHeight);
+					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE - pBody->ubHeight);
 				} break;
 				case DIRECTION_DOWN: {
 					pBody->fVelocityY = -pBody->fVelocityX;
 					pBody->fVelocityX = 0; // faster / easier to control (?) than swapped variant
-					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileX * MAP_TILE_SIZE);
-					pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileY + 1) * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubX * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubY + 1) * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_LEFT: {
-					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX) * MAP_TILE_SIZE- pBody->ubWidth);
-					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubX) * MAP_TILE_SIZE- pBody->ubWidth);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_RIGHT: {
 					pBody->fVelocityX = -pBody->fVelocityX;
-					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].uwTileX + 1) * MAP_TILE_SIZE);
-					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].uwTileY * MAP_TILE_SIZE);
+					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubX + 1) * MAP_TILE_SIZE);
+					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_NONE: {
 

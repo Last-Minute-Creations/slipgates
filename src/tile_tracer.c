@@ -65,18 +65,8 @@ void tracerProcess(tTileTracer *pTracer) {
 
 		if(mapIsCollidingWithPortalProjectilesAt(uwTileX, uwTileY)) {
 			pTracer->isActive = 0;
-			UWORD uwSlipgateOldTile1X = g_pSlipgates[pTracer->ubIndex].uwTileX;
-			UWORD uwSlipgateOldTile1Y = g_pSlipgates[pTracer->ubIndex].uwTileY;
-			UWORD uwSlipgateOldTile2X = g_pSlipgates[pTracer->ubIndex].uwOtherTileX;
-			UWORD uwSlipgateOldTile2Y = g_pSlipgates[pTracer->ubIndex].uwOtherTileY;
-			// TODO: tile 2
-			if(mapTrySpawnSlipgate(pTracer->ubIndex, uwTileX, uwTileY)) {
-				gameDrawTile(uwSlipgateOldTile1X, uwSlipgateOldTile1Y);
-				gameDrawTile(uwSlipgateOldTile2X, uwSlipgateOldTile2Y);
-				gameDrawTile(g_pSlipgates[pTracer->ubIndex].uwTileX, g_pSlipgates[pTracer->ubIndex].uwTileY);
-				gameDrawTile(g_pSlipgates[pTracer->ubIndex].uwOtherTileX, g_pSlipgates[pTracer->ubIndex].uwOtherTileY);
-				break;
-			}
+			mapTrySpawnSlipgate(pTracer->ubIndex, uwTileX, uwTileY);
+			break;
 		}
 	}
 }

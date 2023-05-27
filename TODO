@@ -20,13 +20,13 @@ General:
 	✔ Projectiles doesn't collide with force/lethal iles @done(23-05-27 14:41)
 	✔ Boxes doesn't collide with lethal tiles @done(23-05-27 14:41)
 	✔ Bouncers doesn't collide with force/lethal tiles @done(23-05-27 14:41)
+	✔ Fix overlapping slipgates @done(23-05-27 18:53)
 	☐ Collisions between objects
 	☐ Edit mode
 	☐ Faster map restarts without file reload
 	☐ Menu
 	☐ Outro screen
 	☐ Entrance tiles
-	☐ Fix overlapping slipgates
 	☐ Abyss - tile that kills players and objects, invisible 3 rows under map?
 	☐ Basic turrets (11 chambers)
 	☐ Multi-bob character body
