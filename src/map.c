@@ -184,7 +184,11 @@ void mapPressButtonAt(UBYTE ubX, UBYTE ubY) {
 	if(!mapTileIsButton(eTile)) {
 		logWrite("ERR: Tile %d at %hhu,%hhu is not a button!\n", eTile, ubX, ubY);
 	}
-	s_ubButtonPressMask |= BV(eTile - TILE_BUTTON_1);
+	mapPressButtonIndex(eTile - TILE_BUTTON_1);
+}
+
+void mapPressButtonIndex(UBYTE ubButtonIndex) {
+	s_ubButtonPressMask |= BV(ubButtonIndex);
 }
 
 //----------------------------------------------------------------- INTERACTIONS

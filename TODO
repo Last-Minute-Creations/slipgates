@@ -49,9 +49,10 @@ Tiles:
 	☐ Togglable wall (3 chambers)
 
 Energy ball (10 chambers):
-	☐ Spawner
 	✔ Bounce from walls @done(23-05-27 09:26)
-	☐ Receiver button
+	✔ Receiver button @done(23-05-27 10:31)
+	☐ Spawner
+	☐ Limited lifespan and respawns
 	☐ Collision with objects - kill player
 
 Misc objects:

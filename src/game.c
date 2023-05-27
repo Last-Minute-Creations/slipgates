@@ -49,6 +49,7 @@ static tBodyBox s_sBodyBouncer;
 static UBYTE s_hasBouncerNewVelocity;
 static fix16_t s_fNewBouncerVelocityX;
 static fix16_t s_fNewBouncerVelocityY;
+static UBYTE s_isReceiverReached;
 
 static UWORD s_uwGameFrame;
 static UBYTE s_ubCurrentLevel;
@@ -81,8 +82,8 @@ static UBYTE tileGetColor(tTile eTile) {
 		case TILE_BUTTON_7:
 		case TILE_BUTTON_8:
 			return 12;
-		case TILE_GATE_1:
-			return 11;
+		case TILE_GATE_1: return 11;
+		case TILE_RECEIVER: return 9;
 		default: return 16;
 	}
 }
@@ -111,12 +112,17 @@ static void onBoxCollided(
 }
 
 static void onBouncerCollided(
-	UNUSED_ARG tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY,
+	tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY,
 	UNUSED_ARG void *pData
 ) {
-	s_hasBouncerNewVelocity = 1;
-	s_fNewBouncerVelocityX = -s_sBodyBouncer.fVelocityX;
-	s_fNewBouncerVelocityY = -s_sBodyBouncer.fVelocityY;
+	if(eTile == TILE_RECEIVER) {
+		s_isReceiverReached = 1;
+	}
+	else {
+		s_hasBouncerNewVelocity = 1;
+		s_fNewBouncerVelocityX = -s_sBodyBouncer.fVelocityX;
+		s_fNewBouncerVelocityY = -s_sBodyBouncer.fVelocityY;
+	}
 }
 
 static void loadLevel(UBYTE ubIndex) {
@@ -141,6 +147,7 @@ static void loadLevel(UBYTE ubIndex) {
 	s_sBodyBouncer.fAccelerationY = 0;
 	s_sBodyBouncer.fVelocityX = fix16_from_int(2);
 	s_hasBouncerNewVelocity = 0;
+	s_isReceiverReached = 0;
 
 	tracerInit(&g_sTracerSlipgate);
 	drawMap();
@@ -306,6 +313,10 @@ static void gameGsLoop(void) {
 		*pTileUnderCursor = TILE_GATE_1;
 		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
 	}
+	else if(keyUse(KEY_PERIOD)) {
+		*pTileUnderCursor = TILE_RECEIVER;
+		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+	}
 
 	for(UBYTE i = 0; i < MAP_INTERACTIONS_MAX; ++i) {
 		if(keyUse(KEY_1 + i) && *pTileUnderCursor == TILE_GATE_1) {
@@ -358,12 +369,17 @@ static void gameGsLoop(void) {
 		bobPush(&s_pBoxBodies[i].sBob);
 	}
 
-	bodySimulate(&s_sBodyBouncer);
-	bobPush(&s_sBodyBouncer.sBob);
-	if(s_hasBouncerNewVelocity) {
-		s_sBodyBouncer.fVelocityX = s_fNewBouncerVelocityX;
-		s_sBodyBouncer.fVelocityY = s_fNewBouncerVelocityY;
-		s_hasBouncerNewVelocity = 0;
+	if(s_isReceiverReached) {
+		mapPressButtonIndex(3);
+	}
+	else {
+		bodySimulate(&s_sBodyBouncer);
+		bobPush(&s_sBodyBouncer.sBob);
+		if(s_hasBouncerNewVelocity) {
+			s_sBodyBouncer.fVelocityX = s_fNewBouncerVelocityX;
+			s_sBodyBouncer.fVelocityY = s_fNewBouncerVelocityY;
+			s_hasBouncerNewVelocity = 0;
+		}
 	}
 
 	bodySimulate(&s_sPlayer.sBody);
@@ -474,6 +490,9 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	if(mapTileIsButton(eTile)) {
 		UBYTE ubButtonIndex = eTile - TILE_BUTTON_1;
 		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(ubButtonIndex));
+	}
+	else if(eTile == TILE_RECEIVER) {
+		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(3));
 	}
 	else {
 		tInteraction *pInteraction = mapGetInteractionByTile(ubTileX, ubTileY);

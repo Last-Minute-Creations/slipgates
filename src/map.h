@@ -46,6 +46,7 @@ typedef enum tTile {
 	TILE_BUTTON_7           = 14 | MAP_LAYER_SOLID_FOR_BODIES | MAP_LAYER_SOLID_FOR_PROJECTILES | MAP_LAYER_BUTTON,
 	TILE_BUTTON_8           = 15 | MAP_LAYER_SOLID_FOR_BODIES | MAP_LAYER_SOLID_FOR_PROJECTILES | MAP_LAYER_BUTTON,
 	TILE_GATE_1             = 16 | MAP_LAYER_SOLID_FOR_BODIES | MAP_LAYER_SOLID_FOR_PROJECTILES,
+	TILE_RECEIVER           = 17 | MAP_LAYER_SOLID_FOR_BODIES | MAP_LAYER_SOLID_FOR_PROJECTILES,
 } tTile;
 
 typedef struct tFix16Coord {
@@ -70,6 +71,8 @@ void mapSave(UBYTE ubIndex);
 void mapProcess(void);
 
 void mapPressButtonAt(UBYTE ubX, UBYTE ubY);
+
+void mapPressButtonIndex(UBYTE ubButtonIndex);
 
 //----------------------------------------------------------------- INTERACTIONS
 
