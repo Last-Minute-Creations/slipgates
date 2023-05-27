@@ -100,12 +100,16 @@ static void gameDrawInteractionTiles(const tInteraction *pInteraction) {
 	}
 }
 
-static void onBoxCollided(
+static UBYTE boxCollisionHandler(
 	tTile eTile, UBYTE ubTileX, UBYTE ubTileY, UNUSED_ARG void *pData
 ) {
-	if(mapTileIsButton(eTile)) {
-		mapPressButtonAt(ubTileX, ubTileY);
+	UBYTE isColliding = mapTileIsCollidingWithBoxes(eTile);
+	if(isColliding) {
+		if(mapTileIsButton(eTile)) {
+			mapPressButtonAt(ubTileX, ubTileY);
+		}
 	}
+	return isColliding;
 }
 
 static void loadLevel(UBYTE ubIndex) {
@@ -118,8 +122,7 @@ static void loadLevel(UBYTE ubIndex) {
 	playerReset(&s_sPlayer, g_sCurrentLevel.sSpawnPos.fX, g_sCurrentLevel.sSpawnPos.fY);
 	for(UBYTE i = 0; i < MAP_BOXES_MAX; ++i) {
 		bodyInit(&s_pBoxBodies[i], 0, 0, 8, 8);
-		s_pBoxBodies[i].cbTileCollisionCheck = mapTileIsCollidingWithBoxes;
-		s_pBoxBodies[i].onCollided = onBoxCollided;
+		s_pBoxBodies[i].cbTileCollisionHandler = boxCollisionHandler;
 	}
 	for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {
 		s_pBoxBodies[i].fPosX = g_sCurrentLevel.pBoxSpawns[i].fX;

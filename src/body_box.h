@@ -9,11 +9,9 @@
 #include <ace/managers/bob.h>
 #include "map.h"
 
-typedef void (*tTileCollisionHandler)(
+typedef UBYTE (*tTileCollisionHandler)(
 	tTile eTile, UBYTE ubTileX, UBYTE ubTileY, void *pData
 );
-
-typedef UBYTE (*tTileCollisionChecker)(tTile eTile);
 
 typedef struct tBodyBox {
 	tBob sBob;
@@ -23,8 +21,7 @@ typedef struct tBodyBox {
 	fix16_t fVelocityY;
 	fix16_t fAccelerationX;
 	fix16_t fAccelerationY;
-	tTileCollisionHandler onCollided;
-	tTileCollisionChecker cbTileCollisionCheck;
+	tTileCollisionHandler cbTileCollisionHandler;
 	void *pOnCollidedData;
 	UBYTE ubWidth;
 	UBYTE ubHeight;

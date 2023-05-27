@@ -30,19 +30,23 @@ static UBYTE playerCanJump(tPlayer *pPlayer) {
 	return pPlayer->sBody.isOnGround;
 }
 
-static void playerOnCollided(
+static UBYTE playerCollisionHandler(
 	tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY, void *pData
 ) {
-	if(mapTileIsLethal(eTile)) {
-		tPlayer *pPlayer = pData;
-		playerDamage(pPlayer, 100);
+	UBYTE isColliding = mapTileIsCollidingWithPlayers(eTile);
+	if(isColliding) {
+		if(mapTileIsLethal(eTile)) {
+			tPlayer *pPlayer = pData;
+			playerDamage(pPlayer, 100);
+		}
+		else if(mapTileIsExit(eTile)) {
+			gameMarkExitReached();
+		}
+		else if(mapTileIsButton(eTile)) {
+			mapPressButtonAt(ubTileX, ubTileY);
+		}
 	}
-	else if(mapTileIsExit(eTile)) {
-		gameMarkExitReached();
-	}
-	else if(mapTileIsButton(eTile)) {
-		mapPressButtonAt(ubTileX, ubTileY);
-	}
+	return isColliding;
 }
 
 //------------------------------------------------------------------- PUBLIC FNS
@@ -67,8 +71,7 @@ UBYTE playerTryShootSlipgateAt(
 
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	bodyInit(&pPlayer->sBody, fPosX, fPosY, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT);
-	pPlayer->sBody.cbTileCollisionCheck = mapTileIsCollidingWithPlayers;
-	pPlayer->sBody.onCollided = playerOnCollided;
+	pPlayer->sBody.cbTileCollisionHandler = playerCollisionHandler;
 	pPlayer->sBody.pOnCollidedData = pPlayer;
 	pPlayer->pGrabbedBox = 0;
 	pPlayer->bHealth = 1;

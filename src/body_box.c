@@ -7,13 +7,7 @@
 
 static UBYTE bodyCheckCollision(tBodyBox *pBody, UBYTE ubTileX, UBYTE ubTileY) {
 	tTile eTile = mapGetTileAt(ubTileX, ubTileY);
-	if(pBody->cbTileCollisionCheck(eTile)) {
-		if(pBody->onCollided) {
-			pBody->onCollided(eTile, ubTileX, ubTileY, pBody->pOnCollidedData);
-		}
-		return 1;
-	}
-	return 0;
+	return pBody->cbTileCollisionHandler(eTile, ubTileX, ubTileY, pBody->pOnCollidedData);
 }
 
 void bodyInit(
@@ -24,7 +18,7 @@ void bodyInit(
 	pBody->ubWidth = ubWidth;
 	pBody->ubHeight = ubHeight;
 	pBody->fAccelerationY = fix16_one / 4; // gravity
-	pBody->onCollided = 0;
+	pBody->cbTileCollisionHandler = 0;
 }
 
 void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {

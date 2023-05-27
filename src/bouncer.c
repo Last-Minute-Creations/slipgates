@@ -28,18 +28,22 @@ static fix16_t s_fSpawnPositionY;
 
 //------------------------------------------------------------------ PRIVATE FNS
 
-static void onBouncerCollided(
+static UBYTE bouncerCollisionHandler(
 	tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY,
 	UNUSED_ARG void *pData
 ) {
-	if(eTile == TILE_RECEIVER) {
-		s_eBouncerState = BOUNCER_STATE_RECEIVER_REACHED;
+	UBYTE isColliding = mapTileIsCollidingWithProjectiles(eTile);
+	if(isColliding) {
+		if(eTile == TILE_RECEIVER) {
+			s_eBouncerState = BOUNCER_STATE_RECEIVER_REACHED;
+		}
+		else {
+			s_hasBouncerNewVelocity = 1;
+			s_fNewBouncerVelocityX = -s_sBodyBouncer.fVelocityX;
+			s_fNewBouncerVelocityY = -s_sBodyBouncer.fVelocityY;
+		}
 	}
-	else {
-		s_hasBouncerNewVelocity = 1;
-		s_fNewBouncerVelocityX = -s_sBodyBouncer.fVelocityX;
-		s_fNewBouncerVelocityY = -s_sBodyBouncer.fVelocityY;
-	}
+	return isColliding;
 }
 
 //------------------------------------------------------------------- PUBLIC FNS
@@ -77,8 +81,7 @@ void bouncerInit(UBYTE ubSpawnerTileX, UBYTE ubSpawnerTileY) {
 	s_fSpawnPositionY = fix16_from_int(uwBouncerSpawnY);
 
 	bodyInit(&s_sBodyBouncer, s_fSpawnPositionX, s_fSpawnPositionY, 8, 8);
-	s_sBodyBouncer.cbTileCollisionCheck = mapTileIsCollidingWithProjectiles;
-	s_sBodyBouncer.onCollided = onBouncerCollided;
+	s_sBodyBouncer.cbTileCollisionHandler = bouncerCollisionHandler;
 	s_sBodyBouncer.fAccelerationY = 0;
 	s_hasBouncerNewVelocity = 0;
 	s_eBouncerState = BOUNCER_STATE_WAITING_FOR_SPAWN;
