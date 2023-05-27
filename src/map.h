@@ -47,6 +47,7 @@ typedef enum tTile {
 	TILE_BUTTON_8           = 15 | MAP_LAYER_SOLID_FOR_BODIES | MAP_LAYER_SOLID_FOR_PROJECTILES | MAP_LAYER_BUTTON,
 	TILE_GATE_1             = 16 | MAP_LAYER_SOLID_FOR_BODIES | MAP_LAYER_SOLID_FOR_PROJECTILES,
 	TILE_RECEIVER           = 17 | MAP_LAYER_SOLID_FOR_BODIES | MAP_LAYER_SOLID_FOR_PROJECTILES,
+	TILE_BOUNCER_SPAWNER    = 18 | MAP_LAYER_SOLID_FOR_BODIES | MAP_LAYER_SOLID_FOR_PROJECTILES,
 } tTile;
 
 typedef struct tFix16Coord {
@@ -59,6 +60,8 @@ typedef struct tLevel {
 	tTile pTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
 	tFix16Coord pBoxSpawns[MAP_BOXES_MAX];
 	UBYTE ubBoxCount;
+	UBYTE ubBouncerSpawnerTileX;
+	UBYTE ubBouncerSpawnerTileY;
 } tLevel;
 
 extern tSlipgate g_pSlipgates[2];
@@ -84,13 +87,13 @@ tInteraction *mapGetInteractionByTile(UBYTE ubTileX, UBYTE ubTileY);
 
 tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY);
 
-UBYTE mapIsTileEmptyAt(UBYTE ubTileX, UBYTE ubTileY);
+UBYTE mapIsEmptyAt(UBYTE ubTileX, UBYTE ubTileY);
 
-UBYTE mapIsTileSolidForProjectilesAt(UBYTE ubTileX, UBYTE ubTileY);
+UBYTE mapIsSolidForProjectilesAt(UBYTE ubTileX, UBYTE ubTileY);
 
-UBYTE mapIsTileSolidForBodiesAt(UBYTE ubTileX, UBYTE ubTileY);
+UBYTE mapIsSolidForBodiesAt(UBYTE ubTileX, UBYTE ubTileY);
 
-UBYTE mapIsTileSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY);
+UBYTE mapIsSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY);
 
 //---------------------------------------------------------------- TILE CHECKERS
 

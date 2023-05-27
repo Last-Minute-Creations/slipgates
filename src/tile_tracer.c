@@ -63,7 +63,7 @@ void tracerProcess(tTileTracer *pTracer) {
 		UWORD uwTileX = uwPosX / MAP_TILE_SIZE;
 		UWORD uwTileY = uwPosY / MAP_TILE_SIZE;
 
-		if(mapIsTileSolidForProjectilesAt(uwTileX, uwTileY)) {
+		if(mapIsSolidForProjectilesAt(uwTileX, uwTileY)) {
 			pTracer->isActive = 0;
 			UWORD uwSlipgateOldTile1X = g_pSlipgates[pTracer->ubIndex].uwTileX;
 			UWORD uwSlipgateOldTile1Y = g_pSlipgates[pTracer->ubIndex].uwTileY;

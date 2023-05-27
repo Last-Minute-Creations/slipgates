@@ -19,9 +19,7 @@
 #include "game_math.h"
 #include "tile_tracer.h"
 #include "player.h"
-
-#define GAME_BOUNCER_LIFE_COOLDOWN 500
-#define GAME_BOUNCER_SPAWN_COOLDOWN 75
+#include "bouncer.h"
 
 // DEBUG SWITCHES
 // #define GAME_DRAW_GRID
@@ -32,12 +30,6 @@ typedef enum tExitState {
 	EXIT_RESTART,
 	EXIT_NEXT,
 } tExitState;
-
-typedef enum tBouncerState {
-	BOUNCER_STATE_WAITING_FOR_SPAWN,
-	BOUNCER_STATE_MOVING,
-	BOUNCER_STATE_RECEIVER_REACHED,
-} tBouncerState;
 
 static tView *s_pView;
 static tVPort *s_pVpMain;
@@ -53,13 +45,6 @@ static tBitMap *s_pBmCursor;
 static tPlayer s_sPlayer;
 static tBodyBox s_pBoxBodies[MAP_BOXES_MAX];
 static tSprite *s_pSpriteCrosshair;
-
-static tBodyBox s_sBodyBouncer;
-static UBYTE s_hasBouncerNewVelocity;
-static fix16_t s_fNewBouncerVelocityX;
-static fix16_t s_fNewBouncerVelocityY;
-static tBouncerState s_eBouncerState;
-static UWORD s_uwBouncerCooldown;
 
 static UWORD s_uwGameFrame;
 static UBYTE s_ubCurrentLevel;
@@ -94,7 +79,9 @@ static UBYTE tileGetColor(tTile eTile) {
 			return 12;
 		case TILE_GATE_1: return 11;
 		case TILE_RECEIVER: return 9;
-		default: return 16;
+		case TILE_BOUNCER_SPAWNER: return 6;
+		case TILE_BG_1: return 15;
+		default: return 0;
 	}
 }
 
@@ -121,20 +108,6 @@ static void onBoxCollided(
 	}
 }
 
-static void onBouncerCollided(
-	tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY,
-	UNUSED_ARG void *pData
-) {
-	if(eTile == TILE_RECEIVER) {
-		s_eBouncerState = BOUNCER_STATE_RECEIVER_REACHED;
-	}
-	else {
-		s_hasBouncerNewVelocity = 1;
-		s_fNewBouncerVelocityX = -s_sBodyBouncer.fVelocityX;
-		s_fNewBouncerVelocityY = -s_sBodyBouncer.fVelocityY;
-	}
-}
-
 static void loadLevel(UBYTE ubIndex) {
 	viewLoad(0);
 	s_ubCurrentLevel = ubIndex;
@@ -152,14 +125,10 @@ static void loadLevel(UBYTE ubIndex) {
 		s_pBoxBodies[i].fPosY = g_sCurrentLevel.pBoxSpawns[i].fY;
 	}
 
-	bodyInit(&s_sBodyBouncer, fix16_from_int(200), fix16_from_int(100), 8, 8);
-	s_sBodyBouncer.onCollided = onBouncerCollided;
-	s_sBodyBouncer.fAccelerationY = 0;
-	s_sBodyBouncer.fVelocityX = fix16_from_int(2);
-	s_hasBouncerNewVelocity = 0;
-	s_eBouncerState = BOUNCER_STATE_WAITING_FOR_SPAWN;
-	s_uwBouncerCooldown = 1;
-
+	bouncerInit(
+		g_sCurrentLevel.ubBouncerSpawnerTileX,
+		g_sCurrentLevel.ubBouncerSpawnerTileY
+	);
 	tracerInit(&g_sTracerSlipgate);
 	drawMap();
 	viewLoad(s_pView);
@@ -221,7 +190,7 @@ static void gameGsCreate(void) {
 		);
 	}
 	bobInit(
-		&s_sBodyBouncer.sBob, 16, 8, 1,
+		&bouncerGetBody()->sBob, 16, 8, 1,
 		s_pBouncerFrames->Planes[0], s_pBouncerMasks->Planes[0], 0, 0
 	);
 
@@ -277,30 +246,32 @@ static void gameGsLoop(void) {
 
 	// Level editor
 #if defined(GAME_EDITOR_ENABLED)
-	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[sPosCross.uwX / MAP_TILE_SIZE][sPosCross.uwY / MAP_TILE_SIZE];
+	UWORD uwCursorTileX = sPosCross.uwX / MAP_TILE_SIZE;
+	UWORD uwCursorTileY = sPosCross.uwY / MAP_TILE_SIZE;
+	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[uwCursorTileX][uwCursorTileY];
 	if(keyCheck(KEY_Z)) {
 		*pTileUnderCursor = TILE_BG_1;
-		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_X)) {
 		*pTileUnderCursor = TILE_WALL_1;
-		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_C)) {
 		*pTileUnderCursor = TILE_WALL_NO_SLIPGATE_1;
-		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_V)) {
 		*pTileUnderCursor = TILE_FORCE_FIELD_1;
-		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_B)) {
 		*pTileUnderCursor = TILE_DEATH_FIELD_1;
-		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_N)) {
 		*pTileUnderCursor = TILE_EXIT_1;
-		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_M)) {
 		if(mapTileIsButton(*pTileUnderCursor)) {
@@ -311,22 +282,40 @@ static void gameGsLoop(void) {
 				else {
 					++*pTileUnderCursor;
 				}
-				gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+				gameDrawTile(uwCursorTileX, uwCursorTileY);
 			}
 		}
 		else {
 			keyUse(KEY_M); // prevent double-processing of same tile
 			*pTileUnderCursor = TILE_BUTTON_1;
-			gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+			gameDrawTile(uwCursorTileX, uwCursorTileY);
 		}
 	}
 	else if(keyCheck(KEY_COMMA)) {
 		*pTileUnderCursor = TILE_GATE_1;
-		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_PERIOD)) {
 		*pTileUnderCursor = TILE_RECEIVER;
-		gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+		gameDrawTile(uwCursorTileX, uwCursorTileY);
+	}
+	else if(keyUse(KEY_SLASH)) {
+		if(g_sCurrentLevel.ubBouncerSpawnerTileX != BOUNCER_TILE_INVALID) {
+			g_sCurrentLevel.pTiles[g_sCurrentLevel.ubBouncerSpawnerTileX][g_sCurrentLevel.ubBouncerSpawnerTileY] = TILE_WALL_1;
+			gameDrawTile(
+				g_sCurrentLevel.ubBouncerSpawnerTileX,
+				g_sCurrentLevel.ubBouncerSpawnerTileY
+			);
+		}
+
+		*pTileUnderCursor = TILE_BOUNCER_SPAWNER;
+		g_sCurrentLevel.ubBouncerSpawnerTileX = uwCursorTileX;
+		g_sCurrentLevel.ubBouncerSpawnerTileY = uwCursorTileY;
+		bouncerInit(
+			g_sCurrentLevel.ubBouncerSpawnerTileX,
+			g_sCurrentLevel.ubBouncerSpawnerTileY
+		);
+		gameDrawTile(uwCursorTileX, uwCursorTileY);
 	}
 
 	for(UBYTE i = 0; i < MAP_INTERACTIONS_MAX; ++i) {
@@ -334,13 +323,13 @@ static void gameGsLoop(void) {
 			if(keyCheck(KEY_CONTROL)) {
 				// Add/remove tile to/from interaction group
 				tInteraction *pInteraction = mapGetInteractionByIndex(i);
-				interactionToggleTile(pInteraction, sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+				interactionToggleTile(pInteraction, uwCursorTileX, uwCursorTileY);
 				gameDrawInteractionTiles(pInteraction);
 			}
 			else {
 				// change interaction group's activation mask
 				tInteraction *pInteraction = mapGetInteractionByTile(
-					sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE
+					uwCursorTileX, uwCursorTileY
 				);
 				if(pInteraction) {
 					pInteraction->ubButtonMask ^= BV(i);
@@ -349,7 +338,7 @@ static void gameGsLoop(void) {
 			}
 
 			// Could be no longer part of interaction
-			gameDrawTile(sPosCross.uwX / MAP_TILE_SIZE, sPosCross.uwY / MAP_TILE_SIZE);
+			gameDrawTile(uwCursorTileX, uwCursorTileY);
 			break;
 		}
 	}
@@ -364,7 +353,7 @@ static void gameGsLoop(void) {
 		}
 	}
 	if(keyUse(KEY_U)) {
-		bodyTeleport(&s_sBodyBouncer, sPosCross.uwX, sPosCross.uwY);
+		bodyTeleport(bouncerGetBody(), sPosCross.uwX, sPosCross.uwY);
 	}
 #endif
 
@@ -380,30 +369,8 @@ static void gameGsLoop(void) {
 		bobPush(&s_pBoxBodies[i].sBob);
 	}
 
-	if(s_eBouncerState == BOUNCER_STATE_RECEIVER_REACHED) {
-		mapPressButtonIndex(3);
-	}
-	else if(s_eBouncerState == BOUNCER_STATE_WAITING_FOR_SPAWN) {
-		if(--s_uwBouncerCooldown == 0) {
-			// TODO: spawn next to spawner
-			s_uwBouncerCooldown = GAME_BOUNCER_LIFE_COOLDOWN;
-			s_eBouncerState = BOUNCER_STATE_MOVING;
-		}
-	}
-	else {
-		if(--s_uwBouncerCooldown == 0) {
-			s_uwBouncerCooldown = GAME_BOUNCER_SPAWN_COOLDOWN;
-			s_eBouncerState = BOUNCER_STATE_WAITING_FOR_SPAWN;
-		}
-		else {
-			bodySimulate(&s_sBodyBouncer);
-			bobPush(&s_sBodyBouncer.sBob);
-			if(s_hasBouncerNewVelocity) {
-				s_sBodyBouncer.fVelocityX = s_fNewBouncerVelocityX;
-				s_sBodyBouncer.fVelocityY = s_fNewBouncerVelocityY;
-				s_hasBouncerNewVelocity = 0;
-			}
-		}
+	if(bouncerProcess()) {
+		bobPush(&bouncerGetBody()->sBob);
 	}
 
 	bodySimulate(&s_sPlayer.sBody);

@@ -7,6 +7,7 @@
 #include <ace/utils/file.h>
 #include <ace/managers/system.h>
 #include "game.h"
+#include "bouncer.h"
 
 //----------------------------------------------------------------- PRIVATE VARS
 
@@ -96,6 +97,13 @@ void mapLoad(UBYTE ubIndex) {
 				UWORD uwTileCode;
 				fileRead(pFile, &uwTileCode, sizeof(uwTileCode));
 				g_sCurrentLevel.pTiles[ubX][ubY] = uwTileCode;
+				if(uwTileCode == TILE_BOUNCER_SPAWNER) {
+					if(g_sCurrentLevel.ubBouncerSpawnerTileX != BOUNCER_TILE_INVALID) {
+						logWrite("ERR: More than one bouncer spawner on map\n");
+					}
+					g_sCurrentLevel.ubBouncerSpawnerTileX = ubX;
+					g_sCurrentLevel.ubBouncerSpawnerTileY = ubY;
+				}
 			}
 		}
 
@@ -215,19 +223,19 @@ tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY) {
 	return g_sCurrentLevel.pTiles[ubTileX][ubTileY];
 }
 
-UBYTE mapIsTileEmptyAt(UBYTE ubTileX, UBYTE ubTileY) {
+UBYTE mapIsEmptyAt(UBYTE ubTileX, UBYTE ubTileY) {
 	return g_sCurrentLevel.pTiles[ubTileX][ubTileY] == TILE_BG_1;
 }
 
-UBYTE mapIsTileSolidForBodiesAt(UBYTE ubTileX, UBYTE ubTileY) {
+UBYTE mapIsSolidForBodiesAt(UBYTE ubTileX, UBYTE ubTileY) {
 	return mapTileIsSolidForBodies(g_sCurrentLevel.pTiles[ubTileX][ubTileY]);
 }
 
-UBYTE mapIsTileSolidForProjectilesAt(UBYTE ubTileX, UBYTE ubTileY) {
+UBYTE mapIsSolidForProjectilesAt(UBYTE ubTileX, UBYTE ubTileY) {
 	return (g_sCurrentLevel.pTiles[ubTileX][ubTileY] & MAP_LAYER_SOLID_FOR_PROJECTILES) != 0;
 }
 
-UBYTE mapIsTileSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY) {
+UBYTE mapIsSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY) {
 	return (g_sCurrentLevel.pTiles[ubTileX][ubTileY] & MAP_LAYER_SLIPGATABLE) != 0;
 }
 
@@ -252,7 +260,7 @@ UBYTE mapTileIsButton(tTile eTile) {
 //-------------------------------------------------------------------- SLIPGATES
 
 UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
-	if(!mapIsTileSlipgatableAt(ubTileX, ubTileY)) {
+	if(!mapIsSlipgatableAt(ubTileX, ubTileY)) {
 		return 0;
 	}
 
@@ -262,9 +270,9 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 	}
 
 	if(
-		mapIsTileEmptyAt(ubTileX - 1, ubTileY) &&
-		mapIsTileSlipgatableAt(ubTileX, ubTileY + 1) &&
-		mapIsTileEmptyAt(ubTileX - 1, ubTileY + 1)
+		mapIsEmptyAt(ubTileX - 1, ubTileY) &&
+		mapIsSlipgatableAt(ubTileX, ubTileY + 1) &&
+		mapIsEmptyAt(ubTileX - 1, ubTileY + 1)
 	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
@@ -273,9 +281,9 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_LEFT;
 	}
 	else if(
-		mapIsTileEmptyAt(ubTileX + 1, ubTileY) &&
-		mapIsTileSlipgatableAt(ubTileX, ubTileY + 1) &&
-		mapIsTileEmptyAt(ubTileX + 1, ubTileY + 1)
+		mapIsEmptyAt(ubTileX + 1, ubTileY) &&
+		mapIsSlipgatableAt(ubTileX, ubTileY + 1) &&
+		mapIsEmptyAt(ubTileX + 1, ubTileY + 1)
 	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
@@ -284,9 +292,9 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_RIGHT;
 	}
 	else if(
-		mapIsTileEmptyAt(ubTileX, ubTileY - 1) &&
-		mapIsTileSlipgatableAt(ubTileX + 1, ubTileY) &&
-		mapIsTileEmptyAt(ubTileX + 1, ubTileY - 1)
+		mapIsEmptyAt(ubTileX, ubTileY - 1) &&
+		mapIsSlipgatableAt(ubTileX + 1, ubTileY) &&
+		mapIsEmptyAt(ubTileX + 1, ubTileY - 1)
 	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
@@ -295,9 +303,9 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_UP;
 	}
 	else if(
-		mapIsTileEmptyAt(ubTileX, ubTileY + 1) &&
-		mapIsTileSlipgatableAt(ubTileX + 1, ubTileY) &&
-		mapIsTileEmptyAt(ubTileX + 1, ubTileY + 1)
+		mapIsEmptyAt(ubTileX, ubTileY + 1) &&
+		mapIsSlipgatableAt(ubTileX + 1, ubTileY) &&
+		mapIsEmptyAt(ubTileX + 1, ubTileY + 1)
 	) {
 		g_pSlipgates[ubIndex].uwTileX = ubTileX;
 		g_pSlipgates[ubIndex].uwTileY = ubTileY;
