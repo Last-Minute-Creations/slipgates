@@ -23,15 +23,15 @@ void tracerStart(
 
 	pTracer->wDeltaTileX = (wDeltaX > 0) - (wDeltaX < 0);
 	pTracer->wDeltaTileY = (wDeltaY > 0) - (wDeltaY < 0);
-	UWORD uwNextTileX = uwSourceX / MAP_TILE_SIZE + 1;
-	UWORD uwNextTileY = uwSourceY / MAP_TILE_SIZE + 1;
+	UWORD uwNextTileX = uwSourceX / MAP_TILE_SIZE + pTracer->wDeltaTileX;
+	UWORD uwNextTileY = uwSourceY / MAP_TILE_SIZE + pTracer->wDeltaTileY;
 	pTracer->fAccumulatorX = fix16_from_int((WORD)(uwNextTileX * MAP_TILE_SIZE) - (WORD)uwSourceX);
 	pTracer->fAccumulatorY = fix16_from_int((WORD)(uwNextTileY * MAP_TILE_SIZE) - (WORD)uwSourceY);
 
 	fix16_t fSin = csin(ubAngle);
 	fix16_t fCos = ccos(ubAngle);
-	pTracer->fAccumulatorDeltaX = (fCos == 0) ? fix16_from_int(32767) : fix16_abs(fix16_div(fix16_from_int(MAP_TILE_SIZE), ccos(ubAngle)));
-	pTracer->fAccumulatorDeltaY = (fSin == 0) ? fix16_from_int(32767) : fix16_abs(fix16_div(fix16_from_int(MAP_TILE_SIZE), csin(ubAngle)));
+	pTracer->fAccumulatorDeltaX = (fCos == 0) ? fix16_from_int(32767) : (fix16_div(fix16_from_int(MAP_TILE_SIZE), ccos(ubAngle)));
+	pTracer->fAccumulatorDeltaY = (fSin == 0) ? fix16_from_int(32767) : (fix16_div(fix16_from_int(MAP_TILE_SIZE), csin(ubAngle)));
 
 	pTracer->uwTileX = uwSourceX / MAP_TILE_SIZE;
 	pTracer->uwTileY = uwSourceY / MAP_TILE_SIZE;
@@ -45,7 +45,7 @@ void tracerProcess(tTileTracer *pTracer) {
 	}
 
 	for(UBYTE i = TRACER_ITERATIONS_PER_FRAME; i--;) {
-		if(pTracer->fAccumulatorX < pTracer->fAccumulatorY) {
+		if(fix16_abs(pTracer->fAccumulatorX) < fix16_abs(pTracer->fAccumulatorY)) {
 			pTracer->fAccumulatorX = fix16_add(pTracer->fAccumulatorX, pTracer->fAccumulatorDeltaX);
 			pTracer->uwTileX += pTracer->wDeltaTileX;
 		} else {
