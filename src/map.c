@@ -220,29 +220,29 @@ UBYTE mapIsTileSolidForBodiesAt(UBYTE ubTileX, UBYTE ubTileY) {
 }
 
 UBYTE mapIsTileSolidForProjectilesAt(UBYTE ubTileX, UBYTE ubTileY) {
-	return (g_sCurrentLevel.pTiles[ubTileX][ubTileY] & MAP_TILE_MASK_SOLID_FOR_PROJECTILES) != 0;
+	return (g_sCurrentLevel.pTiles[ubTileX][ubTileY] & MAP_LAYER_SOLID_FOR_PROJECTILES) != 0;
 }
 
 UBYTE mapIsTileSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY) {
-	return (g_sCurrentLevel.pTiles[ubTileX][ubTileY] & MAP_TILE_MASK_SLIPGATABLE) != 0;
+	return (g_sCurrentLevel.pTiles[ubTileX][ubTileY] & MAP_LAYER_SLIPGATABLE) != 0;
 }
 
 //---------------------------------------------------------------- TILE CHECKERS
 
 UBYTE mapTileIsSolidForBodies(tTile eTile) {
-	return (eTile & MAP_TILE_MASK_SOLID_FOR_BODIES) != 0;
+	return (eTile & MAP_LAYER_SOLID_FOR_BODIES) != 0;
 }
 
 UBYTE mapTileIsLethal(tTile eTile) {
-	return (eTile & MAP_TILE_MASK_LETHAL) != 0;
+	return (eTile & MAP_LAYER_LETHAL) != 0;
 }
 
 UBYTE mapTileIsExit(tTile eTile) {
-	return (eTile & MAP_TILE_MASK_EXIT) != 0;
+	return (eTile & MAP_LAYER_EXIT) != 0;
 }
 
 UBYTE mapTileIsButton(tTile eTile) {
-	return (eTile & MAP_TILE_MASK_BUTTON) != 0;
+	return (eTile & MAP_LAYER_BUTTON) != 0;
 }
 
 //-------------------------------------------------------------------- SLIPGATES

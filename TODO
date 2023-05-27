@@ -16,16 +16,19 @@ General:
 	✔ Transitions between levels @done(23-05-25 09:44)
 	✔ Button interactions with player @done(23-05-26 16:11)
 	✔ Variable box amount in map @done(23-05-26 20:26)
+	✔ Exit tiles @done(23-05-27 09:27)
+	☐ Collisions with boxes
+	☐ Edit mode
+	☐ Faster map restarts without file reload
 	☐ Menu
 	☐ Outro screen
-	☐ Collisions with boxes
 	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
-	☐ Entrance/exit tiles
+	☐ Entrance tiles
 	☐ Fix overlapping slipgates
 	☐ Abyss (kills players and boxes)
-	☐ Make sure lethal blocks doesn't kill and collide with boxes
+	☐ Make sure lethal blocks doesn't destroy and collide with boxes
+	☐ Basic turrets (11 chambers)
 	☐ Cube spawner (1 chamber)
-	☐ Basic turrets
 	☐ Multi-bob character body
 	☐ Bigger max velocity
 	☐ Increase precision of trig tables for better aiming accuracy
@@ -45,11 +48,16 @@ Tiles:
 	☐ Electricity floor/ceil (7 chambers)
 	☐ Togglable wall (3 chambers)
 
+Energy ball (10 chambers):
+	☐ Spawner
+	✔ Bounce from walls @done(23-05-27 09:26)
+	☐ Receiver button
+	☐ Collision with objects - kill player
+
 Misc objects:
 	✔ Doors (17 chambers) @done(23-05-25 20:33)
 	✔ ANDed doors @done(23-05-26 15:47)
 	✔ Generalize, configurable interaction relations @done(23-05-26 15:47)
-	☐ Energy ball (10 chambers)
 	☐ Lifts (4 chambers)
 	☐ Crushers (3 chambers)
 	☐ Entrance door
