@@ -47,7 +47,7 @@ Tiles:
 	✔ Impassable (blue) beam @done(23-05-23 15:02)
 	✔ Death (red) beam @done(23-05-24 14:31)
 	✔ Button @done(23-05-25 20:36)
-	☐ Electricity floor/ceil (7 chambers)
+	☐ Togglable lethal floor/ceil (7 chambers)
 	☐ Togglable slipgate wall (3 chambers)
 
 Bouncers (10 chambers):
@@ -55,7 +55,6 @@ Bouncers (10 chambers):
 	✔ Receiver button @done(23-05-27 10:31)
 	✔ Limited lifespan and respawns @done(23-05-27 11:51)
 	✔ Spawner @done(23-05-27 12:52)
-	☐ Make sure lethal/force tiles doesn't destroy and collide with bouncers
 	☐ Collision with objects - kill player
 
 Misc objects:
