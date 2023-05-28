@@ -8,6 +8,7 @@
 #include <ace/managers/state.h>
 #include "tile_tracer.h"
 #include "body_box.h"
+#include "player.h"
 
 extern tState g_sStateGame;
 extern tTileTracer g_sTracerSlipgate;
@@ -19,5 +20,7 @@ tUwCoordYX gameGetCrossPosition(void);
 tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY);
 
 void gameMarkExitReached(void);
+
+tPlayer *gameGetPlayer(void);
 
 #endif // SLIPGATES_GAME_H

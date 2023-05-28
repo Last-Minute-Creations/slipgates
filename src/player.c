@@ -17,15 +17,6 @@ static fix16_t s_fPlayerJumpVeloY = F16(-3);
 
 //------------------------------------------------------------------ PRIVATE FNS
 
-static void playerDamage(tPlayer *pPlayer, UBYTE ubAmount) {
-	pPlayer->bHealth = MAX(0, pPlayer->bHealth - ubAmount);
-
-	if(pPlayer->bHealth == 0) {
-		// ded
-		pPlayer->sBody.fVelocityX = 0;
-	}
-}
-
 static UBYTE playerCanJump(tPlayer *pPlayer) {
 	return pPlayer->sBody.isOnGround;
 }
@@ -157,3 +148,11 @@ void playerProcess(tPlayer *pPlayer) {
 	}
 }
 
+void playerDamage(tPlayer *pPlayer, UBYTE ubAmount) {
+	pPlayer->bHealth = MAX(0, pPlayer->bHealth - ubAmount);
+
+	if(pPlayer->bHealth == 0) {
+		// ded
+		pPlayer->sBody.fVelocityX = 0;
+	}
+}

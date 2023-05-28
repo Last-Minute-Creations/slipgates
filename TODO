@@ -21,19 +21,18 @@ General:
 	✔ Boxes doesn't collide with lethal tiles @done(23-05-27 14:41)
 	✔ Bouncers doesn't collide with force/lethal tiles @done(23-05-27 14:41)
 	✔ Fix overlapping slipgates @done(23-05-27 18:53)
-	☐ Collisions between objects
+	✔ Treat unpaired slipgate as a wall @done(23-05-28 11:25)
 	☐ Edit mode
 	☐ Faster map restarts without file reload
 	☐ Menu
 	☐ Outro screen
 	☐ Entrance tiles
-	☐ Abyss - tile that kills players and objects, invisible 3 rows under map?
 	☐ Basic turrets (11 chambers)
 	☐ Multi-bob character body
 	☐ Bigger max velocity
 	☐ Increase precision of trig tables for better aiming accuracy
-	☐ Treat unpaired slipgate as a wall
 	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
+	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 	✘ Collision tiles? @cancelled(23-05-27 12:12)
 
 Boxes:
@@ -41,6 +40,7 @@ Boxes:
 	☐ Constrain range
 	☐ Velocity-based dragging instead of position-based
 	☐ Turn off gravity during pickup
+	☐ Collisions between player and boxes - needed?
 
 Tiles:
 	✔ No-portal wall @done(23-05-23 14:44)
@@ -55,16 +55,16 @@ Bouncers (10 chambers):
 	✔ Receiver button @done(23-05-27 10:31)
 	✔ Limited lifespan and respawns @done(23-05-27 11:51)
 	✔ Spawner @done(23-05-27 12:52)
-	☐ Collision with objects - kill player
+	✔ Collision with objects - kill player @done(23-05-28 12:13)
 
 Misc objects:
 	✔ Doors (17 chambers) @done(23-05-25 20:33)
 	✔ ANDed doors @done(23-05-26 15:47)
 	✔ Generalize, configurable interaction relations @done(23-05-26 15:47)
 	☐ Lifts (4 chambers)
-	☐ Crushers (3 chambers)
 	☐ Entrance door
-	☐ Box spawner (1 chamber)
+	✘ Box spawner (1 chamber) @cancelled(23-05-28 11:26)
+	✘ Crushers (3 chambers) @cancelled(23-05-28 11:26)
 
 Momentum, normal-wise:
 	✔ up-up @done(23-05-19 09:00)

@@ -21,8 +21,9 @@ void bodyInit(
 	pBody->cbTileCollisionHandler = 0;
 }
 
-void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
-	logWrite("Slipgate!");
+static UBYTE moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
+	// Here be dragons
+
 	switch(g_pSlipgates[ubIndexSrc].eNormal) {
 		case DIRECTION_UP:
 			switch(g_pSlipgates[!ubIndexSrc].eNormal) {
@@ -52,7 +53,7 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_NONE:
-					break;
+					return 0;
 			}
 			break;
 		case DIRECTION_DOWN:
@@ -83,7 +84,7 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
 				case DIRECTION_NONE:
-					break;
+					return 0;
 			}
 			break;
 		case DIRECTION_LEFT:
@@ -109,9 +110,8 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubX + 1) * MAP_TILE_SIZE);
 					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
-				case DIRECTION_NONE: {
-
-				} break;
+				case DIRECTION_NONE:
+					return 0;
 			}
 			break;
 		case DIRECTION_RIGHT:
@@ -137,34 +137,21 @@ void moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 					pBody->fPosX = fix16_from_int((g_pSlipgates[!ubIndexSrc].sTilePos.ubX + 1) * MAP_TILE_SIZE);
 					pBody->fPosY = fix16_from_int(g_pSlipgates[!ubIndexSrc].sTilePos.ubY * MAP_TILE_SIZE);
 				} break;
-				case DIRECTION_NONE: {
-
-				} break;
+				case DIRECTION_NONE:
+					return 0;
 			}
 			break;
 		case DIRECTION_NONE:
-			switch(g_pSlipgates[!ubIndexSrc].eNormal) {
-				case DIRECTION_UP: {
-
-				} break;
-				case DIRECTION_DOWN: {
-
-				} break;
-				case DIRECTION_LEFT: {
-
-				} break;
-				case DIRECTION_RIGHT: {
-
-				} break;
-				case DIRECTION_NONE: {
-
-				} break;
-			}
-			break;
+			return 0;
 	}
+	logWrite("Slipgated!");
+	return 1;
 }
 
 void bodySimulate(tBodyBox *pBody) {
+	// Here be dragons
+	// This function is a fucking abomination. I'm going to hell for this.
+
 	pBody->fVelocityY = fix16_clamp(
 		fix16_add(pBody->fVelocityY, pBody->fAccelerationY),
 		fix16_from_int(-7), fix16_from_int(7)
@@ -188,6 +175,7 @@ void bodySimulate(tBodyBox *pBody) {
 			bodyCheckCollision(pBody, uwTileRight, uwMid / MAP_TILE_SIZE) ||
 			bodyCheckCollision(pBody, uwTileRight, uwBottom / MAP_TILE_SIZE)
 		) {
+			// collide with wall
 			fNewPosX = fix16_from_int(uwTileRight * MAP_TILE_SIZE - pBody->ubWidth);
 			pBody->fVelocityX = 0;
 		}
@@ -196,18 +184,30 @@ void bodySimulate(tBodyBox *pBody) {
 			g_pSlipgates[0].eNormal == DIRECTION_LEFT
 		) {
 			// Slipgate A
-			moveBodyViaSlipgate(pBody, 0);
-			fNewPosX = pBody->fPosX;
-			fNewPosY = pBody->fPosY;
+			if(moveBodyViaSlipgate(pBody, 0)) {
+				fNewPosX = pBody->fPosX;
+				fNewPosY = pBody->fPosY;
+			}
+			else {
+				// collide with wall
+				fNewPosX = fix16_from_int(uwTileRight * MAP_TILE_SIZE - pBody->ubWidth);
+				pBody->fVelocityX = 0;
+			}
 		}
 		else if(
 			mapGetTileAt(uwTileRight, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_2 &&
 			g_pSlipgates[1].eNormal == DIRECTION_LEFT
 		) {
 			// Slipgate B
-			moveBodyViaSlipgate(pBody, 1);
-			fNewPosX = pBody->fPosX;
-			fNewPosY = pBody->fPosY;
+			if(moveBodyViaSlipgate(pBody, 1)) {
+				fNewPosX = pBody->fPosX;
+				fNewPosY = pBody->fPosY;
+			}
+			else {
+				// collide with wall
+				fNewPosX = fix16_from_int(uwTileRight * MAP_TILE_SIZE - pBody->ubWidth);
+				pBody->fVelocityX = 0;
+			}
 		}
 	}
 	else if(pBody->fVelocityX < 0) {
@@ -218,6 +218,7 @@ void bodySimulate(tBodyBox *pBody) {
 			bodyCheckCollision(pBody, uwTileLeft, uwMid / MAP_TILE_SIZE) ||
 			bodyCheckCollision(pBody, uwTileLeft, uwBottom / MAP_TILE_SIZE)
 		) {
+			// collide with wall
 			fNewPosX = fix16_from_int((uwTileLeft + 1) * MAP_TILE_SIZE);
 			pBody->fVelocityX = 0;
 		}
@@ -226,18 +227,30 @@ void bodySimulate(tBodyBox *pBody) {
 			g_pSlipgates[0].eNormal == DIRECTION_RIGHT
 		) {
 			// Slipgate A
-			moveBodyViaSlipgate(pBody, 0);
-			fNewPosX = pBody->fPosX;
-			fNewPosY = pBody->fPosY;
+			if(moveBodyViaSlipgate(pBody, 0)) {
+				fNewPosX = pBody->fPosX;
+				fNewPosY = pBody->fPosY;
+			}
+			else {
+				// collide with wall
+				fNewPosX = fix16_from_int((uwTileLeft + 1) * MAP_TILE_SIZE);
+				pBody->fVelocityX = 0;
+			}
 		}
 		else if(
 			mapGetTileAt(uwTileLeft, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_2 &&
 			g_pSlipgates[1].eNormal == DIRECTION_RIGHT
 		) {
 			// Slipgate B
-			moveBodyViaSlipgate(pBody, 1);
-			fNewPosX = pBody->fPosX;
-			fNewPosY = pBody->fPosY;
+			if(moveBodyViaSlipgate(pBody, 1)) {
+				fNewPosX = pBody->fPosX;
+				fNewPosY = pBody->fPosY;
+			}
+			else {
+				// collide with wall
+				fNewPosX = fix16_from_int((uwTileLeft + 1) * MAP_TILE_SIZE);
+				pBody->fVelocityX = 0;
+			}
 		}
 	}
 
@@ -271,16 +284,32 @@ void bodySimulate(tBodyBox *pBody) {
 			g_pSlipgates[0].eNormal == DIRECTION_UP
 		) {
 			// Slipgate A
-			moveBodyViaSlipgate(pBody, 0);
-			fNewPosY = pBody->fPosY;
+			if(moveBodyViaSlipgate(pBody, 0)) {
+				fNewPosY = pBody->fPosY;
+			}
+			else {
+				// collide with floor
+				uwTop = ((uwTileBottom) * MAP_TILE_SIZE) - pBody->ubHeight;
+				fNewPosY = fix16_from_int(uwTop);
+				pBody->fVelocityY = 0;
+				pBody->isOnGround = 1;
+			}
 		}
 		else if(
 			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTileBottom) == TILE_SLIPGATE_2 &&
 			g_pSlipgates[1].eNormal == DIRECTION_UP
 		) {
 			// Slipgate B
-			moveBodyViaSlipgate(pBody, 1);
-			fNewPosY = pBody->fPosY;
+			if(moveBodyViaSlipgate(pBody, 1)) {
+				fNewPosY = pBody->fPosY;
+			}
+			else {
+				// collide with floor
+				uwTop = ((uwTileBottom) * MAP_TILE_SIZE) - pBody->ubHeight;
+				fNewPosY = fix16_from_int(uwTop);
+				pBody->fVelocityY = 0;
+				pBody->isOnGround = 1;
+			}
 		}
 	}
 	else if(pBody->fVelocityY < 0) {
@@ -295,13 +324,25 @@ void bodySimulate(tBodyBox *pBody) {
 		}
 		else if(mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) == TILE_SLIPGATE_1) {
 			// Slipgate A
-			moveBodyViaSlipgate(pBody, 0);
-			fNewPosY = pBody->fPosY;
+			if(moveBodyViaSlipgate(pBody, 0)) {
+				fNewPosY = pBody->fPosY;
+			}
+			else {
+				// collide with ceil
+				fNewPosY = fix16_from_int((uwTop / MAP_TILE_SIZE + 1) * MAP_TILE_SIZE);
+				// pBody->fVelocityY = 0;
+			}
 		}
 		else if(mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) == TILE_SLIPGATE_2) {
 			// Slipgate B
-			moveBodyViaSlipgate(pBody, 1);
-			fNewPosY = pBody->fPosY;
+			if(moveBodyViaSlipgate(pBody, 1)) {
+				fNewPosY = pBody->fPosY;
+			}
+			else {
+				// collide with ceil
+				fNewPosY = fix16_from_int((uwTop / MAP_TILE_SIZE + 1) * MAP_TILE_SIZE);
+				// pBody->fVelocityY = 0;
+			}
 		}
 	}
 

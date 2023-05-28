@@ -528,6 +528,10 @@ void gameMarkExitReached(void) {
 	s_eExitState = EXIT_NEXT;
 }
 
+tPlayer *gameGetPlayer(void) {
+	return &s_sPlayer;
+}
+
 //-------------------------------------------------------------------- GAMESTATE
 
 tState g_sStateGame = { .cbCreate = gameGsCreate, .cbLoop = gameGsLoop, .cbDestroy = gameGsDestroy };

@@ -3,9 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "bouncer.h"
+#include "game.h"
 
-#define BOUNCER_LIFE_COOLDOWN 500
-#define BOUNCER_SPAWN_COOLDOWN 75
+#define BOUNCER_LIFE_COOLDOWN 100
+#define BOUNCER_SPAWN_COOLDOWN 100
 #define BOUNCER_VELOCITY 2
 
 typedef enum tBouncerState {
@@ -114,6 +115,19 @@ UBYTE bouncerProcess(void) {
 					s_sBodyBouncer.fVelocityY = s_fNewBouncerVelocityY;
 					s_hasBouncerNewVelocity = 0;
 				}
+
+				// Collision with player
+				tPlayer *pPlayer = gameGetPlayer();
+				UBYTE isCollidingWithPlayer = (
+					s_sBodyBouncer.sBob.sPos.uwX < pPlayer->sBody.sBob.sPos.uwX + pPlayer->sBody.ubWidth &&
+					s_sBodyBouncer.sBob.sPos.uwX + s_sBodyBouncer.ubWidth > pPlayer->sBody.sBob.sPos.uwX &&
+					s_sBodyBouncer.sBob.sPos.uwY < pPlayer->sBody.sBob.sPos.uwY + pPlayer->sBody.ubHeight &&
+					s_sBodyBouncer.sBob.sPos.uwY + s_sBodyBouncer.ubHeight > pPlayer->sBody.sBob.sPos.uwY
+				);
+				if(isCollidingWithPlayer) {
+					playerDamage(pPlayer, 100);
+				}
+
 				return 1;
 			}
 			break;

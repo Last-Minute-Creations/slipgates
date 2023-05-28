@@ -13,10 +13,12 @@ typedef struct tPlayer {
 	BYTE bHealth;
 } tPlayer;
 
-UBYTE playerTryShootSlipgateAt(tPlayer *pPlayer, UBYTE ubIndex, UBYTE ubAngle);
-
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY);
 
 void playerProcess(tPlayer *pPlayer);
+
+UBYTE playerTryShootSlipgateAt(tPlayer *pPlayer, UBYTE ubIndex, UBYTE ubAngle);
+
+void playerDamage(tPlayer *pPlayer, UBYTE ubAmount);
 
 #endif // SLIPGATES_PLAYER_H
