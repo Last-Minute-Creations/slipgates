@@ -77,7 +77,10 @@ static UBYTE tileGetColor(tTile eTile) {
 		case TILE_BUTTON_7:
 		case TILE_BUTTON_8:
 			return 12;
-		case TILE_GATE_1: return 11;
+		case TILE_GATE_CLOSED_1: return 11;
+		case TILE_GATE_OPEN_1: return 15;
+		case TILE_SLIPGATABLE_OFF_1: return 3;
+		case TILE_SLIPGATABLE_ON_1: return 7;
 		case TILE_RECEIVER: return 9;
 		case TILE_BOUNCER_SPAWNER: return 6;
 		case TILE_BG_1: return 15;
@@ -96,7 +99,10 @@ static void drawMap(void) {
 
 static void gameDrawInteractionTiles(const tInteraction *pInteraction) {
 	for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
-		gameDrawTile(pInteraction->pTargetTiles[i].ubX, pInteraction->pTargetTiles[i].ubY);
+		gameDrawTile(
+			pInteraction->pTargetTiles[i].sPos.ubX,
+			pInteraction->pTargetTiles[i].sPos.ubY
+		);
 	}
 }
 
@@ -296,7 +302,7 @@ static void gameGsLoop(void) {
 		}
 	}
 	else if(keyCheck(KEY_COMMA)) {
-		*pTileUnderCursor = TILE_GATE_1;
+		*pTileUnderCursor = TILE_GATE_CLOSED_1;
 		gameDrawTile(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_PERIOD)) {
@@ -321,13 +327,28 @@ static void gameGsLoop(void) {
 		);
 		gameDrawTile(uwCursorTileX, uwCursorTileY);
 	}
+	else if(keyCheck(KEY_L)) {
+		*pTileUnderCursor = TILE_SLIPGATABLE_OFF_1;
+		gameDrawTile(uwCursorTileX, uwCursorTileY);
+	}
 
 	for(UBYTE i = 0; i < MAP_INTERACTIONS_MAX; ++i) {
-		if(keyUse(KEY_1 + i) && *pTileUnderCursor == TILE_GATE_1) {
+		if(keyUse(KEY_1 + i)) {
 			if(keyCheck(KEY_CONTROL)) {
 				// Add/remove tile to/from interaction group
 				tInteraction *pInteraction = mapGetInteractionByIndex(i);
-				interactionToggleTile(pInteraction, uwCursorTileX, uwCursorTileY);
+				if(*pTileUnderCursor == TILE_GATE_OPEN_1 || *pTileUnderCursor == TILE_GATE_CLOSED_1) {
+					interactionAddOrRemoveTile(
+						pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
+						TILE_GATE_OPEN_1, TILE_GATE_CLOSED_1
+					);
+				}
+				else if(*pTileUnderCursor == TILE_SLIPGATABLE_OFF_1 || *pTileUnderCursor == TILE_SLIPGATABLE_ON_1) {
+					interactionAddOrRemoveTile(
+						pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_SLIPGATABLE,
+						TILE_SLIPGATABLE_ON_1, TILE_SLIPGATABLE_OFF_1
+					);
+				}
 				gameDrawInteractionTiles(pInteraction);
 			}
 			else {

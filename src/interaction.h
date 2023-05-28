@@ -6,18 +6,34 @@
 #define SLIPGATES_INTERACTION_H
 
 #include <ace/types.h>
+#include "tile.h"
 
 #define INTERACTION_TARGET_MAX 4
 #define INTERACTION_TILE_INDEX_INVALID 255
 
+typedef enum tInteractionKind {
+	INTERACTION_KIND_GATE,
+	INTERACTION_KIND_SLIPGATABLE,
+} tInteractionKind;
+
+typedef struct tTogglableTile {
+	tUbCoordYX sPos;
+	tInteractionKind eKind;
+	tTile eTileActive;
+	tTile eTileInactive;
+} tTogglableTile;
+
 typedef struct tInteraction {
-	tUbCoordYX pTargetTiles[INTERACTION_TARGET_MAX];
+	tTogglableTile pTargetTiles[INTERACTION_TARGET_MAX];
 	UBYTE ubTargetCount;
 	UBYTE ubButtonMask;
 	UBYTE wasActive;
 } tInteraction;
 
-void interactionToggleTile(tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTileY);
+void interactionAddOrRemoveTile(
+	tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTileY,
+	tInteractionKind eKind, tTile eTileActive, tTile eTileInactive
+);
 
 UBYTE interactionGetTileIndex(tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTileY);
 

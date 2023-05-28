@@ -26,7 +26,7 @@ static void setSlipgateTiles(const tSlipgate *pSlipgate, tTile eTile) {
 
 static void mapCloseSlipgate(UBYTE ubIndex) {
 	if(g_pSlipgates[ubIndex].eNormal != DIRECTION_NONE) {
-		setSlipgateTiles(&g_pSlipgates[ubIndex], TILE_WALL_1);
+		setSlipgateTiles(&g_pSlipgates[ubIndex], TILE_WALL_1); // TODO: restore tiles underneath
 		g_pSlipgates[ubIndex].eNormal = DIRECTION_NONE;
 	}
 }
@@ -68,8 +68,11 @@ void mapLoad(UBYTE ubIndex) {
 			fileRead(pFile, &pInteraction->ubButtonMask, sizeof(pInteraction->ubButtonMask));
 			fileRead(pFile, &pInteraction->wasActive, sizeof(pInteraction->wasActive));
 			for(UBYTE ubTargetIndex = 0; ubTargetIndex < pInteraction->ubTargetCount; ++ubTargetIndex) {
-				tUbCoordYX *pTileCoord = &pInteraction->pTargetTiles[ubTargetIndex];
-				fileRead(pFile, &pTileCoord->uwYX, sizeof(pTileCoord->uwYX));
+				tTogglableTile *pTargetTile = &pInteraction->pTargetTiles[ubTargetIndex];
+				fileRead(pFile, &pTargetTile->eKind, sizeof(pTargetTile->eKind));
+				fileRead(pFile, &pTargetTile->eTileActive, sizeof(pTargetTile->eTileActive));
+				fileRead(pFile, &pTargetTile->eTileInactive, sizeof(pTargetTile->eTileInactive));
+				fileRead(pFile, &pTargetTile->sPos.uwYX, sizeof(pTargetTile->sPos.uwYX));
 			}
 		}
 
@@ -120,8 +123,11 @@ void mapSave(UBYTE ubIndex) {
 		fileWrite(pFile, &pInteraction->ubButtonMask, sizeof(pInteraction->ubButtonMask));
 		fileWrite(pFile, &pInteraction->wasActive, sizeof(pInteraction->wasActive));
 		for(UBYTE ubTargetIndex = 0; ubTargetIndex < pInteraction->ubTargetCount; ++ubTargetIndex) {
-			tUbCoordYX *pTileCoord = &pInteraction->pTargetTiles[ubTargetIndex];
-			fileWrite(pFile, &pTileCoord->uwYX, sizeof(pTileCoord->uwYX));
+			tTogglableTile *pTargetTile = &pInteraction->pTargetTiles[ubTargetIndex];
+			fileWrite(pFile, &pTargetTile->eKind, sizeof(pTargetTile->eKind));
+			fileWrite(pFile, &pTargetTile->eTileActive, sizeof(pTargetTile->eTileActive));
+			fileWrite(pFile, &pTargetTile->eTileInactive, sizeof(pTargetTile->eTileInactive));
+			fileWrite(pFile, &pTargetTile->sPos.uwYX, sizeof(pTargetTile->sPos.uwYX));
 		}
 	}
 
@@ -151,8 +157,13 @@ void mapProcess(void) {
 	) {
 		if(!pInteraction->wasActive) {
 			for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
-				g_sCurrentLevel.pTiles[pInteraction->pTargetTiles[i].ubX][pInteraction->pTargetTiles[i].ubY] = TILE_BG_1;
-				gameDrawTile(pInteraction->pTargetTiles[i].ubX, pInteraction->pTargetTiles[i].ubY);
+				tTogglableTile *pTile = &pInteraction->pTargetTiles[i];
+				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileActive;
+				if(pTile->eKind == INTERACTION_KIND_SLIPGATABLE) {
+					mapTryCloseSlipgateAt(0, pTile->sPos);
+					mapTryCloseSlipgateAt(1, pTile->sPos);
+				}
+				gameDrawTile(pTile->sPos.ubX, pTile->sPos.ubY);
 			}
 			pInteraction->wasActive = 1;
 		}
@@ -160,8 +171,13 @@ void mapProcess(void) {
 	else {
 		if(pInteraction->wasActive) {
 			for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
-				g_sCurrentLevel.pTiles[pInteraction->pTargetTiles[i].ubX][pInteraction->pTargetTiles[i].ubY] = TILE_GATE_1;
-				gameDrawTile(pInteraction->pTargetTiles[i].ubX, pInteraction->pTargetTiles[i].ubY);
+				tTogglableTile *pTile = &pInteraction->pTargetTiles[i];
+				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileInactive;
+				if(pTile->eKind == INTERACTION_KIND_SLIPGATABLE) {
+					mapTryCloseSlipgateAt(0, pTile->sPos);
+					mapTryCloseSlipgateAt(1, pTile->sPos);
+				}
+				gameDrawTile(pTile->sPos.ubX, pTile->sPos.ubY);
 			}
 			pInteraction->wasActive = 0;
 		}
@@ -224,41 +240,41 @@ UBYTE mapIsCollidingWithBouncersAt(UBYTE ubTileX, UBYTE ubTileY) {
 }
 
 UBYTE mapIsSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY) {
-	return (g_sCurrentLevel.pTiles[ubTileX][ubTileY] & MAP_LAYER_SLIPGATABLE) != 0;
+	return (g_sCurrentLevel.pTiles[ubTileX][ubTileY] & TILE_LAYER_SLIPGATABLE) != 0;
 }
 
 //---------------------------------------------------------------- TILE CHECKERS
 
 UBYTE mapTileIsCollidingWithBoxes(tTile eTile) {
-	return (eTile & (MAP_LAYER_WALLS | MAP_LAYER_FORCE_FIELDS)) != 0;
+	return (eTile & (TILE_LAYER_WALLS | TILE_LAYER_FORCE_FIELDS)) != 0;
 }
 
 UBYTE mapTileIsCollidingWithPortalProjectiles(tTile eTile) {
-	return (eTile & (MAP_LAYER_WALLS | MAP_LAYER_SLIPGATES)) != 0;
+	return (eTile & (TILE_LAYER_WALLS | TILE_LAYER_SLIPGATES)) != 0;
 }
 
 UBYTE mapTileIsCollidingWithBouncers(tTile eTile) {
-	return (eTile & (MAP_LAYER_WALLS)) != 0;
+	return (eTile & (TILE_LAYER_WALLS)) != 0;
 }
 
 UBYTE mapTileIsCollidingWithPlayers(tTile eTile) {
-	return (eTile & (MAP_LAYER_WALLS | MAP_LAYER_LETHALS | MAP_LAYER_FORCE_FIELDS)) != 0;
+	return (eTile & (TILE_LAYER_WALLS | TILE_LAYER_LETHALS | TILE_LAYER_FORCE_FIELDS)) != 0;
 }
 
 UBYTE mapTileIsSlipgate(tTile eTile) {
-	return (eTile & MAP_LAYER_SLIPGATES) != 0;
+	return (eTile & TILE_LAYER_SLIPGATES) != 0;
 }
 
 UBYTE mapTileIsLethal(tTile eTile) {
-	return (eTile & MAP_LAYER_LETHALS) != 0;
+	return (eTile & TILE_LAYER_LETHALS) != 0;
 }
 
 UBYTE mapTileIsExit(tTile eTile) {
-	return (eTile & MAP_LAYER_EXIT) != 0;
+	return (eTile & TILE_LAYER_EXIT) != 0;
 }
 
 UBYTE mapTileIsButton(tTile eTile) {
-	return (eTile & MAP_LAYER_BUTTON) != 0;
+	return (eTile & TILE_LAYER_BUTTON) != 0;
 }
 
 //-------------------------------------------------------------------- SLIPGATES
@@ -322,18 +338,17 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		return 0;
 	}
 
-	tSlipgate *pSlipgateOther = &g_pSlipgates[!ubIndex];
-	if(
-		pSlipgateOther->sTilePos.uwYX == pSlipgate->sTilePos.uwYX ||
-		pSlipgateOther->sTilePos.uwYX == pSlipgate->sTilePosOther.uwYX ||
-		pSlipgateOther->sTilePosOther.uwYX == pSlipgate->sTilePos.uwYX ||
-		pSlipgateOther->sTilePosOther.uwYX == pSlipgate->sTilePosOther.uwYX
-	) {
-		mapCloseSlipgate(!ubIndex);
-	}
+	mapTryCloseSlipgateAt(!ubIndex, pSlipgate->sTilePos);
+	mapTryCloseSlipgateAt(!ubIndex, pSlipgate->sTilePosOther);
 
 	setSlipgateTiles(pSlipgate, ubIndex == 0 ? TILE_SLIPGATE_1 : TILE_SLIPGATE_2);
 	return 1;
+}
+
+void mapTryCloseSlipgateAt(UBYTE ubIndex, tUbCoordYX sPos) {
+	if(slipgateIsOccupyingTile(&g_pSlipgates[ubIndex], sPos)) {
+		mapCloseSlipgate(ubIndex);
+	}
 }
 
 //------------------------------------------------------------------ GLOBAL VARS

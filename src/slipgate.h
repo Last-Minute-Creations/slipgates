@@ -14,4 +14,6 @@ typedef struct tSlipgate {
 	tDirection eNormal; // set to DIRECTION_NONE when is off
 } tSlipgate;
 
+UBYTE slipgateIsOccupyingTile(const tSlipgate *pSlipgate, tUbCoordYX sPos);
+
 #endif // SLIPGATES_SLIPGATE_H

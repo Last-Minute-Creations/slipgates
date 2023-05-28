@@ -5,13 +5,20 @@
 #include "interaction.h"
 #include <ace/managers/log.h>
 
-void interactionToggleTile(tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTileY) {
+void interactionAddOrRemoveTile(
+	tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTileY,
+	tInteractionKind eKind, tTile eTileActive, tTile eTileInactive
+) {
 	tUbCoordYX sTileCoord = {.ubX = ubTileX, .ubY = ubTileY};
 	UBYTE ubTileIndex = interactionGetTileIndex(pInteraction, ubTileX, ubTileY);
 	if(ubTileIndex == INTERACTION_TILE_INDEX_INVALID) {
 		// Tile not on list - add
 		if(pInteraction->ubTargetCount < INTERACTION_TARGET_MAX) {
-			pInteraction->pTargetTiles[pInteraction->ubTargetCount++].uwYX = sTileCoord.uwYX;
+			pInteraction->pTargetTiles[pInteraction->ubTargetCount].sPos.uwYX = sTileCoord.uwYX;
+			pInteraction->pTargetTiles[pInteraction->ubTargetCount].eKind = eKind;
+			pInteraction->pTargetTiles[pInteraction->ubTargetCount].eTileActive = eTileActive;
+			pInteraction->pTargetTiles[pInteraction->ubTargetCount].eTileInactive = eTileInactive;
+			++pInteraction->ubTargetCount;
 		}
 		else {
 			logWrite("ERR: No more space for tile in interaction %p\n", pInteraction);
@@ -21,7 +28,7 @@ void interactionToggleTile(tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTi
 
 	// Remove from list, move back all later tiles
 	for(UBYTE ubNext = ubTileIndex + 1; ubNext < pInteraction->ubTargetCount; ++ubNext) {
-		pInteraction->pTargetTiles[ubNext - 1].uwYX = pInteraction->pTargetTiles[ubNext].uwYX;
+		pInteraction->pTargetTiles[ubNext - 1] = pInteraction->pTargetTiles[ubNext];
 	}
 	--pInteraction->ubTargetCount;
 }
@@ -29,7 +36,7 @@ void interactionToggleTile(tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTi
 UBYTE interactionGetTileIndex(tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTileY) {
 	tUbCoordYX sTileCoord = {.ubX = ubTileX, .ubY = ubTileY};
 	for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
-		if(pInteraction->pTargetTiles[i].uwYX == sTileCoord.uwYX) {
+		if(pInteraction->pTargetTiles[i].sPos.uwYX == sTileCoord.uwYX) {
 			return i;
 		}
 	}

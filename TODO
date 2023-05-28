@@ -22,18 +22,17 @@ General:
 	✔ Bouncers doesn't collide with force/lethal tiles @done(23-05-27 14:41)
 	✔ Fix overlapping slipgates @done(23-05-27 18:53)
 	✔ Treat unpaired slipgate as a wall @done(23-05-28 11:25)
+	☐ Restore tiles underneath closing slipgates
 	☐ Edit mode
 	☐ Faster map restarts without file reload
 	☐ Menu
 	☐ Outro screen
 	☐ Entrance tiles
-	☐ Basic turrets (11 chambers)
 	☐ Multi-bob character body
 	☐ Bigger max velocity
 	☐ Increase precision of trig tables for better aiming accuracy
 	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
-	✘ Collision tiles? @cancelled(23-05-27 12:12)
 
 Boxes:
 	✔ Generalize @done(23-05-26 20:26)
@@ -47,8 +46,8 @@ Tiles:
 	✔ Impassable (blue) beam @done(23-05-23 15:02)
 	✔ Death (red) beam @done(23-05-24 14:31)
 	✔ Button @done(23-05-25 20:36)
+	✔ Togglable slipgate wall (3 chambers) @done(23-05-28 15:33)
 	☐ Togglable lethal floor/ceil (7 chambers)
-	☐ Togglable slipgate wall (3 chambers)
 
 Bouncers (10 chambers):
 	✔ Bounce from walls @done(23-05-27 09:26)
@@ -56,6 +55,13 @@ Bouncers (10 chambers):
 	✔ Limited lifespan and respawns @done(23-05-27 11:51)
 	✔ Spawner @done(23-05-27 12:52)
 	✔ Collision with objects - kill player @done(23-05-28 12:13)
+
+Turrets (11 chambers):
+	☐ Active/inactive tile
+	☐ Stomping on turret disables it
+	☐ Box falling on turret disables it
+	☐ Checking player hits via collision tilemap
+	☐ Checking player visibility via collision tilemap
 
 Misc objects:
 	✔ Doors (17 chambers) @done(23-05-25 20:33)
@@ -85,3 +91,5 @@ Momentum, normal-wise:
 	✔ down-right @done(23-05-27 10:04)
 
 Test chambers:
+
+Archive:
