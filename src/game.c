@@ -84,6 +84,10 @@ static UBYTE tileGetColor(tTile eTile) {
 		case TILE_RECEIVER: return 9;
 		case TILE_BOUNCER_SPAWNER: return 6;
 		case TILE_BG_1: return 15;
+		case TILE_SPIKES_OFF_BG_1: return 15;
+		case TILE_SPIKES_OFF_FLOOR_1: return 3;
+		case TILE_SPIKES_ON_BG_1: return 2;
+		case TILE_SPIKES_ON_FLOOR_1: return 2;
 		default: return 0;
 	}
 }
@@ -329,6 +333,11 @@ static void gameGsLoop(void) {
 	}
 	else if(keyCheck(KEY_L)) {
 		*pTileUnderCursor = TILE_SLIPGATABLE_OFF_1;
+		gameDrawTile(uwCursorTileX, uwCursorTileY);
+	}
+	else if(keyUse(KEY_K)) {
+		mapAddOrRemoveSpikeTile(uwCursorTileX, uwCursorTileY);
+		gameDrawTile(uwCursorTileX, uwCursorTileY - 1);
 		gameDrawTile(uwCursorTileX, uwCursorTileY);
 	}
 

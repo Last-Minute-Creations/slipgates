@@ -23,6 +23,7 @@ General:
 	✔ Fix overlapping slipgates @done(23-05-27 18:53)
 	✔ Treat unpaired slipgate as a wall @done(23-05-28 11:25)
 	✔ Restore tiles underneath closing slipgates @done(23-05-29 14:12)
+	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
 	☐ Edit mode
 	☐ Faster map restarts without file reload
 	☐ Menu
@@ -31,7 +32,6 @@ General:
 	☐ Multi-bob character body
 	☐ Bigger max velocity
 	☐ Increase precision of trig tables for better aiming accuracy
-	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Boxes:
@@ -47,7 +47,7 @@ Tiles:
 	✔ Death (red) beam @done(23-05-24 14:31)
 	✔ Button @done(23-05-25 20:36)
 	✔ Togglable slipgate wall (3 chambers) @done(23-05-28 15:33)
-	☐ Togglable lethal floor/ceil (7 chambers)
+	✔ Togglable lethal floor/ceil (7 chambers) @done(23-05-29 17:16)
 
 Bouncers (10 chambers):
 	✔ Bounce from walls @done(23-05-27 09:26)

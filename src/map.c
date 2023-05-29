@@ -9,11 +9,15 @@
 #include "game.h"
 #include "bouncer.h"
 
+#define MAP_SPIKES_COOLDOWN 50
+
 //----------------------------------------------------------------- PRIVATE VARS
 
 static tInteraction s_pInteractions[MAP_INTERACTIONS_MAX];
 static UBYTE s_ubButtonPressMask;
 static UBYTE s_ubCurrentInteraction;
+static UWORD s_uwSpikeCooldown;
+static UBYTE s_isSpikeActive;
 
 //------------------------------------------------------------ PRIVATE FUNCTIONS
 
@@ -43,10 +47,79 @@ static void mapCloseSlipgate(UBYTE ubIndex) {
 	}
 }
 
+static void mapProcessNextInteraction(void) {
+	tInteraction *pInteraction = &s_pInteractions[s_ubCurrentInteraction];
+
+	// Process effects of next interaction
+	if(
+		pInteraction->ubButtonMask &&
+		(pInteraction->ubButtonMask & s_ubButtonPressMask) == pInteraction->ubButtonMask
+	) {
+		if(!pInteraction->wasActive) {
+			for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
+				tTogglableTile *pTile = &pInteraction->pTargetTiles[i];
+				if(pTile->eKind == INTERACTION_KIND_SLIPGATABLE) {
+					mapTryCloseSlipgateAt(0, pTile->sPos);
+					mapTryCloseSlipgateAt(1, pTile->sPos);
+				}
+				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileActive;
+				gameDrawTile(pTile->sPos.ubX, pTile->sPos.ubY);
+			}
+			pInteraction->wasActive = 1;
+		}
+	}
+	else {
+		if(pInteraction->wasActive) {
+			for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
+				tTogglableTile *pTile = &pInteraction->pTargetTiles[i];
+				if(pTile->eKind == INTERACTION_KIND_SLIPGATABLE) {
+					mapTryCloseSlipgateAt(0, pTile->sPos);
+					mapTryCloseSlipgateAt(1, pTile->sPos);
+				}
+				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileInactive;
+				gameDrawTile(pTile->sPos.ubX, pTile->sPos.ubY);
+			}
+			pInteraction->wasActive = 0;
+		}
+	}
+
+	if(++s_ubCurrentInteraction >= MAP_INTERACTIONS_MAX) {
+		s_ubCurrentInteraction = 0;
+	}
+}
+
+static UBYTE mapProcessSpikes(void) {
+	if(--s_uwSpikeCooldown == 0) {
+		s_isSpikeActive = !s_isSpikeActive;
+		if(s_isSpikeActive)  {
+			for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
+				tUbCoordYX sSpikeCoord = g_sCurrentLevel.pSpikeTiles[i];
+				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = TILE_SPIKES_ON_FLOOR_1;
+				gameDrawTile(sSpikeCoord.ubX, sSpikeCoord.ubY);
+				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = TILE_SPIKES_ON_BG_1;
+				gameDrawTile(sSpikeCoord.ubX, sSpikeCoord.ubY - 1);
+			}
+		}
+		else {
+			for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
+				tUbCoordYX sSpikeCoord = g_sCurrentLevel.pSpikeTiles[i];
+				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = TILE_SPIKES_OFF_FLOOR_1;
+				gameDrawTile(sSpikeCoord.ubX, sSpikeCoord.ubY);
+				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = TILE_SPIKES_OFF_BG_1;
+				gameDrawTile(sSpikeCoord.ubX, sSpikeCoord.ubY - 1);
+			}
+		}
+		s_uwSpikeCooldown = MAP_SPIKES_COOLDOWN;
+		return 1;
+	}
+	return 0;
+}
+
 //------------------------------------------------------------- PUBLIC FUNCTIONS
 
 void mapLoad(UBYTE ubIndex) {
 	memset(s_pInteractions, 0, sizeof(s_pInteractions));
+	g_sCurrentLevel.ubSpikeTilesCount = 0;
 
 	if(ubIndex == 0) {
 		// hadcoded level
@@ -94,6 +167,11 @@ void mapLoad(UBYTE ubIndex) {
 			fileRead(pFile, &g_sCurrentLevel.pBoxSpawns[i].fY, sizeof(g_sCurrentLevel.pBoxSpawns[i].fY));
 		}
 
+		fileRead(pFile, &g_sCurrentLevel.ubSpikeTilesCount, sizeof(g_sCurrentLevel.ubSpikeTilesCount));
+		for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
+			fileRead(pFile, &g_sCurrentLevel.pSpikeTiles[i].uwYX, sizeof(g_sCurrentLevel.pSpikeTiles[i].uwYX));
+		}
+
 		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
 			for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
 				UWORD uwTileCode;
@@ -116,6 +194,8 @@ void mapLoad(UBYTE ubIndex) {
 	g_pSlipgates[0].eNormal = DIRECTION_NONE;
 	g_pSlipgates[1].eNormal = DIRECTION_NONE;
 	s_ubCurrentInteraction = 0;
+	s_uwSpikeCooldown = 1;
+	s_isSpikeActive = 0;
 }
 
 void mapSave(UBYTE ubIndex) {
@@ -149,6 +229,11 @@ void mapSave(UBYTE ubIndex) {
 		fileWrite(pFile, &g_sCurrentLevel.pBoxSpawns[i].fY, sizeof(g_sCurrentLevel.pBoxSpawns[i].fY));
 	}
 
+	fileWrite(pFile, &g_sCurrentLevel.ubSpikeTilesCount, sizeof(g_sCurrentLevel.ubSpikeTilesCount));
+	for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
+		fileWrite(pFile, &g_sCurrentLevel.pSpikeTiles[i].uwYX, sizeof(g_sCurrentLevel.pSpikeTiles[i].uwYX));
+	}
+
 	for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
 		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
 			UWORD uwTileCode = mapGetTileAt(ubX, ubY);
@@ -160,43 +245,8 @@ void mapSave(UBYTE ubIndex) {
 }
 
 void mapProcess(void) {
-	tInteraction *pInteraction = &s_pInteractions[s_ubCurrentInteraction];
-
-	// Process effects of next interaction
-	if(
-		pInteraction->ubButtonMask &&
-		(pInteraction->ubButtonMask & s_ubButtonPressMask) == pInteraction->ubButtonMask
-	) {
-		if(!pInteraction->wasActive) {
-			for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
-				tTogglableTile *pTile = &pInteraction->pTargetTiles[i];
-				if(pTile->eKind == INTERACTION_KIND_SLIPGATABLE) {
-					mapTryCloseSlipgateAt(0, pTile->sPos);
-					mapTryCloseSlipgateAt(1, pTile->sPos);
-				}
-				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileActive;
-				gameDrawTile(pTile->sPos.ubX, pTile->sPos.ubY);
-			}
-			pInteraction->wasActive = 1;
-		}
-	}
-	else {
-		if(pInteraction->wasActive) {
-			for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
-				tTogglableTile *pTile = &pInteraction->pTargetTiles[i];
-				if(pTile->eKind == INTERACTION_KIND_SLIPGATABLE) {
-					mapTryCloseSlipgateAt(0, pTile->sPos);
-					mapTryCloseSlipgateAt(1, pTile->sPos);
-				}
-				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileInactive;
-				gameDrawTile(pTile->sPos.ubX, pTile->sPos.ubY);
-			}
-			pInteraction->wasActive = 0;
-		}
-	}
-
-	if(++s_ubCurrentInteraction >= MAP_INTERACTIONS_MAX) {
-		s_ubCurrentInteraction = 0;
+	if(!mapProcessSpikes()) {
+		mapProcessNextInteraction();
 	}
 
 	// Reset button mask for refresh by body collisions
@@ -213,6 +263,28 @@ void mapPressButtonAt(UBYTE ubX, UBYTE ubY) {
 
 void mapPressButtonIndex(UBYTE ubButtonIndex) {
 	s_ubButtonPressMask |= BV(ubButtonIndex);
+}
+
+void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY) {
+	tUbCoordYX sPos = {.ubX = ubX, .ubY = ubY};
+	// Remove if list already contains pos
+	for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
+		if(g_sCurrentLevel.pSpikeTiles[i].uwYX == sPos.uwYX) {
+			g_sCurrentLevel.pTiles[ubX][ubY] = TILE_WALL_1;
+			g_sCurrentLevel.pTiles[ubX][ubY - 1] = TILE_BG_1;
+			while(++i < g_sCurrentLevel.ubSpikeTilesCount) {
+				g_sCurrentLevel.pSpikeTiles[i - 1].uwYX = g_sCurrentLevel.pSpikeTiles[i].uwYX;
+			}
+			--g_sCurrentLevel.ubSpikeTilesCount;
+			return;
+		}
+	}
+
+	if(g_sCurrentLevel.ubSpikeTilesCount < MAP_SPIKES_TILES_MAX) {
+		g_sCurrentLevel.pSpikeTiles[g_sCurrentLevel.ubSpikeTilesCount++].uwYX = sPos.uwYX;
+		g_sCurrentLevel.pTiles[ubX][ubY] = s_isSpikeActive ? TILE_SPIKES_ON_FLOOR_1 : TILE_SPIKES_OFF_FLOOR_1;
+		g_sCurrentLevel.pTiles[ubX][ubY - 1] = s_isSpikeActive ? TILE_SPIKES_ON_BG_1 : TILE_SPIKES_OFF_BG_1;
+	}
 }
 
 //----------------------------------------------------------------- INTERACTIONS
