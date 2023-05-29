@@ -22,7 +22,7 @@ General:
 	✔ Bouncers doesn't collide with force/lethal tiles @done(23-05-27 14:41)
 	✔ Fix overlapping slipgates @done(23-05-27 18:53)
 	✔ Treat unpaired slipgate as a wall @done(23-05-28 11:25)
-	☐ Restore tiles underneath closing slipgates
+	✔ Restore tiles underneath closing slipgates @done(23-05-29 14:12)
 	☐ Edit mode
 	☐ Faster map restarts without file reload
 	☐ Menu

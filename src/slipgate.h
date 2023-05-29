@@ -7,11 +7,13 @@
 
 #include <ace/types.h>
 #include "direction.h"
+#include "tile.h"
 
 typedef struct tSlipgate {
 	tUbCoordYX sTilePos; // top-left tile
 	tUbCoordYX sTilePosOther; // other tile
 	tDirection eNormal; // set to DIRECTION_NONE when is off
+	tTile pPrevTiles[2];
 } tSlipgate;
 
 UBYTE slipgateIsOccupyingTile(const tSlipgate *pSlipgate, tUbCoordYX sPos);

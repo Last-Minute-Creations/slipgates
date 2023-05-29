@@ -17,17 +17,29 @@ static UBYTE s_ubCurrentInteraction;
 
 //------------------------------------------------------------ PRIVATE FUNCTIONS
 
-static void setSlipgateTiles(const tSlipgate *pSlipgate, tTile eTile) {
-	g_sCurrentLevel.pTiles[pSlipgate->sTilePos.ubX][pSlipgate->sTilePos.ubY] = eTile;
+static void mapOpenSlipgate(UBYTE ubIndex) {
+	tSlipgate *pSlipgate = &g_pSlipgates[ubIndex];
+	// Save terrain tiles
+	pSlipgate->pPrevTiles[0] = g_sCurrentLevel.pTiles[pSlipgate->sTilePos.ubX][pSlipgate->sTilePos.ubY];
+	pSlipgate->pPrevTiles[1] = g_sCurrentLevel.pTiles[pSlipgate->sTilePosOther.ubX][pSlipgate->sTilePosOther.ubY];
+
+	// Draw slipgate tiles
+	g_sCurrentLevel.pTiles[pSlipgate->sTilePos.ubX][pSlipgate->sTilePos.ubY] = TILE_SLIPGATE_1 + ubIndex;
 	gameDrawTile(pSlipgate->sTilePos.ubX, pSlipgate->sTilePos.ubY);
-	g_sCurrentLevel.pTiles[pSlipgate->sTilePosOther.ubX][pSlipgate->sTilePosOther.ubY] = eTile;
+	g_sCurrentLevel.pTiles[pSlipgate->sTilePosOther.ubX][pSlipgate->sTilePosOther.ubY] = TILE_SLIPGATE_1 + ubIndex;
 	gameDrawTile(pSlipgate->sTilePosOther.ubX, pSlipgate->sTilePosOther.ubY);
 }
 
 static void mapCloseSlipgate(UBYTE ubIndex) {
-	if(g_pSlipgates[ubIndex].eNormal != DIRECTION_NONE) {
-		setSlipgateTiles(&g_pSlipgates[ubIndex], TILE_WALL_1); // TODO: restore tiles underneath
-		g_pSlipgates[ubIndex].eNormal = DIRECTION_NONE;
+	tSlipgate *pSlipgate = &g_pSlipgates[ubIndex];
+	if(pSlipgate->eNormal != DIRECTION_NONE) {
+		// Restore terrain tiles
+		g_sCurrentLevel.pTiles[pSlipgate->sTilePos.ubX][pSlipgate->sTilePos.ubY] = pSlipgate->pPrevTiles[0];
+		gameDrawTile(pSlipgate->sTilePos.ubX, pSlipgate->sTilePos.ubY);
+		g_sCurrentLevel.pTiles[pSlipgate->sTilePosOther.ubX][pSlipgate->sTilePosOther.ubY] = pSlipgate->pPrevTiles[1];
+		gameDrawTile(pSlipgate->sTilePosOther.ubX, pSlipgate->sTilePosOther.ubY);
+
+		pSlipgate->eNormal = DIRECTION_NONE;
 	}
 }
 
@@ -158,11 +170,11 @@ void mapProcess(void) {
 		if(!pInteraction->wasActive) {
 			for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
 				tTogglableTile *pTile = &pInteraction->pTargetTiles[i];
-				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileActive;
 				if(pTile->eKind == INTERACTION_KIND_SLIPGATABLE) {
 					mapTryCloseSlipgateAt(0, pTile->sPos);
 					mapTryCloseSlipgateAt(1, pTile->sPos);
 				}
+				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileActive;
 				gameDrawTile(pTile->sPos.ubX, pTile->sPos.ubY);
 			}
 			pInteraction->wasActive = 1;
@@ -172,11 +184,11 @@ void mapProcess(void) {
 		if(pInteraction->wasActive) {
 			for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
 				tTogglableTile *pTile = &pInteraction->pTargetTiles[i];
-				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileInactive;
 				if(pTile->eKind == INTERACTION_KIND_SLIPGATABLE) {
 					mapTryCloseSlipgateAt(0, pTile->sPos);
 					mapTryCloseSlipgateAt(1, pTile->sPos);
 				}
+				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileInactive;
 				gameDrawTile(pTile->sPos.ubX, pTile->sPos.ubY);
 			}
 			pInteraction->wasActive = 0;
@@ -341,7 +353,7 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 	mapTryCloseSlipgateAt(!ubIndex, pSlipgate->sTilePos);
 	mapTryCloseSlipgateAt(!ubIndex, pSlipgate->sTilePosOther);
 
-	setSlipgateTiles(pSlipgate, ubIndex == 0 ? TILE_SLIPGATE_1 : TILE_SLIPGATE_2);
+	mapOpenSlipgate(ubIndex);
 	return 1;
 }
 
