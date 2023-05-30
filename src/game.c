@@ -103,7 +103,7 @@ static void drawMap(void) {
 
 static void gameDrawInteractionTiles(const tInteraction *pInteraction) {
 	for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
-		gameDrawTile(
+		mapRequestTileDraw(
 			pInteraction->pTargetTiles[i].sPos.ubX,
 			pInteraction->pTargetTiles[i].sPos.ubY
 		);
@@ -145,6 +145,16 @@ static void loadLevel(UBYTE ubIndex) {
 	);
 	tracerInit(&g_sTracerSlipgate);
 	drawMap();
+	blitCopyAligned(
+		s_pBufferMain->pBack, 0, 0,
+		s_pBufferMain->pFront, 0, 0,
+		SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT / 2
+	);
+	blitCopyAligned(
+		s_pBufferMain->pBack, 0, SCREEN_PAL_HEIGHT / 2,
+		s_pBufferMain->pFront, 0, SCREEN_PAL_HEIGHT / 2,
+		SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT / 2
+	);
 	viewLoad(s_pView);
 }
 
@@ -265,27 +275,27 @@ static void gameGsLoop(void) {
 	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[uwCursorTileX][uwCursorTileY];
 	if(keyCheck(KEY_Z)) {
 		*pTileUnderCursor = TILE_BG_1;
-		gameDrawTile(uwCursorTileX, uwCursorTileY);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_X)) {
 		*pTileUnderCursor = TILE_WALL_1;
-		gameDrawTile(uwCursorTileX, uwCursorTileY);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_C)) {
 		*pTileUnderCursor = TILE_WALL_NO_SLIPGATE_1;
-		gameDrawTile(uwCursorTileX, uwCursorTileY);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_V)) {
 		*pTileUnderCursor = TILE_FORCE_FIELD_1;
-		gameDrawTile(uwCursorTileX, uwCursorTileY);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_B)) {
 		*pTileUnderCursor = TILE_DEATH_FIELD_1;
-		gameDrawTile(uwCursorTileX, uwCursorTileY);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_N)) {
 		*pTileUnderCursor = TILE_EXIT_1;
-		gameDrawTile(uwCursorTileX, uwCursorTileY);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_M)) {
 		if(mapTileIsButton(*pTileUnderCursor)) {
@@ -296,27 +306,27 @@ static void gameGsLoop(void) {
 				else {
 					++*pTileUnderCursor;
 				}
-				gameDrawTile(uwCursorTileX, uwCursorTileY);
+				mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 			}
 		}
 		else {
 			keyUse(KEY_M); // prevent double-processing of same tile
 			*pTileUnderCursor = TILE_BUTTON_1;
-			gameDrawTile(uwCursorTileX, uwCursorTileY);
+			mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 		}
 	}
 	else if(keyCheck(KEY_COMMA)) {
 		*pTileUnderCursor = TILE_GATE_CLOSED_1;
-		gameDrawTile(uwCursorTileX, uwCursorTileY);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_PERIOD)) {
 		*pTileUnderCursor = TILE_RECEIVER;
-		gameDrawTile(uwCursorTileX, uwCursorTileY);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_SLASH)) {
 		if(g_sCurrentLevel.ubBouncerSpawnerTileX != BOUNCER_TILE_INVALID) {
 			g_sCurrentLevel.pTiles[g_sCurrentLevel.ubBouncerSpawnerTileX][g_sCurrentLevel.ubBouncerSpawnerTileY] = TILE_WALL_1;
-			gameDrawTile(
+			mapRequestTileDraw(
 				g_sCurrentLevel.ubBouncerSpawnerTileX,
 				g_sCurrentLevel.ubBouncerSpawnerTileY
 			);
@@ -329,16 +339,16 @@ static void gameGsLoop(void) {
 			g_sCurrentLevel.ubBouncerSpawnerTileX,
 			g_sCurrentLevel.ubBouncerSpawnerTileY
 		);
-		gameDrawTile(uwCursorTileX, uwCursorTileY);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_L)) {
 		*pTileUnderCursor = TILE_SLIPGATABLE_OFF_1;
-		gameDrawTile(uwCursorTileX, uwCursorTileY);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_K)) {
 		mapAddOrRemoveSpikeTile(uwCursorTileX, uwCursorTileY);
-		gameDrawTile(uwCursorTileX, uwCursorTileY - 1);
-		gameDrawTile(uwCursorTileX, uwCursorTileY);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY - 1);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 
 	for(UBYTE i = 0; i < MAP_INTERACTIONS_MAX; ++i) {
@@ -372,7 +382,7 @@ static void gameGsLoop(void) {
 			}
 
 			// Could be no longer part of interaction
-			gameDrawTile(uwCursorTileX, uwCursorTileY);
+			mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 			break;
 		}
 	}
@@ -456,7 +466,6 @@ static void gameGsDestroy(void) {
 static void gameDrawTileInteractionMask(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubMask) {
 	UBYTE ubBitIndex = 0;
 	blitRect(s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE + 1, ubTileY * MAP_TILE_SIZE + 1, 6, 6, 15);
-	blitRect(s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE + 1, ubTileY * MAP_TILE_SIZE + 1, 6, 6, 15);
 
 	while(ubMask) {
 		if(ubMask & 1) {
@@ -464,12 +473,6 @@ static void gameDrawTileInteractionMask(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubMa
 			UBYTE ubIndicatorY = 1 + (ubBitIndex / 3) * 2;
 			blitRect(
 				s_pBufferMain->pBack,
-				ubTileX * MAP_TILE_SIZE + ubIndicatorX,
-				ubTileY * MAP_TILE_SIZE + ubIndicatorY,
-				1, 1, 1
-			);
-			blitRect(
-				s_pBufferMain->pFront,
 				ubTileX * MAP_TILE_SIZE + ubIndicatorX,
 				ubTileY * MAP_TILE_SIZE + ubIndicatorY,
 				1, 1, 1
@@ -498,16 +501,12 @@ tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY) {
 
 //------------------------------------------------------------------- PUBLIC FNS
 
-// TODO: replace with tile draw queue
+// TODO: move to map.c?
 void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	tTile eTile = mapGetTileAt(ubTileX, ubTileY);
 	UBYTE ubColor = tileGetColor(eTile);
 	blitRect(
 		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
-	);
-	blitRect(
-		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
 		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
 	);
 
@@ -534,14 +533,6 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	);
 	blitLine(
 		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
-	);
-	blitLine(
-		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
-	);
-	blitLine(
-		s_pBufferMain->pFront, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
 		ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
 	);
 #endif

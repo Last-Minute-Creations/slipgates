@@ -48,6 +48,8 @@ void mapPressButtonIndex(UBYTE ubButtonIndex);
 
 void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY);
 
+void mapRequestTileDraw(UBYTE ubX, UBYTE ubY);
+
 //----------------------------------------------------------------- INTERACTIONS
 
 tInteraction *mapGetInteractionByIndex(UBYTE ubInteractionIndex);

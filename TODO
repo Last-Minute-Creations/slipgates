@@ -23,13 +23,14 @@ General:
 	✔ Fix overlapping slipgates @done(23-05-27 18:53)
 	✔ Treat unpaired slipgate as a wall @done(23-05-28 11:25)
 	✔ Restore tiles underneath closing slipgates @done(23-05-29 14:12)
-	☐ Tile update queue (from aminer, charena, germz, openfire, or custom)
+	☐ Tile update queue - custom, hashset-esque
+	☐ Bitmap-based tiles
+	☐ Multi-bob character body
 	☐ Edit mode
 	☐ Faster map restarts without file reload
 	☐ Menu
 	☐ Outro screen
 	☐ Entrance tiles
-	☐ Multi-bob character body
 	☐ Bigger max velocity
 	☐ Increase precision of trig tables for better aiming accuracy
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
@@ -91,5 +92,3 @@ Momentum, normal-wise:
 	✔ down-right @done(23-05-27 10:04)
 
 Test chambers:
-
-Archive:

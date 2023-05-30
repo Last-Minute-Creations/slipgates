@@ -10,6 +10,7 @@
 #include "bouncer.h"
 
 #define MAP_SPIKES_COOLDOWN 50
+#define MAP_DIRTY_TILES_MAX (MAP_TILE_WIDTH * MAP_TILE_HEIGHT)
 
 //----------------------------------------------------------------- PRIVATE VARS
 
@@ -18,6 +19,10 @@ static UBYTE s_ubButtonPressMask;
 static UBYTE s_ubCurrentInteraction;
 static UWORD s_uwSpikeCooldown;
 static UBYTE s_isSpikeActive;
+static UBYTE s_pDirtyTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
+static tUbCoordYX s_pDirtyTileQueues[2][MAP_DIRTY_TILES_MAX];
+static UWORD s_pDirtyTileCounts[2];
+static UBYTE s_ubCurrentDirtyList;
 
 //------------------------------------------------------------ PRIVATE FUNCTIONS
 
@@ -29,9 +34,9 @@ static void mapOpenSlipgate(UBYTE ubIndex) {
 
 	// Draw slipgate tiles
 	g_sCurrentLevel.pTiles[pSlipgate->sTilePos.ubX][pSlipgate->sTilePos.ubY] = TILE_SLIPGATE_1 + ubIndex;
-	gameDrawTile(pSlipgate->sTilePos.ubX, pSlipgate->sTilePos.ubY);
+	mapRequestTileDraw(pSlipgate->sTilePos.ubX, pSlipgate->sTilePos.ubY);
 	g_sCurrentLevel.pTiles[pSlipgate->sTilePosOther.ubX][pSlipgate->sTilePosOther.ubY] = TILE_SLIPGATE_1 + ubIndex;
-	gameDrawTile(pSlipgate->sTilePosOther.ubX, pSlipgate->sTilePosOther.ubY);
+	mapRequestTileDraw(pSlipgate->sTilePosOther.ubX, pSlipgate->sTilePosOther.ubY);
 }
 
 static void mapCloseSlipgate(UBYTE ubIndex) {
@@ -39,9 +44,9 @@ static void mapCloseSlipgate(UBYTE ubIndex) {
 	if(pSlipgate->eNormal != DIRECTION_NONE) {
 		// Restore terrain tiles
 		g_sCurrentLevel.pTiles[pSlipgate->sTilePos.ubX][pSlipgate->sTilePos.ubY] = pSlipgate->pPrevTiles[0];
-		gameDrawTile(pSlipgate->sTilePos.ubX, pSlipgate->sTilePos.ubY);
+		mapRequestTileDraw(pSlipgate->sTilePos.ubX, pSlipgate->sTilePos.ubY);
 		g_sCurrentLevel.pTiles[pSlipgate->sTilePosOther.ubX][pSlipgate->sTilePosOther.ubY] = pSlipgate->pPrevTiles[1];
-		gameDrawTile(pSlipgate->sTilePosOther.ubX, pSlipgate->sTilePosOther.ubY);
+		mapRequestTileDraw(pSlipgate->sTilePosOther.ubX, pSlipgate->sTilePosOther.ubY);
 
 		pSlipgate->eNormal = DIRECTION_NONE;
 	}
@@ -63,7 +68,7 @@ static void mapProcessNextInteraction(void) {
 					mapTryCloseSlipgateAt(1, pTile->sPos);
 				}
 				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileActive;
-				gameDrawTile(pTile->sPos.ubX, pTile->sPos.ubY);
+				mapRequestTileDraw(pTile->sPos.ubX, pTile->sPos.ubY);
 			}
 			pInteraction->wasActive = 1;
 		}
@@ -77,7 +82,7 @@ static void mapProcessNextInteraction(void) {
 					mapTryCloseSlipgateAt(1, pTile->sPos);
 				}
 				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileInactive;
-				gameDrawTile(pTile->sPos.ubX, pTile->sPos.ubY);
+				mapRequestTileDraw(pTile->sPos.ubX, pTile->sPos.ubY);
 			}
 			pInteraction->wasActive = 0;
 		}
@@ -95,24 +100,34 @@ static UBYTE mapProcessSpikes(void) {
 			for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
 				tUbCoordYX sSpikeCoord = g_sCurrentLevel.pSpikeTiles[i];
 				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = TILE_SPIKES_ON_FLOOR_1;
-				gameDrawTile(sSpikeCoord.ubX, sSpikeCoord.ubY);
+				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY);
 				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = TILE_SPIKES_ON_BG_1;
-				gameDrawTile(sSpikeCoord.ubX, sSpikeCoord.ubY - 1);
+				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY - 1);
 			}
 		}
 		else {
 			for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
 				tUbCoordYX sSpikeCoord = g_sCurrentLevel.pSpikeTiles[i];
 				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = TILE_SPIKES_OFF_FLOOR_1;
-				gameDrawTile(sSpikeCoord.ubX, sSpikeCoord.ubY);
+				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY);
 				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = TILE_SPIKES_OFF_BG_1;
-				gameDrawTile(sSpikeCoord.ubX, sSpikeCoord.ubY - 1);
+				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY - 1);
 			}
 		}
 		s_uwSpikeCooldown = MAP_SPIKES_COOLDOWN;
 		return 1;
 	}
 	return 0;
+}
+
+static void mapDrawPendingTiles(void) {
+	for(UWORD i = 0; i < s_pDirtyTileCounts[s_ubCurrentDirtyList]; ++i) {
+		tUbCoordYX sCoord = s_pDirtyTileQueues[s_ubCurrentDirtyList][i];
+		gameDrawTile(sCoord.ubX, sCoord.ubY);
+		s_pDirtyTiles[sCoord.ubX][sCoord.ubY]--;
+	}
+	s_pDirtyTileCounts[s_ubCurrentDirtyList] = 0;
+	s_ubCurrentDirtyList = !s_ubCurrentDirtyList;
 }
 
 //------------------------------------------------------------- PUBLIC FUNCTIONS
@@ -196,6 +211,9 @@ void mapLoad(UBYTE ubIndex) {
 	s_ubCurrentInteraction = 0;
 	s_uwSpikeCooldown = 1;
 	s_isSpikeActive = 0;
+	s_pDirtyTileCounts[0] = 0;
+	s_pDirtyTileCounts[1] = 0;
+	s_ubCurrentDirtyList = 0;
 }
 
 void mapSave(UBYTE ubIndex) {
@@ -249,6 +267,8 @@ void mapProcess(void) {
 		mapProcessNextInteraction();
 	}
 
+	mapDrawPendingTiles();
+
 	// Reset button mask for refresh by body collisions
 	s_ubButtonPressMask = 0;
 }
@@ -284,6 +304,17 @@ void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY) {
 		g_sCurrentLevel.pSpikeTiles[g_sCurrentLevel.ubSpikeTilesCount++].uwYX = sPos.uwYX;
 		g_sCurrentLevel.pTiles[ubX][ubY] = s_isSpikeActive ? TILE_SPIKES_ON_FLOOR_1 : TILE_SPIKES_OFF_FLOOR_1;
 		g_sCurrentLevel.pTiles[ubX][ubY - 1] = s_isSpikeActive ? TILE_SPIKES_ON_BG_1 : TILE_SPIKES_OFF_BG_1;
+	}
+}
+
+void mapRequestTileDraw(UBYTE ubX, UBYTE ubY) {
+	if(s_pDirtyTiles[ubX][ubY] < 2) {
+		tUbCoordYX sCoord = {.ubX = ubX, .ubY = ubY};
+		s_pDirtyTileQueues[s_ubCurrentDirtyList][s_pDirtyTileCounts[s_ubCurrentDirtyList]++] = sCoord;
+		if(s_pDirtyTiles[ubX][ubY] < 1) {
+			s_pDirtyTileQueues[!s_ubCurrentDirtyList][s_pDirtyTileCounts[!s_ubCurrentDirtyList]++] = sCoord;
+		}
+		s_pDirtyTiles[ubX][ubY] = 2;
 	}
 }
 
