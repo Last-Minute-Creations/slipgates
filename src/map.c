@@ -121,13 +121,13 @@ static UBYTE mapProcessSpikes(void) {
 }
 
 static void mapDrawPendingTiles(void) {
+	s_ubCurrentDirtyList = !s_ubCurrentDirtyList;
 	for(UWORD i = 0; i < s_pDirtyTileCounts[s_ubCurrentDirtyList]; ++i) {
 		tUbCoordYX sCoord = s_pDirtyTileQueues[s_ubCurrentDirtyList][i];
 		gameDrawTile(sCoord.ubX, sCoord.ubY);
-		s_pDirtyTiles[sCoord.ubX][sCoord.ubY]--;
+		--s_pDirtyTiles[sCoord.ubX][sCoord.ubY];
 	}
 	s_pDirtyTileCounts[s_ubCurrentDirtyList] = 0;
-	s_ubCurrentDirtyList = !s_ubCurrentDirtyList;
 }
 
 //------------------------------------------------------------- PUBLIC FUNCTIONS
@@ -237,6 +237,7 @@ void mapLoad(UBYTE ubIndex) {
 	s_pDirtyTileCounts[0] = 0;
 	s_pDirtyTileCounts[1] = 0;
 	s_ubCurrentDirtyList = 0;
+	memset(s_pDirtyTiles, 0, MAP_TILE_WIDTH * MAP_TILE_HEIGHT);
 }
 
 void mapSave(UBYTE ubIndex) {
