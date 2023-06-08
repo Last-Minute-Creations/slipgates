@@ -25,8 +25,8 @@ General:
 	✔ Restore tiles underneath closing slipgates @done(23-05-29 14:12)
 	✔ Tile update queue - custom, hashset-esque @done(23-05-30 21:02)
 	✔ Story text on top of level @done(23-06-08 11:06)
+	✔ Bitmap-based tiles @done(23-06-08 14:24)
 	☐ Editable story text
-	☐ Bitmap-based tiles
 	☐ Multi-bob character body
 	☐ Edit mode
 	☐ Faster map restarts without file reload

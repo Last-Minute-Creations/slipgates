@@ -22,6 +22,12 @@
 #include "player.h"
 #include "bouncer.h"
 
+#define GAME_BPP 5
+
+// Hardcoded bitmap widths to prevent runtime multiplications
+#define TILESET_BYTE_WIDTH (16 / 8)
+#define BUFFER_BYTE_WIDTH (MAP_TILE_WIDTH * MAP_TILE_SIZE / 8)
+
 // DEBUG SWITCHES
 // #define GAME_DRAW_GRID
 #define GAME_EDITOR_ENABLED
@@ -43,6 +49,7 @@ static tBitMap *s_pBoxMasks;
 static tBitMap *s_pBouncerFrames;
 static tBitMap *s_pBouncerMasks;
 static tBitMap *s_pBmCursor;
+static tBitMap *s_pBmTiles;
 static tPlayer s_sPlayer;
 static tBodyBox s_pBoxBodies[MAP_BOXES_MAX];
 static tSprite *s_pSpriteCrosshair;
@@ -60,40 +67,6 @@ static tExitState s_eExitState;
 // static char s_szAccelerationY[13];
 
 tTileTracer g_sTracerSlipgate;
-
-static UBYTE tileGetColor(tTile eTile) {
-	switch (eTile)
-	{
-		case TILE_WALL_1: return 7;
-		case TILE_WALL_NO_SLIPGATE_1: return 3;
-		case TILE_SLIPGATE_1: return 8;
-		case TILE_SLIPGATE_2: return 13;
-		case TILE_FORCE_FIELD_1: return 5;
-		case TILE_DEATH_FIELD_1: return 2;
-		case TILE_EXIT_1: return 14;
-		case TILE_BUTTON_1:
-		case TILE_BUTTON_2:
-		case TILE_BUTTON_3:
-		case TILE_BUTTON_4:
-		case TILE_BUTTON_5:
-		case TILE_BUTTON_6:
-		case TILE_BUTTON_7:
-		case TILE_BUTTON_8:
-			return 12;
-		case TILE_GATE_CLOSED_1: return 11;
-		case TILE_GATE_OPEN_1: return 15;
-		case TILE_SLIPGATABLE_OFF_1: return 3;
-		case TILE_SLIPGATABLE_ON_1: return 7;
-		case TILE_RECEIVER: return 9;
-		case TILE_BOUNCER_SPAWNER: return 6;
-		case TILE_BG_1: return 15;
-		case TILE_SPIKES_OFF_BG_1: return 15;
-		case TILE_SPIKES_OFF_FLOOR_1: return 3;
-		case TILE_SPIKES_ON_BG_1: return 2;
-		case TILE_SPIKES_ON_FLOOR_1: return 2;
-		default: return 0;
-	}
-}
 
 // TODO: refactor and move to map.c?
 static void drawMap(void) {
@@ -188,7 +161,7 @@ static void gameGsCreate(void) {
 	TAG_END);
 
 	s_pVpMain = vPortCreate(0,
-		TAG_VPORT_BPP, 5,
+		TAG_VPORT_BPP, GAME_BPP,
 		TAG_VPORT_VIEW, s_pView,
 	TAG_END);
 
@@ -210,6 +183,7 @@ static void gameGsCreate(void) {
 	s_pBouncerFrames = bitmapCreateFromFile("data/bouncer.bm", 0);
 	s_pBouncerMasks = bitmapCreateFromFile("data/bouncer_mask.bm", 0);
 	s_pBmCursor = bitmapCreateFromFile("data/cursor.bm", 0);
+	s_pBmTiles = bitmapCreateFromFile("data/tiles.bm", 0);
 
 	s_pFont = fontCreate("data/uni54.fnt");
 	s_pTextBuffer = fontCreateTextBitMap(336, s_pFont->uwHeight * 2);
@@ -473,6 +447,7 @@ static void gameGsDestroy(void) {
 	bitmapDestroy(s_pBouncerFrames);
 	bitmapDestroy(s_pBouncerMasks);
 	bitmapDestroy(s_pBmCursor);
+	bitmapDestroy(s_pBmTiles);
 
 	fontDestroyTextBitMap(s_pTextBuffer);
 	fontDestroy(s_pFont);
@@ -519,11 +494,35 @@ tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY) {
 // TODO: move to map.c?
 void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	tTile eTile = mapGetTileAt(ubTileX, ubTileY);
-	UBYTE ubColor = tileGetColor(eTile);
-	blitRect(
-		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		MAP_TILE_SIZE, MAP_TILE_SIZE, ubColor
-	);
+	UWORD uwTileIndex = eTile & MAP_TILE_INDEX_MASK;
+
+	// A: tile mask, B: tile source, C/D: bg
+	UWORD uwHeight = MAP_TILE_SIZE * s_pBmTiles->Depth;
+	UWORD uwBlitWords = 1;
+	WORD wSrcModulo = TILESET_BYTE_WIDTH - (uwBlitWords<<1);
+	WORD wDstModulo = BUFFER_BYTE_WIDTH - (uwBlitWords<<1);
+	ULONG ulSrcOffs = uwTileIndex * MAP_TILE_SIZE * TILESET_BYTE_WIDTH * GAME_BPP; // + (wSrcX>>3);
+	ULONG ulDstOffs = ubTileY * MAP_TILE_SIZE * BUFFER_BYTE_WIDTH * GAME_BPP + ((ubTileX * MAP_TILE_SIZE) >>3);
+	UBYTE ubShift = (ubTileX & 1) ? 8 : 0;
+	UWORD uwBltCon0 = (ubShift << ASHIFTSHIFT) | USEB|USEC|USED | MINTERM_COOKIE;
+	UWORD uwBltCon1 = ubShift << BSHIFTSHIFT;
+
+	blitWait(); // Don't modify registers when other blit is in progress
+	g_pCustom->bltcon0 = uwBltCon0;
+	g_pCustom->bltcon1 = uwBltCon1;
+	g_pCustom->bltafwm = 0xFF00;
+	g_pCustom->bltalwm = 0xFF00;
+	g_pCustom->bltbmod = wSrcModulo;
+	g_pCustom->bltcmod = wDstModulo;
+	g_pCustom->bltdmod = wDstModulo;
+	g_pCustom->bltadat = 0xFF00;
+
+	// TODO: all of above regs could be calculated/set once before triggering
+	// batch tiles draw, but only if editor/debug mode overlays are not needed.
+	g_pCustom->bltbpt = (UBYTE*)((ULONG)s_pBmTiles->Planes[0] + ulSrcOffs);
+	g_pCustom->bltcpt = (UBYTE*)((ULONG)s_pBufferMain->pBack->Planes[0] + ulDstOffs);
+	g_pCustom->bltdpt = (UBYTE*)((ULONG)s_pBufferMain->pBack->Planes[0] + ulDstOffs);
+	g_pCustom->bltsize = (uwHeight << HSIZEBITS) | uwBlitWords;
 
 #if defined(GAME_EDITOR_ENABLED)
 	if(mapTileIsButton(eTile)) {

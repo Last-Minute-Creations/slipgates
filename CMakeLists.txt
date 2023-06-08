@@ -66,6 +66,14 @@ convertBitmaps(
 )
 
 convertBitmaps(
+	TARGET ${GAME_EXECUTABLE} PALETTE ${palette_slipgates_gpl}
+	INTERLEAVED SOURCES
+		${RES_DIR}/tiles.png
+	DESTINATIONS
+		${DATA_DIR}/tiles.bm
+)
+
+convertBitmaps(
 	TARGET ${GAME_EXECUTABLE} PALETTE ${palette_sprite_gpl}
 	INTERLEAVED SOURCES
 		${RES_DIR}/cursor.png
