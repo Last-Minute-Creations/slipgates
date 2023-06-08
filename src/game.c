@@ -212,7 +212,7 @@ static void gameGsCreate(void) {
 	s_pBmCursor = bitmapCreateFromFile("data/cursor.bm", 0);
 
 	s_pFont = fontCreate("data/uni54.fnt");
-	s_pTextBuffer = fontCreateTextBitMap(336, s_pFont->uwHeight);
+	s_pTextBuffer = fontCreateTextBitMap(336, s_pFont->uwHeight * 2);
 
 	bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
 	bobInit(

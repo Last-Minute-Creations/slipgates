@@ -24,6 +24,8 @@ General:
 	✔ Treat unpaired slipgate as a wall @done(23-05-28 11:25)
 	✔ Restore tiles underneath closing slipgates @done(23-05-29 14:12)
 	✔ Tile update queue - custom, hashset-esque @done(23-05-30 21:02)
+	✔ Story text on top of level @done(23-06-08 11:06)
+	☐ Editable story text
 	☐ Bitmap-based tiles
 	☐ Multi-bob character body
 	☐ Edit mode

@@ -142,6 +142,7 @@ void mapLoad(UBYTE ubIndex) {
 		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
 			g_sCurrentLevel.pTiles[ubX][0] = TILE_WALL_1;
 			g_sCurrentLevel.pTiles[ubX][1] = TILE_WALL_1;
+			g_sCurrentLevel.pTiles[ubX][2] = TILE_WALL_1;
 			g_sCurrentLevel.pTiles[ubX][MAP_TILE_HEIGHT - 2] = TILE_WALL_1;
 			g_sCurrentLevel.pTiles[ubX][MAP_TILE_HEIGHT - 1] = TILE_WALL_1;
 		}
@@ -153,6 +154,12 @@ void mapLoad(UBYTE ubIndex) {
 		}
 		g_sCurrentLevel.sSpawnPos.fX = fix16_from_int(100);
 		g_sCurrentLevel.sSpawnPos.fY = fix16_from_int(100);
+
+		strcpy(
+			g_sCurrentLevel.szStoryText,
+			"The ruins looked dormant, with no traces of previous adventurers\n"
+			"in sight, but soon first obstacles, and a helpful utility appeared."
+		);
 	}
 	else {
 		char szName[13];
@@ -187,6 +194,22 @@ void mapLoad(UBYTE ubIndex) {
 			fileRead(pFile, &g_sCurrentLevel.pSpikeTiles[i].uwYX, sizeof(g_sCurrentLevel.pSpikeTiles[i].uwYX));
 		}
 
+		UBYTE ubTurretCount;
+		fileRead(pFile, &ubTurretCount, sizeof(ubTurretCount));
+
+		UBYTE ubStoryTextLength;
+		fileRead(pFile, &ubStoryTextLength, sizeof(ubStoryTextLength));
+		if(ubStoryTextLength) {
+			fileRead(pFile, g_sCurrentLevel.szStoryText, ubStoryTextLength);
+			g_sCurrentLevel.szStoryText[ubStoryTextLength] = '\0';
+		}
+
+		UBYTE ubReservedCount1;
+		fileRead(pFile, &ubReservedCount1, sizeof(ubReservedCount1));
+
+		UBYTE ubReservedCount2;
+		fileRead(pFile, &ubReservedCount2, sizeof(ubReservedCount2));
+
 		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
 			for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
 				UWORD uwTileCode;
@@ -214,12 +237,6 @@ void mapLoad(UBYTE ubIndex) {
 	s_pDirtyTileCounts[0] = 0;
 	s_pDirtyTileCounts[1] = 0;
 	s_ubCurrentDirtyList = 0;
-
-	strcpy(
-		g_sCurrentLevel.szStoryText,
-		"The ruins looked dormant, with no traces of previous adventurers\n"
-		"in sight, but soon first obstacles, and a helpful utility appeared."
-	);
 }
 
 void mapSave(UBYTE ubIndex) {
@@ -257,6 +274,21 @@ void mapSave(UBYTE ubIndex) {
 	for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
 		fileWrite(pFile, &g_sCurrentLevel.pSpikeTiles[i].uwYX, sizeof(g_sCurrentLevel.pSpikeTiles[i].uwYX));
 	}
+
+		UBYTE ubTurretCount = 0;
+		fileWrite(pFile, &ubTurretCount, sizeof(ubTurretCount));
+
+		UBYTE ubStoryTextLength = strlen(g_sCurrentLevel.szStoryText);
+		fileWrite(pFile, &ubStoryTextLength, sizeof(ubStoryTextLength));
+		if(ubStoryTextLength) {
+			fileWrite(pFile, g_sCurrentLevel.szStoryText, ubStoryTextLength);
+		}
+
+		UBYTE ubReservedCount1 = 0;
+		fileWrite(pFile, &ubReservedCount1, sizeof(ubReservedCount1));
+
+		UBYTE ubReservedCount2 = 0;
+		fileWrite(pFile, &ubReservedCount2, sizeof(ubReservedCount2));
 
 	for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
 		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
