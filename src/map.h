@@ -16,6 +16,7 @@
 #define MAP_INTERACTIONS_MAX 4
 #define MAP_BOXES_MAX 5
 #define MAP_SPIKES_TILES_MAX 10
+#define MAP_STORY_TEXT_MAX 200
 
 typedef struct tFix16Coord {
 	fix16_t fX;
@@ -31,6 +32,7 @@ typedef struct tLevel {
 	UBYTE ubBouncerSpawnerTileX;
 	UBYTE ubBouncerSpawnerTileY;
 	UBYTE ubSpikeTilesCount;
+	char szStoryText[MAP_STORY_TEXT_MAX];
 } tLevel;
 
 extern tSlipgate g_pSlipgates[2];

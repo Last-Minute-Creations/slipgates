@@ -12,6 +12,7 @@
 #include <ace/managers/mouse.h>
 #include <ace/utils/palette.h>
 #include <ace/utils/file.h>
+#include <ace/utils/font.h>
 #include <ace/managers/key.h>
 #include "slipgates.h"
 #include "body_box.h"
@@ -45,6 +46,8 @@ static tBitMap *s_pBmCursor;
 static tPlayer s_sPlayer;
 static tBodyBox s_pBoxBodies[MAP_BOXES_MAX];
 static tSprite *s_pSpriteCrosshair;
+static tFont *s_pFont;
+static tTextBitMap *s_pTextBuffer;
 
 static UWORD s_uwGameFrame;
 static UBYTE s_ubCurrentLevel;
@@ -99,6 +102,12 @@ static void drawMap(void) {
 			gameDrawTile(ubTileX, ubTileY);
 		}
 	}
+
+	fontDrawStr(
+		s_pFont, s_pBufferMain->pBack, 320/2, 0,
+		g_sCurrentLevel.szStoryText,
+		13, FONT_COOKIE | FONT_HCENTER, s_pTextBuffer
+	);
 }
 
 static void gameDrawInteractionTiles(const tInteraction *pInteraction) {
@@ -201,6 +210,9 @@ static void gameGsCreate(void) {
 	s_pBouncerFrames = bitmapCreateFromFile("data/bouncer.bm", 0);
 	s_pBouncerMasks = bitmapCreateFromFile("data/bouncer_mask.bm", 0);
 	s_pBmCursor = bitmapCreateFromFile("data/cursor.bm", 0);
+
+	s_pFont = fontCreate("data/uni54.fnt");
+	s_pTextBuffer = fontCreateTextBitMap(336, s_pFont->uwHeight);
 
 	bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
 	bobInit(
@@ -461,6 +473,9 @@ static void gameGsDestroy(void) {
 	bitmapDestroy(s_pBouncerFrames);
 	bitmapDestroy(s_pBouncerMasks);
 	bitmapDestroy(s_pBmCursor);
+
+	fontDestroyTextBitMap(s_pTextBuffer);
+	fontDestroy(s_pFont);
 }
 
 static void gameDrawTileInteractionMask(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubMask) {

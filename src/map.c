@@ -214,6 +214,12 @@ void mapLoad(UBYTE ubIndex) {
 	s_pDirtyTileCounts[0] = 0;
 	s_pDirtyTileCounts[1] = 0;
 	s_ubCurrentDirtyList = 0;
+
+	strcpy(
+		g_sCurrentLevel.szStoryText,
+		"The ruins looked dormant, with no traces of previous adventurers\n"
+		"in sight, but soon first obstacles, and a helpful utility appeared."
+	);
 }
 
 void mapSave(UBYTE ubIndex) {

@@ -73,10 +73,10 @@ convertBitmaps(
 		${DATA_DIR}/cursor.bm
 )
 
-# convertFont(
-# 	TARGET ${GAME_EXECUTABLE}
-# 	SOURCE ${RES_DIR}/uni54 DESTINATION ${DATA_DIR}/uni54.fnt
-# )
+convertFont(
+	TARGET ${GAME_EXECUTABLE} FIRST_CHAR 32
+	SOURCE ${RES_DIR}/uni54.png DESTINATION ${DATA_DIR}/uni54.fnt
+)
 
 # Version stuff
 string(TIMESTAMP YEAR "%y")

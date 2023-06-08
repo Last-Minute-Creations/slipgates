@@ -23,7 +23,7 @@ General:
 	✔ Fix overlapping slipgates @done(23-05-27 18:53)
 	✔ Treat unpaired slipgate as a wall @done(23-05-28 11:25)
 	✔ Restore tiles underneath closing slipgates @done(23-05-29 14:12)
-	☐ Tile update queue - custom, hashset-esque
+	✔ Tile update queue - custom, hashset-esque @done(23-05-30 21:02)
 	☐ Bitmap-based tiles
 	☐ Multi-bob character body
 	☐ Edit mode
