@@ -8,17 +8,23 @@
 #include <ace/types.h>
 #include <fixmath/fix16.h>
 
+#define GAME_MATH_ANGLE_COUNT 128
+#define GAME_MATH_ATAN2_SCALE 8
+#define GAME_MATH_PRECALCULATED
+// #define GAME_MATH_SAVE_PRECALC
+
 #define ANGLE_0    0
-#define ANGLE_45   16
-#define ANGLE_90   32
-#define ANGLE_180  64
-#define ANGLE_360  128
-#define ANGLE_LAST 127
+#define ANGLE_45   (GAME_MATH_ANGLE_COUNT / 8)
+#define ANGLE_90   (GAME_MATH_ANGLE_COUNT / 4)
+#define ANGLE_180  (GAME_MATH_ANGLE_COUNT / 2)
+#define ANGLE_360  (GAME_MATH_ANGLE_COUNT)
+#define ANGLE_LAST ((GAME_MATH_ANGLE_COUNT)-1)
+
 #define csin(x) (g_pSin[x])
-#define ccos(x) ((x < 96?csin(ANGLE_90+x):csin(x-3*ANGLE_90)))
+#define ccos(x) ((x < (3 * ANGLE_90) ? csin(ANGLE_90 + x) : csin(x - 3 * ANGLE_90)))
 #define angleToFrame(angle) (angle>>1)
 
-extern fix16_t g_pSin[128];
+extern fix16_t g_pSin[GAME_MATH_ANGLE_COUNT];
 
 /**
  *  Calculates angle between source and destination points.

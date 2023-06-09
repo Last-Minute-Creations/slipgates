@@ -47,6 +47,8 @@ set(GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 file(MAKE_DIRECTORY ${DATA_DIR})
 file(MAKE_DIRECTORY ${GEN_DIR})
+file(GLOB COPY_FILES ${RES_DIR}/copied/*)
+file(COPY ${COPY_FILES} DESTINATION ${DATA_DIR})
 
 # Palette
 file(GLOB palette_slipgates_gpl ${RES_DIR}/slipgates.gpl)
