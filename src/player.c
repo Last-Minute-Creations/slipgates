@@ -82,7 +82,8 @@ void playerProcess(tPlayer *pPlayer) {
 
 	// Player shooting slipgates
 	UBYTE ubAimAngle = getAngleBetweenPoints(
-		fix16_to_int(pPlayer->sBody.fPosX), fix16_to_int(pPlayer->sBody.fPosY),
+		fix16_to_int(pPlayer->sBody.fPosX) + pPlayer->sBody.ubWidth / 2,
+		fix16_to_int(pPlayer->sBody.fPosY) + pPlayer->sBody.ubHeight / 2,
 		sPosCross.uwX, sPosCross.uwY
 	);
 	tracerProcess(&g_sTracerSlipgate);
