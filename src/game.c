@@ -567,6 +567,10 @@ tPlayer *gameGetPlayer(void) {
 	return &s_sPlayer;
 }
 
+tSimpleBufferManager *gameGetBuffer(void) {
+	return s_pBufferMain;
+}
+
 //-------------------------------------------------------------------- GAMESTATE
 
 tState g_sStateGame = { .cbCreate = gameGsCreate, .cbLoop = gameGsLoop, .cbDestroy = gameGsDestroy };

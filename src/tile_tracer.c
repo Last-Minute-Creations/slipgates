@@ -44,6 +44,8 @@ void tracerProcess(tTileTracer *pTracer) {
 		return;
 	}
 
+	tSimpleBufferManager *pBuffer = gameGetBuffer();
+
 	for(UBYTE i = TRACER_ITERATIONS_PER_FRAME; i--;) {
 		if(fix16_abs(pTracer->fAccumulatorX) < fix16_abs(pTracer->fAccumulatorY)) {
 			pTracer->fAccumulatorX = fix16_add(pTracer->fAccumulatorX, pTracer->fAccumulatorDeltaX);
@@ -53,19 +55,15 @@ void tracerProcess(tTileTracer *pTracer) {
 			pTracer->uwTileY += pTracer->wDeltaTileY;
 		}
 
+		// Debug draw of tracer trajectory
 		UWORD uwPosX = pTracer->uwTileX * MAP_TILE_SIZE + 3;
 		UWORD uwPosY = pTracer->uwTileY * MAP_TILE_SIZE + 3;
+		blitRect(pBuffer->pBack, uwPosX, uwPosY, 2, 2, 8);
+		blitRect(pBuffer->pFront, uwPosX, uwPosY, 2, 2, 8);
 
-		// Debug draw of tracer trajectory
-		// blitRect(s_pBufferMain->pBack, uwPosX, uwPosY, 2, 2, 8);
-		// blitRect(s_pBufferMain->pFront, uwPosX, uwPosY, 2, 2, 8);
-
-		UWORD uwTileX = uwPosX / MAP_TILE_SIZE;
-		UWORD uwTileY = uwPosY / MAP_TILE_SIZE;
-
-		if(mapIsCollidingWithPortalProjectilesAt(uwTileX, uwTileY)) {
+		if(mapIsCollidingWithPortalProjectilesAt(pTracer->uwTileX, pTracer->uwTileY)) {
 			pTracer->isActive = 0;
-			mapTrySpawnSlipgate(pTracer->ubIndex, uwTileX, uwTileY);
+			mapTrySpawnSlipgate(pTracer->ubIndex, pTracer->uwTileX, pTracer->uwTileY);
 			break;
 		}
 	}

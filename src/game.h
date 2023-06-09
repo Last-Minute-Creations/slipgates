@@ -6,6 +6,7 @@
 #define SLIPGATES_GAME_H
 
 #include <ace/managers/state.h>
+#include <ace/managers/viewport/simplebuffer.h>
 #include "tile_tracer.h"
 #include "body_box.h"
 #include "player.h"
@@ -22,5 +23,7 @@ tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY);
 void gameMarkExitReached(void);
 
 tPlayer *gameGetPlayer(void);
+
+tSimpleBufferManager *gameGetBuffer(void);
 
 #endif // SLIPGATES_GAME_H
