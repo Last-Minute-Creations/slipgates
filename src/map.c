@@ -11,6 +11,17 @@
 
 #define MAP_SPIKES_COOLDOWN 50
 #define MAP_DIRTY_TILES_MAX (MAP_TILE_WIDTH * MAP_TILE_HEIGHT)
+#define MAP_TURRET_ATTACK_COOLDOWN 10
+#define MAP_TURRET_TILE_RANGE 5
+
+typedef struct tTurret {
+	tUbCoordYX sTilePos;
+	UBYTE isActive;
+	UBYTE ubAttackCooldown;
+	tUwCoordYX sScanTopLeft;
+	tUwCoordYX sScanBottomRight;
+	tDirection eDirection;
+} tTurret;
 
 //----------------------------------------------------------------- PRIVATE VARS
 
@@ -23,6 +34,9 @@ static UBYTE s_pDirtyTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
 static tUbCoordYX s_pDirtyTileQueues[2][MAP_DIRTY_TILES_MAX];
 static UWORD s_pDirtyTileCounts[2];
 static UBYTE s_ubCurrentDirtyList;
+static tTurret s_pTurrets[MAP_TURRETS_MAX];
+static UBYTE s_ubTurretCount;
+static UBYTE s_ubCurrentTurret;
 
 //------------------------------------------------------------ PRIVATE FUNCTIONS
 
@@ -93,6 +107,34 @@ static void mapProcessNextInteraction(void) {
 	}
 }
 
+static void mapProcessNextTurret(void) {
+	if(++s_ubCurrentTurret > MAP_TURRETS_MAX) {
+		s_ubCurrentTurret = 0;
+	}
+
+	tTurret *pTurret = &s_pTurrets[s_ubCurrentTurret];
+	if(pTurret->isActive) {
+		if(pTurret->ubAttackCooldown > 0) {
+			BYTE bNewCooldown = (BYTE)pTurret->ubAttackCooldown - (BYTE)s_ubTurretCount;
+			pTurret->ubAttackCooldown = MAX(0, bNewCooldown);
+		}
+		else {
+			tPlayer *pPlayer = gameGetPlayer();
+			UWORD uwPlayerX = fix16_to_int(pPlayer->sBody.fPosX);
+			UWORD uwPlayerY = fix16_to_int(pPlayer->sBody.fPosY);
+			if(
+				pTurret->sScanTopLeft.uwX < uwPlayerX + pPlayer->sBody.ubWidth &&
+				pTurret->sScanBottomRight.uwX > uwPlayerX &&
+				pTurret->sScanTopLeft.uwY < uwPlayerY + pPlayer->sBody.ubHeight &&
+				pTurret->sScanBottomRight.uwY > uwPlayerY
+			) {
+				playerDamage(pPlayer, 1);
+				pTurret->ubAttackCooldown = MAP_TURRET_ATTACK_COOLDOWN;
+			}
+		}
+	}
+}
+
 static UBYTE mapProcessSpikes(void) {
 	if(--s_uwSpikeCooldown == 0) {
 		s_isSpikeActive = !s_isSpikeActive;
@@ -135,6 +177,7 @@ static void mapDrawPendingTiles(void) {
 void mapLoad(UBYTE ubIndex) {
 	memset(s_pInteractions, 0, sizeof(s_pInteractions));
 	g_sCurrentLevel.ubSpikeTilesCount = 0;
+	s_ubTurretCount = 0;
 
 	if(ubIndex == 0) {
 		// hadcoded level
@@ -304,6 +347,7 @@ void mapSave(UBYTE ubIndex) {
 void mapProcess(void) {
 	if(!mapProcessSpikes()) {
 		mapProcessNextInteraction();
+		mapProcessNextTurret();
 	}
 
 	mapDrawPendingTiles();
@@ -318,6 +362,24 @@ void mapPressButtonAt(UBYTE ubX, UBYTE ubY) {
 		logWrite("ERR: Tile %d at %hhu,%hhu is not a button!\n", eTile, ubX, ubY);
 	}
 	mapPressButtonIndex(eTile - TILE_BUTTON_1);
+}
+
+void mapDisableTurretAt(UBYTE ubX, UBYTE ubY) {
+	tUbCoordYX sPos = {.ubX = ubX, .ubY = ubY};
+	for(UBYTE i = 0; i < s_ubTurretCount; ++i) {
+		if(s_pTurrets[i].sTilePos.uwYX == sPos.uwYX) {
+			// Disable relevant turret logic
+			s_pTurrets[i].isActive = 0;
+
+			// Update turret tile
+			g_sCurrentLevel.pTiles[ubX][ubY] = (
+				(g_sCurrentLevel.pTiles[ubX][ubY] == TILE_TURRET_ACTIVE_LEFT) ?
+				TILE_TURRET_INACTIVE_LEFT : TILE_TURRET_INACTIVE_RIGHT
+			);
+			mapRequestTileDraw(ubX, ubY);
+			break;
+		}
+	}
 }
 
 void mapPressButtonIndex(UBYTE ubButtonIndex) {
@@ -343,6 +405,71 @@ void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY) {
 		g_sCurrentLevel.pSpikeTiles[g_sCurrentLevel.ubSpikeTilesCount++].uwYX = sPos.uwYX;
 		g_sCurrentLevel.pTiles[ubX][ubY] = s_isSpikeActive ? TILE_SPIKES_ON_FLOOR_1 : TILE_SPIKES_OFF_FLOOR_1;
 		g_sCurrentLevel.pTiles[ubX][ubY - 1] = s_isSpikeActive ? TILE_SPIKES_ON_BG_1 : TILE_SPIKES_OFF_BG_1;
+	}
+}
+
+void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY, tDirection eDirection) {
+	tUbCoordYX sPos = {.ubX = ubX, .ubY = ubY};
+	// Remove if list already contains pos
+	for(UBYTE i = 0; i < s_ubTurretCount; ++i) {
+		if(s_pTurrets[i].sTilePos.uwYX == sPos.uwYX) {
+			g_sCurrentLevel.pTiles[ubX][ubY] = TILE_BG_1;
+			while(++i < s_ubTurretCount) {
+				s_pTurrets[i - 1] = s_pTurrets[i];
+			}
+			--s_ubTurretCount;
+			return;
+		}
+	}
+
+	if(s_ubTurretCount < MAP_SPIKES_TILES_MAX) {
+		tTurret *pTurret = &s_pTurrets[s_ubTurretCount];
+		++s_ubTurretCount;
+
+		// Set up turret
+		// TODO: move to initTurret() and call when recalc is needed
+		pTurret->sTilePos.uwYX = sPos.uwYX;
+		pTurret->isActive = 1;
+		pTurret->eDirection = eDirection;
+		pTurret->ubAttackCooldown = 0;
+		g_sCurrentLevel.pTiles[ubX][ubY] = (
+			(eDirection == DIRECTION_LEFT) ?
+			TILE_TURRET_ACTIVE_LEFT :
+			TILE_TURRET_ACTIVE_RIGHT
+		);
+
+		if(eDirection == DIRECTION_LEFT) {
+			UBYTE ubLeftTileX = ubX;
+			for(UBYTE i = 0; i < MAP_TURRET_TILE_RANGE; ++i) {
+				if(mapIsCollidingWithPortalProjectilesAt(ubLeftTileX - 1, ubY)) {
+					break;
+				}
+				--ubLeftTileX;
+			}
+			pTurret->sScanTopLeft = (tUwCoordYX) {.uwX = ubLeftTileX * MAP_TILE_SIZE, .uwY = ubY * MAP_TILE_SIZE};
+			pTurret->sScanBottomRight = (tUwCoordYX) {.uwX = ubX * MAP_TILE_SIZE, .uwY = (ubY + 1) * MAP_TILE_SIZE};
+		}
+		else {
+			UBYTE ubRightTileX = ubX + 1;
+			for(UBYTE i = 0; i < MAP_TURRET_TILE_RANGE; ++i) {
+				if(mapIsCollidingWithPortalProjectilesAt(ubRightTileX, ubY)) {
+					break;
+				}
+				++ubRightTileX;
+			}
+			pTurret->sScanTopLeft = (tUwCoordYX) {.uwX = (ubX + 1) * MAP_TILE_SIZE, .uwY = ubY * MAP_TILE_SIZE};
+			pTurret->sScanBottomRight = (tUwCoordYX) {.uwX = ubRightTileX * MAP_TILE_SIZE, .uwY = (ubY + 1) * MAP_TILE_SIZE};
+		}
+
+		// if(pTurret->sScanBottomRight.uwX - pTurret->sScanTopLeft.uwX != 0) {
+		// 	tSimpleBufferManager *pBuffer = gameGetBuffer();
+		// 	blitRect(
+		// 		pBuffer->pBack,
+		// 		pTurret->sScanTopLeft.uwX, pTurret->sScanTopLeft.uwY,
+		// 		pTurret->sScanBottomRight.uwX - pTurret->sScanTopLeft.uwX,
+		// 		pTurret->sScanBottomRight.uwY - pTurret->sScanTopLeft.uwY, 8
+		// 	);
+		// }
 	}
 }
 
@@ -429,6 +556,10 @@ UBYTE mapTileIsExit(tTile eTile) {
 
 UBYTE mapTileIsButton(tTile eTile) {
 	return (eTile & TILE_LAYER_BUTTON) != 0;
+}
+
+UBYTE mapTileIsActiveTurret(tTile eTile) {
+	return (eTile & TILE_LAYER_ACTIVE_TURRET) != 0;
 }
 
 //-------------------------------------------------------------------- SLIPGATES

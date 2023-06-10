@@ -15,6 +15,7 @@
 #define MAP_TILE_HEIGHT 32
 #define MAP_INTERACTIONS_MAX 4
 #define MAP_BOXES_MAX 5
+#define MAP_TURRETS_MAX 5
 #define MAP_SPIKES_TILES_MAX 10
 #define MAP_STORY_TEXT_MAX 200
 
@@ -48,9 +49,15 @@ void mapPressButtonAt(UBYTE ubX, UBYTE ubY);
 
 void mapPressButtonIndex(UBYTE ubButtonIndex);
 
-void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY);
+void mapDisableTurretAt(UBYTE ubX, UBYTE ubY);
 
 void mapRequestTileDraw(UBYTE ubX, UBYTE ubY);
+
+//----------------------------------------------------------------------- EDITOR
+
+void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY);
+
+void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY, tDirection eDirection);
 
 //----------------------------------------------------------------- INTERACTIONS
 
@@ -87,6 +94,8 @@ UBYTE mapTileIsLethal(tTile eTile);
 UBYTE mapTileIsExit(tTile eTile);
 
 UBYTE mapTileIsButton(tTile eTile);
+
+UBYTE mapTileIsActiveTurret(tTile eTile);
 
 //-------------------------------------------------------------------- SLIPGATES
 

@@ -336,6 +336,14 @@ static void gameGsLoop(void) {
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY - 1);
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
+	else if(keyUse(KEY_H)) {
+		mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY, DIRECTION_LEFT);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+	}
+	else if(keyUse(KEY_J)) {
+		mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY, DIRECTION_RIGHT);
+		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+	}
 
 	for(UBYTE i = 0; i < MAP_INTERACTIONS_MAX; ++i) {
 		if(keyUse(KEY_1 + i)) {
