@@ -17,8 +17,10 @@ if(ELF2HUNK)
 	set(GAME_EXECUTABLE ${GAME_EXECUTABLE_STEM}.elf)
 	set(GAME_OUTPUT_EXECUTABLE ${GAME_EXECUTABLE_STEM}.exe)
 	add_executable(${GAME_EXECUTABLE} ${GAME_src})
-	target_link_options(${GAME_EXECUTABLE} PUBLIC -Wno-attributes)
-	target_link_libraries(${GAME_EXECUTABLE} -Wl,-Map=${GAME_EXECUTABLE_STEM}.map)
+	target_link_options(
+		${GAME_EXECUTABLE} PUBLIC -Wno-attributes
+		-Wl,-Map=${GAME_EXECUTABLE_STEM}.map
+	)
 	add_custom_command(
 		TARGET ${GAME_EXECUTABLE} POST_BUILD
 		COMMAND ${ELF2HUNK} ${GAME_EXECUTABLE} ${GAME_OUTPUT_EXECUTABLE}
