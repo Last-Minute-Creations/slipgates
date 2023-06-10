@@ -25,13 +25,16 @@ void tracerStart(
 	pTracer->wDeltaTileY = (wDeltaY > 0) - (wDeltaY < 0);
 	UWORD uwNextTileX = uwSourceX / MAP_TILE_SIZE + pTracer->wDeltaTileX;
 	UWORD uwNextTileY = uwSourceY / MAP_TILE_SIZE + pTracer->wDeltaTileY;
-	pTracer->fAccumulatorX = fix16_from_int((WORD)(uwNextTileX * MAP_TILE_SIZE) - (WORD)uwSourceX);
-	pTracer->fAccumulatorY = fix16_from_int((WORD)(uwNextTileY * MAP_TILE_SIZE) - (WORD)uwSourceY);
-
 	fix16_t fSin = csin(ubAngle);
 	fix16_t fCos = ccos(ubAngle);
-	pTracer->fAccumulatorDeltaX = (fCos == 0) ? fix16_from_int(32767) : (fix16_div(fix16_from_int(MAP_TILE_SIZE), ccos(ubAngle)));
-	pTracer->fAccumulatorDeltaY = (fSin == 0) ? fix16_from_int(32767) : (fix16_div(fix16_from_int(MAP_TILE_SIZE), csin(ubAngle)));
+
+	// Big enough number in case of division by zero
+	static const fix16_t fInfinity = F16(32767) / 2;
+
+	pTracer->fAccumulatorX = (fCos == 0) ? fInfinity : fix16_div(fix16_from_int((WORD)(uwNextTileX * MAP_TILE_SIZE) - (WORD)uwSourceX), fCos); // LUT: 8k
+	pTracer->fAccumulatorY = (fSin == 0) ? fInfinity : fix16_div(fix16_from_int((WORD)(uwNextTileY * MAP_TILE_SIZE) - (WORD)uwSourceY), fSin); // LUT: 8k
+	pTracer->fAccumulatorDeltaX = (fCos == 0) ? fInfinity : fix16_div(fix16_from_int(MAP_TILE_SIZE), fCos); // LUT: 512
+	pTracer->fAccumulatorDeltaY = (fSin == 0) ? fInfinity : fix16_div(fix16_from_int(MAP_TILE_SIZE), fSin); // LUT: 512
 
 	pTracer->uwTileX = uwSourceX / MAP_TILE_SIZE;
 	pTracer->uwTileY = uwSourceY / MAP_TILE_SIZE;
@@ -50,7 +53,8 @@ void tracerProcess(tTileTracer *pTracer) {
 		if(fix16_abs(pTracer->fAccumulatorX) < fix16_abs(pTracer->fAccumulatorY)) {
 			pTracer->fAccumulatorX = fix16_add(pTracer->fAccumulatorX, pTracer->fAccumulatorDeltaX);
 			pTracer->uwTileX += pTracer->wDeltaTileX;
-		} else {
+		}
+		else {
 			pTracer->fAccumulatorY = fix16_add(pTracer->fAccumulatorY, pTracer->fAccumulatorDeltaY);
 			pTracer->uwTileY += pTracer->wDeltaTileY;
 		}

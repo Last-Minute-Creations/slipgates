@@ -27,6 +27,9 @@ General:
 	✔ Story text on top of level @done(23-06-08 11:06)
 	✔ Bitmap-based tiles @done(23-06-08 14:24)
 	✔ Increase precision of trig tables for better aiming accuracy @done(23-06-09 21:50)
+	✔ Increase tracer precision around 0/90/180/270 angles @done(23-06-10 08:26)
+	☐ Increase tracer precision in steep angles, e.g. shooting floor on the ground
+	☐ Show where portal will be opened? Realtime tracing
 	☐ Editable story text
 	☐ Multi-bob character body
 	☐ Edit mode
@@ -35,7 +38,6 @@ General:
 	☐ Outro screen
 	☐ Entrance tiles
 	☐ Bigger max velocity
-	☐ Increase tracer precision around 0/90/180/270 angles
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Boxes:
