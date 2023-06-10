@@ -30,15 +30,21 @@ General:
 	✔ Increase tracer precision around 0/90/180/270 angles @done(23-06-10 08:26)
 	☐ Increase tracer precision in steep angles, e.g. shooting floor on the ground
 	☐ Show where portal will be opened? Realtime tracing
-	☐ Editable story text
 	☐ Multi-bob character body
-	☐ Edit mode
-	☐ Faster map restarts without file reload
-	☐ Menu
-	☐ Outro screen
-	☐ Entrance tiles
+	☐ Entrance tiles?
 	☐ Bigger max velocity
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
+
+Game flow:
+	☐ Faster map restarts without file reload
+	☐ Menu
+	☐ Intro/outro screen
+	☐ Credits
+	☐ LMC/ACE logos
+
+Editor:
+	☐ Editable story text
+	☐ Togglable edit mode
 
 Boxes:
 	✔ Generalize @done(23-05-26 20:26)
@@ -63,18 +69,20 @@ Bouncers (10 chambers):
 	✔ Collision with objects - kill player @done(23-05-28 12:13)
 
 Turrets (11 chambers):
-	☐ Active/inactive tile
-	☐ Stomping on turret disables it
-	☐ Box falling on turret disables it
-	☐ Checking player hits via collision tilemap
-	☐ Checking player visibility via collision tilemap
+	✔ Left/right tile @done(23-06-11 01:32)
+	✔ Active/inactive tile @done(23-06-11 01:32)
+	✔ Stomping on turret disables it @done(23-06-11 01:32)
+	✔ Box falling on turret disables it @done(23-06-11 01:33)
+	✔ Checking player hits via single collider @done(23-06-11 01:33)
+	☐ Save/load in level data
+	✘ Checking player cover via collision tilemap @cancelled(23-06-11 01:33)
 
 Misc objects:
 	✔ Doors (17 chambers) @done(23-05-25 20:33)
 	✔ ANDed doors @done(23-05-26 15:47)
 	✔ Generalize, configurable interaction relations @done(23-05-26 15:47)
 	☐ Lifts (4 chambers)
-	☐ Entrance door
+	✘ Entrance door @cancelled(23-06-10 08:31)
 	✘ Box spawner (1 chamber) @cancelled(23-05-28 11:26)
 	✘ Crushers (3 chambers) @cancelled(23-05-28 11:26)
 

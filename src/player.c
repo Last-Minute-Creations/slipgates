@@ -71,7 +71,7 @@ void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	pPlayer->sBody.cbTileCollisionHandler = playerCollisionHandler;
 	pPlayer->sBody.pOnCollidedData = pPlayer;
 	pPlayer->pGrabbedBox = 0;
-	pPlayer->bHealth = 1;
+	pPlayer->bHealth = 10;
 }
 
 void playerProcess(tPlayer *pPlayer) {
