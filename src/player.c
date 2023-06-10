@@ -22,7 +22,8 @@ static UBYTE playerCanJump(tPlayer *pPlayer) {
 }
 
 static UBYTE playerCollisionHandler(
-	tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY, void *pData
+	tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY, void *pData,
+	tDirection eBodyMovementDirection
 ) {
 	UBYTE isColliding = mapTileIsCollidingWithPlayers(eTile);
 	if(isColliding) {
@@ -35,6 +36,11 @@ static UBYTE playerCollisionHandler(
 		}
 		else if(mapTileIsButton(eTile)) {
 			mapPressButtonAt(ubTileX, ubTileY);
+		}
+		else if(
+			mapTileIsActiveTurret(eTile) && eBodyMovementDirection == DIRECTION_DOWN
+		) {
+			mapDisableTurretAt(ubTileX, ubTileY);
 		}
 	}
 	return isColliding;

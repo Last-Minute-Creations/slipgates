@@ -93,12 +93,18 @@ static void gameDrawInteractionTiles(const tInteraction *pInteraction) {
 }
 
 static UBYTE boxCollisionHandler(
-	tTile eTile, UBYTE ubTileX, UBYTE ubTileY, UNUSED_ARG void *pData
+	tTile eTile, UBYTE ubTileX, UBYTE ubTileY, UNUSED_ARG void *pData,
+	tDirection eBodyMovementDirection
 ) {
 	UBYTE isColliding = mapTileIsCollidingWithBoxes(eTile);
 	if(isColliding) {
 		if(mapTileIsButton(eTile)) {
 			mapPressButtonAt(ubTileX, ubTileY);
+		}
+		else if(
+			mapTileIsActiveTurret(eTile) && eBodyMovementDirection == DIRECTION_DOWN
+		) {
+			mapDisableTurretAt(ubTileX, ubTileY);
 		}
 	}
 	return isColliding;

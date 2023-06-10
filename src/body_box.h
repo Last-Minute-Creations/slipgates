@@ -10,7 +10,8 @@
 #include "map.h"
 
 typedef UBYTE (*tTileCollisionHandler)(
-	tTile eTile, UBYTE ubTileX, UBYTE ubTileY, void *pData
+	tTile eTile, UBYTE ubTileX, UBYTE ubTileY, void *pData,
+	tDirection eBodyMovementDirection
 );
 
 typedef struct tBodyBox {

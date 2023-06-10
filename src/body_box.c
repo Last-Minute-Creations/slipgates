@@ -5,9 +5,14 @@
 #include "body_box.h"
 #include "game.h"
 
-static UBYTE bodyCheckCollision(tBodyBox *pBody, UBYTE ubTileX, UBYTE ubTileY) {
+static UBYTE bodyCheckCollision(
+	tBodyBox *pBody, UBYTE ubTileX, UBYTE ubTileY,
+	tDirection eBodyMovementDirection
+) {
 	tTile eTile = mapGetTileAt(ubTileX, ubTileY);
-	return pBody->cbTileCollisionHandler(eTile, ubTileX, ubTileY, pBody->pOnCollidedData);
+	return pBody->cbTileCollisionHandler(
+		eTile, ubTileX, ubTileY, pBody->pOnCollidedData, eBodyMovementDirection
+	);
 }
 
 void bodyInit(
@@ -171,9 +176,9 @@ void bodySimulate(tBodyBox *pBody) {
 		UWORD uwTileRight = (uwRight + 1) / MAP_TILE_SIZE;
 
 		if(
-			bodyCheckCollision(pBody, uwTileRight, uwTop / MAP_TILE_SIZE) ||
-			bodyCheckCollision(pBody, uwTileRight, uwMid / MAP_TILE_SIZE) ||
-			bodyCheckCollision(pBody, uwTileRight, uwBottom / MAP_TILE_SIZE)
+			bodyCheckCollision(pBody, uwTileRight, uwTop / MAP_TILE_SIZE, DIRECTION_RIGHT) ||
+			bodyCheckCollision(pBody, uwTileRight, uwMid / MAP_TILE_SIZE, DIRECTION_RIGHT) ||
+			bodyCheckCollision(pBody, uwTileRight, uwBottom / MAP_TILE_SIZE, DIRECTION_RIGHT)
 		) {
 			// collide with wall
 			fNewPosX = fix16_from_int(uwTileRight * MAP_TILE_SIZE - pBody->ubWidth);
@@ -214,9 +219,9 @@ void bodySimulate(tBodyBox *pBody) {
 		// moving left
 		UWORD uwTileLeft = (uwLeft - 1) / MAP_TILE_SIZE;
 		if(
-			bodyCheckCollision(pBody, uwTileLeft, uwTop / MAP_TILE_SIZE) ||
-			bodyCheckCollision(pBody, uwTileLeft, uwMid / MAP_TILE_SIZE) ||
-			bodyCheckCollision(pBody, uwTileLeft, uwBottom / MAP_TILE_SIZE)
+			bodyCheckCollision(pBody, uwTileLeft, uwTop / MAP_TILE_SIZE, DIRECTION_LEFT) ||
+			bodyCheckCollision(pBody, uwTileLeft, uwMid / MAP_TILE_SIZE, DIRECTION_LEFT) ||
+			bodyCheckCollision(pBody, uwTileLeft, uwBottom / MAP_TILE_SIZE, DIRECTION_LEFT)
 		) {
 			// collide with wall
 			fNewPosX = fix16_from_int((uwTileLeft + 1) * MAP_TILE_SIZE);
@@ -270,8 +275,8 @@ void bodySimulate(tBodyBox *pBody) {
 		// falling down
 		UWORD uwTileBottom = (uwBottom + 1) / MAP_TILE_SIZE;
 		if(
-			bodyCheckCollision(pBody, uwLeft / MAP_TILE_SIZE, uwTileBottom) ||
-			bodyCheckCollision(pBody, uwRight / MAP_TILE_SIZE, uwTileBottom)
+			bodyCheckCollision(pBody, uwLeft / MAP_TILE_SIZE, uwTileBottom, DIRECTION_DOWN) ||
+			bodyCheckCollision(pBody, uwRight / MAP_TILE_SIZE, uwTileBottom, DIRECTION_DOWN)
 		) {
 			// collide with floor
 			uwTop = ((uwTileBottom) * MAP_TILE_SIZE) - pBody->ubHeight;
@@ -315,8 +320,8 @@ void bodySimulate(tBodyBox *pBody) {
 	else if(pBody->fVelocityY < 0) {
 		// flying up
 		if(
-			bodyCheckCollision(pBody, uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) ||
-			bodyCheckCollision(pBody, uwRight / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE)
+			bodyCheckCollision(pBody, uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE, DIRECTION_UP) ||
+			bodyCheckCollision(pBody, uwRight / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE, DIRECTION_UP)
 		) {
 			// collide with ceil
 			fNewPosY = fix16_from_int((uwTop / MAP_TILE_SIZE + 1) * MAP_TILE_SIZE);

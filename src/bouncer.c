@@ -31,7 +31,7 @@ static fix16_t s_fSpawnPositionY;
 
 static UBYTE bouncerCollisionHandler(
 	tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY,
-	UNUSED_ARG void *pData
+	UNUSED_ARG void *pData, UNUSED_ARG tDirection eBodyMovementDirection
 ) {
 	UBYTE isColliding = mapTileIsCollidingWithBouncers(eTile);
 	if(isColliding) {
