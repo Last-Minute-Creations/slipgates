@@ -13,6 +13,8 @@ typedef struct tPlayer {
 	BYTE bHealth;
 } tPlayer;
 
+void playerManagerInit(void);
+
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY);
 
 void playerProcess(tPlayer *pPlayer);

@@ -176,6 +176,7 @@ static void gameGsCreate(void) {
 
 	assetsGameCreate();
 	s_pTextBuffer = fontCreateTextBitMap(336, g_pFont->uwHeight * 2);
+	playerManagerInit();
 
 	bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
 	bobInit(

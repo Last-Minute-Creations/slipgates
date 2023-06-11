@@ -14,9 +14,19 @@
 #define PLAYER_VELO_DELTA_X_GROUND 3
 #define PLAYER_VELO_DELTA_X_AIR (fix16_one / 4)
 
+#define PLAYER_FRAME_COUNT 4
+#define PLAYER_FRAME_DIR_LEFT 0
+#define PLAYER_FRAME_DIR_RIGHT 1
+
+typedef struct tAnimFrameDef {
+	UBYTE *pFrame;
+	UBYTE *pMask;
+} tAnimFrameDef;
+
 static fix16_t s_fPlayerJumpVeloY = F16(-3);
 static UBYTE s_ubFrameCooldown;
 static UBYTE s_ubAnimFrame;
+static tAnimFrameDef pFrameAddresses[2][PLAYER_FRAME_COUNT];
 
 //------------------------------------------------------------------ PRIVATE FNS
 
@@ -51,6 +61,15 @@ static UBYTE playerCollisionHandler(
 
 //------------------------------------------------------------------- PUBLIC FNS
 
+void playerManagerInit(void) {
+	for(UBYTE i = 0; i < PLAYER_FRAME_COUNT; ++i) {
+		pFrameAddresses[PLAYER_FRAME_DIR_RIGHT][i].pFrame = bobCalcFrameAddress(g_pPlayerFrames, i * 16);
+		pFrameAddresses[PLAYER_FRAME_DIR_RIGHT][i].pMask = bobCalcFrameAddress(g_pPlayerMasks, i * 16);
+		pFrameAddresses[PLAYER_FRAME_DIR_LEFT][i].pFrame = bobCalcFrameAddress(g_pPlayerFrames, (PLAYER_FRAME_COUNT + i) * 16);
+		pFrameAddresses[PLAYER_FRAME_DIR_LEFT][i].pMask = bobCalcFrameAddress(g_pPlayerMasks, (PLAYER_FRAME_COUNT + i) * 16);
+	}
+}
+
 UBYTE playerTryShootSlipgateAt(
 	tPlayer *pPlayer, UBYTE ubIndex, UBYTE ubAngle
 ) {
@@ -84,14 +103,6 @@ void playerProcess(tPlayer *pPlayer) {
 		return;
 	}
 
-	if(--s_ubFrameCooldown == 0) {
-		s_ubFrameCooldown = 10;
-		if(++s_ubAnimFrame == 4) {
-			s_ubAnimFrame = 0;
-		}
-		bobSetFrame(&pPlayer->sBody.sBob, bobCalcFrameAddress(g_pPlayerFrames, s_ubAnimFrame * 16), bobCalcFrameAddress(g_pPlayerMasks, s_ubAnimFrame * 16));
-	}
-
 	tUwCoordYX sPosCross = gameGetCrossPosition();
 	// Player's grabbed box
 	if(pPlayer->pGrabbedBox) {
@@ -100,11 +111,14 @@ void playerProcess(tPlayer *pPlayer) {
 	}
 
 	// Player shooting slipgates
+	UWORD uwPlayerCenterX = fix16_to_int(pPlayer->sBody.fPosX) + pPlayer->sBody.ubWidth / 2;
+	UWORD uwPlayerCenterY = fix16_to_int(pPlayer->sBody.fPosY) + pPlayer->sBody.ubHeight / 2;
 	UBYTE ubAimAngle = getAngleBetweenPoints(
-		fix16_to_int(pPlayer->sBody.fPosX) + pPlayer->sBody.ubWidth / 2,
-		fix16_to_int(pPlayer->sBody.fPosY) + pPlayer->sBody.ubHeight / 2,
-		sPosCross.uwX, sPosCross.uwY
+		uwPlayerCenterX, uwPlayerCenterY, sPosCross.uwX, sPosCross.uwY
 	);
+	// TODO: don't update after death
+	UBYTE ubAnimDirection = (uwPlayerCenterX <= sPosCross.uwX) ? PLAYER_FRAME_DIR_RIGHT : PLAYER_FRAME_DIR_LEFT;
+
 	tracerProcess(&g_sTracerSlipgate);
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB) || keyUse(KEY_Q)) {
 		playerTryShootSlipgateAt(pPlayer, 0, ubAimAngle);
@@ -165,6 +179,19 @@ void playerProcess(tPlayer *pPlayer) {
 				}
 			}
 		}
+	}
+
+	if(--s_ubFrameCooldown == 0) {
+		s_ubFrameCooldown = 10;
+		if(++s_ubAnimFrame == PLAYER_FRAME_COUNT) {
+			s_ubAnimFrame = 0;
+		}
+
+		bobSetFrame(
+			&pPlayer->sBody.sBob,
+			pFrameAddresses[ubAnimDirection][s_ubAnimFrame].pFrame,
+			pFrameAddresses[ubAnimDirection][s_ubAnimFrame].pMask
+		);
 	}
 }
 
