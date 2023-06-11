@@ -172,6 +172,48 @@ static void mapDrawPendingTiles(void) {
 	s_pDirtyTileCounts[s_ubCurrentDirtyList] = 0;
 }
 
+static void mapInitTurret(tTurret *pTurret) {
+		pTurret->isActive = 1;
+		pTurret->ubAttackCooldown = 0;
+
+		if(pTurret->eDirection == DIRECTION_LEFT) {
+			UBYTE ubLeftTileX = pTurret->sTilePos.ubX;
+			for(UBYTE i = 0; i < MAP_TURRET_TILE_RANGE; ++i) {
+				if(mapIsCollidingWithPortalProjectilesAt(ubLeftTileX - 1, pTurret->sTilePos.ubY)) {
+					break;
+				}
+				--ubLeftTileX;
+			}
+			pTurret->sScanTopLeft.uwX = ubLeftTileX * MAP_TILE_SIZE;
+			pTurret->sScanTopLeft.uwY = pTurret->sTilePos.ubY * MAP_TILE_SIZE;
+			pTurret->sScanBottomRight.uwX = pTurret->sTilePos.ubX * MAP_TILE_SIZE;
+			pTurret->sScanBottomRight.uwY = (pTurret->sTilePos.ubY + 1) * MAP_TILE_SIZE;
+		}
+		else {
+			UBYTE ubRightTileX = pTurret->sTilePos.ubX + 1;
+			for(UBYTE i = 0; i < MAP_TURRET_TILE_RANGE; ++i) {
+				if(mapIsCollidingWithPortalProjectilesAt(ubRightTileX, pTurret->sTilePos.ubY)) {
+					break;
+				}
+				++ubRightTileX;
+			}
+			pTurret->sScanTopLeft.uwX = (pTurret->sTilePos.ubX + 1) * MAP_TILE_SIZE;
+			pTurret->sScanTopLeft.uwY = pTurret->sTilePos.ubY * MAP_TILE_SIZE;
+			pTurret->sScanBottomRight.uwX = ubRightTileX * MAP_TILE_SIZE;
+			pTurret->sScanBottomRight.uwY = (pTurret->sTilePos.ubY + 1) * MAP_TILE_SIZE;
+		}
+
+		// if(pTurret->sScanBottomRight.uwX - pTurret->sScanTopLeft.uwX != 0) {
+		// 	tSimpleBufferManager *pBuffer = gameGetBuffer();
+		// 	blitRect(
+		// 		pBuffer->pBack,
+		// 		pTurret->sScanTopLeft.uwX, pTurret->sScanTopLeft.uwY,
+		// 		pTurret->sScanBottomRight.uwX - pTurret->sScanTopLeft.uwX,
+		// 		pTurret->sScanBottomRight.uwY - pTurret->sScanTopLeft.uwY, 8
+		// 	);
+		// }
+}
+
 //------------------------------------------------------------- PUBLIC FUNCTIONS
 
 void mapLoad(UBYTE ubIndex) {
@@ -237,8 +279,11 @@ void mapLoad(UBYTE ubIndex) {
 			fileRead(pFile, &g_sCurrentLevel.pSpikeTiles[i].uwYX, sizeof(g_sCurrentLevel.pSpikeTiles[i].uwYX));
 		}
 
-		UBYTE ubTurretCount;
-		fileRead(pFile, &ubTurretCount, sizeof(ubTurretCount));
+		fileRead(pFile, &s_ubTurretCount, sizeof(s_ubTurretCount));
+		for(UBYTE i = 0; i < s_ubTurretCount; ++i) {
+			fileRead(pFile, &s_pTurrets[i].sTilePos.uwYX, sizeof(s_pTurrets[i].sTilePos.uwYX));
+			fileRead(pFile, &s_pTurrets[i].eDirection, sizeof(s_pTurrets[i].eDirection));
+		}
 
 		UBYTE ubStoryTextLength;
 		fileRead(pFile, &ubStoryTextLength, sizeof(ubStoryTextLength));
@@ -270,6 +315,11 @@ void mapLoad(UBYTE ubIndex) {
 
 		fileClose(pFile);
 		systemUnuse();
+	}
+
+	// Now that tiles are loaded, determine turret range etc
+	for(UBYTE i = 0; i < s_ubTurretCount; ++i)  {
+		mapInitTurret(&s_pTurrets[i]);
 	}
 
 	g_pSlipgates[0].eNormal = DIRECTION_NONE;
@@ -319,8 +369,11 @@ void mapSave(UBYTE ubIndex) {
 		fileWrite(pFile, &g_sCurrentLevel.pSpikeTiles[i].uwYX, sizeof(g_sCurrentLevel.pSpikeTiles[i].uwYX));
 	}
 
-		UBYTE ubTurretCount = 0;
-		fileWrite(pFile, &ubTurretCount, sizeof(ubTurretCount));
+		fileWrite(pFile, &s_ubTurretCount, sizeof(s_ubTurretCount));
+		for(UBYTE i = 0; i < s_ubTurretCount; ++i) {
+			fileWrite(pFile, &s_pTurrets[i].sTilePos.uwYX, sizeof(s_pTurrets[i].sTilePos.uwYX));
+			fileWrite(pFile, &s_pTurrets[i].eDirection, sizeof(s_pTurrets[i].eDirection));
+		}
 
 		UBYTE ubStoryTextLength = strlen(g_sCurrentLevel.szStoryText);
 		fileWrite(pFile, &ubStoryTextLength, sizeof(ubStoryTextLength));
@@ -424,52 +477,17 @@ void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY, tDirection eDirection) {
 
 	if(s_ubTurretCount < MAP_SPIKES_TILES_MAX) {
 		tTurret *pTurret = &s_pTurrets[s_ubTurretCount];
-		++s_ubTurretCount;
-
-		// Set up turret
-		// TODO: move to initTurret() and call when recalc is needed
 		pTurret->sTilePos.uwYX = sPos.uwYX;
-		pTurret->isActive = 1;
 		pTurret->eDirection = eDirection;
-		pTurret->ubAttackCooldown = 0;
+
 		g_sCurrentLevel.pTiles[ubX][ubY] = (
-			(eDirection == DIRECTION_LEFT) ?
+			(pTurret->eDirection == DIRECTION_LEFT) ?
 			TILE_TURRET_ACTIVE_LEFT :
 			TILE_TURRET_ACTIVE_RIGHT
 		);
 
-		if(eDirection == DIRECTION_LEFT) {
-			UBYTE ubLeftTileX = ubX;
-			for(UBYTE i = 0; i < MAP_TURRET_TILE_RANGE; ++i) {
-				if(mapIsCollidingWithPortalProjectilesAt(ubLeftTileX - 1, ubY)) {
-					break;
-				}
-				--ubLeftTileX;
-			}
-			pTurret->sScanTopLeft = (tUwCoordYX) {.uwX = ubLeftTileX * MAP_TILE_SIZE, .uwY = ubY * MAP_TILE_SIZE};
-			pTurret->sScanBottomRight = (tUwCoordYX) {.uwX = ubX * MAP_TILE_SIZE, .uwY = (ubY + 1) * MAP_TILE_SIZE};
-		}
-		else {
-			UBYTE ubRightTileX = ubX + 1;
-			for(UBYTE i = 0; i < MAP_TURRET_TILE_RANGE; ++i) {
-				if(mapIsCollidingWithPortalProjectilesAt(ubRightTileX, ubY)) {
-					break;
-				}
-				++ubRightTileX;
-			}
-			pTurret->sScanTopLeft = (tUwCoordYX) {.uwX = (ubX + 1) * MAP_TILE_SIZE, .uwY = ubY * MAP_TILE_SIZE};
-			pTurret->sScanBottomRight = (tUwCoordYX) {.uwX = ubRightTileX * MAP_TILE_SIZE, .uwY = (ubY + 1) * MAP_TILE_SIZE};
-		}
-
-		// if(pTurret->sScanBottomRight.uwX - pTurret->sScanTopLeft.uwX != 0) {
-		// 	tSimpleBufferManager *pBuffer = gameGetBuffer();
-		// 	blitRect(
-		// 		pBuffer->pBack,
-		// 		pTurret->sScanTopLeft.uwX, pTurret->sScanTopLeft.uwY,
-		// 		pTurret->sScanBottomRight.uwX - pTurret->sScanTopLeft.uwX,
-		// 		pTurret->sScanBottomRight.uwY - pTurret->sScanTopLeft.uwY, 8
-		// 	);
-		// }
+		++s_ubTurretCount;
+		mapInitTurret(pTurret);
 	}
 }
 

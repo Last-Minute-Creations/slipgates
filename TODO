@@ -38,6 +38,8 @@ General:
 Game flow:
 	☐ Faster map restarts without file reload
 	☐ Menu
+	☐ Level selection
+	☐ Attract mode?
 	☐ Intro/outro screen
 	☐ Credits
 	☐ LMC/ACE logos
@@ -74,7 +76,7 @@ Turrets (11 chambers):
 	✔ Stomping on turret disables it @done(23-06-11 01:32)
 	✔ Box falling on turret disables it @done(23-06-11 01:33)
 	✔ Checking player hits via single collider @done(23-06-11 01:33)
-	☐ Save/load in level data
+	✔ Save/load in level data @done(23-06-11 13:44)
 	✘ Checking player cover via collision tilemap @cancelled(23-06-11 01:33)
 
 Misc objects:
