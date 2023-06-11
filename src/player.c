@@ -7,6 +7,7 @@
 #include <ace/managers/mouse.h>
 #include "game.h"
 #include "game_math.h"
+#include "assets.h"
 
 #define PLAYER_BODY_WIDTH 8
 #define PLAYER_BODY_HEIGHT 16
@@ -14,6 +15,8 @@
 #define PLAYER_VELO_DELTA_X_AIR (fix16_one / 4)
 
 static fix16_t s_fPlayerJumpVeloY = F16(-3);
+static UBYTE s_ubFrameCooldown;
+static UBYTE s_ubAnimFrame;
 
 //------------------------------------------------------------------ PRIVATE FNS
 
@@ -72,11 +75,21 @@ void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	pPlayer->sBody.pOnCollidedData = pPlayer;
 	pPlayer->pGrabbedBox = 0;
 	pPlayer->bHealth = 10;
+	s_ubAnimFrame = 0;
+	s_ubFrameCooldown = 10;
 }
 
 void playerProcess(tPlayer *pPlayer) {
 	if(!pPlayer->bHealth) {
 		return;
+	}
+
+	if(--s_ubFrameCooldown == 0) {
+		s_ubFrameCooldown = 10;
+		if(++s_ubAnimFrame == 4) {
+			s_ubAnimFrame = 0;
+		}
+		bobSetFrame(&pPlayer->sBody.sBob, bobCalcFrameAddress(g_pPlayerFrames, s_ubAnimFrame * 16), bobCalcFrameAddress(g_pPlayerMasks, s_ubAnimFrame * 16));
 	}
 
 	tUwCoordYX sPosCross = gameGetCrossPosition();

@@ -21,6 +21,7 @@
 #include "tile_tracer.h"
 #include "player.h"
 #include "bouncer.h"
+#include "assets.h"
 
 #define GAME_BPP 5
 
@@ -42,18 +43,9 @@ static tView *s_pView;
 static tVPort *s_pVpMain;
 static tSimpleBufferManager *s_pBufferMain;
 
-static tBitMap *s_pPlayerFrames;
-static tBitMap *s_pPlayerMasks;
-static tBitMap *s_pBoxFrames;
-static tBitMap *s_pBoxMasks;
-static tBitMap *s_pBouncerFrames;
-static tBitMap *s_pBouncerMasks;
-static tBitMap *s_pBmCursor;
-static tBitMap *s_pBmTiles;
 static tPlayer s_sPlayer;
 static tBodyBox s_pBoxBodies[MAP_BOXES_MAX];
 static tSprite *s_pSpriteCrosshair;
-static tFont *s_pFont;
 static tTextBitMap *s_pTextBuffer;
 
 static UWORD s_uwGameFrame;
@@ -77,7 +69,7 @@ static void drawMap(void) {
 	}
 
 	fontDrawStr(
-		s_pFont, s_pBufferMain->pBack, 320/2, 0,
+		g_pFont, s_pBufferMain->pBack, 320/2, 0,
 		g_sCurrentLevel.szStoryText,
 		13, FONT_COOKIE | FONT_HCENTER, s_pTextBuffer
 	);
@@ -182,38 +174,29 @@ static void gameGsCreate(void) {
 	s_pVpMain->pPalette[18] = 0x27D;
 	s_pVpMain->pPalette[19] = 0xE96;
 
-	s_pPlayerFrames = bitmapCreateFromFile("data/player.bm", 0);
-	s_pPlayerMasks = bitmapCreateFromFile("data/player_mask.bm", 0);
-	s_pBoxFrames = bitmapCreateFromFile("data/box.bm", 0);
-	s_pBoxMasks = bitmapCreateFromFile("data/box_mask.bm", 0);
-	s_pBouncerFrames = bitmapCreateFromFile("data/bouncer.bm", 0);
-	s_pBouncerMasks = bitmapCreateFromFile("data/bouncer_mask.bm", 0);
-	s_pBmCursor = bitmapCreateFromFile("data/cursor.bm", 0);
-	s_pBmTiles = bitmapCreateFromFile("data/tiles.bm", 0);
-
-	s_pFont = fontCreate("data/uni54.fnt");
-	s_pTextBuffer = fontCreateTextBitMap(336, s_pFont->uwHeight * 2);
+	assetsGameCreate();
+	s_pTextBuffer = fontCreateTextBitMap(336, g_pFont->uwHeight * 2);
 
 	bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
 	bobInit(
 		&s_sPlayer.sBody.sBob, 16, 16, 1,
-		s_pPlayerFrames->Planes[0], s_pPlayerMasks->Planes[0], 0, 0
+		g_pPlayerFrames->Planes[0], g_pPlayerMasks->Planes[0], 0, 0
 	);
 	for(UBYTE i = 0; i < MAP_BOXES_MAX; ++i) {
 		bobInit(
 			&s_pBoxBodies[i].sBob, 16, 8, 1,
-			s_pBoxFrames->Planes[0], s_pBoxMasks->Planes[0], 0, 0
+			g_pBoxFrames->Planes[0], g_pBoxMasks->Planes[0], 0, 0
 		);
 	}
 	bobInit(
 		&bouncerGetBody()->sBob, 16, 8, 1,
-		s_pBouncerFrames->Planes[0], s_pBouncerMasks->Planes[0], 0, 0
+		g_pBouncerFrames->Planes[0], g_pBouncerMasks->Planes[0], 0, 0
 	);
 
 	bobReallocateBgBuffers();
 
 	spriteManagerCreate(s_pView, 0);
-	s_pSpriteCrosshair = spriteAdd(0, s_pBmCursor);
+	s_pSpriteCrosshair = spriteAdd(0, g_pBmCursor);
 	systemSetDmaBit(DMAB_SPRITE, 1);
 	spriteProcessChannel(0);
 	mouseSetBounds(MOUSE_PORT_1, 0, 0, SCREEN_PAL_WIDTH - 16, SCREEN_PAL_HEIGHT - 27);
@@ -454,17 +437,9 @@ static void gameGsDestroy(void) {
 	spriteManagerDestroy();
 	viewDestroy(s_pView);
 	bobManagerDestroy();
-	bitmapDestroy(s_pPlayerFrames);
-	bitmapDestroy(s_pPlayerMasks);
-	bitmapDestroy(s_pBoxFrames);
-	bitmapDestroy(s_pBoxMasks);
-	bitmapDestroy(s_pBouncerFrames);
-	bitmapDestroy(s_pBouncerMasks);
-	bitmapDestroy(s_pBmCursor);
-	bitmapDestroy(s_pBmTiles);
 
 	fontDestroyTextBitMap(s_pTextBuffer);
-	fontDestroy(s_pFont);
+	assetsGameDestroy();
 }
 
 static void gameDrawTileInteractionMask(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubMask) {
@@ -511,7 +486,7 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	UWORD uwTileIndex = eTile & MAP_TILE_INDEX_MASK;
 
 	// A: tile mask, B: tile source, C/D: bg
-	UWORD uwHeight = MAP_TILE_SIZE * s_pBmTiles->Depth;
+	UWORD uwHeight = MAP_TILE_SIZE * g_pBmTiles->Depth;
 	UWORD uwBlitWords = 1;
 	WORD wSrcModulo = TILESET_BYTE_WIDTH - (uwBlitWords<<1);
 	WORD wDstModulo = BUFFER_BYTE_WIDTH - (uwBlitWords<<1);
@@ -533,7 +508,7 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 
 	// TODO: all of above regs could be calculated/set once before triggering
 	// batch tiles draw, but only if editor/debug mode overlays are not needed.
-	g_pCustom->bltbpt = (UBYTE*)((ULONG)s_pBmTiles->Planes[0] + ulSrcOffs);
+	g_pCustom->bltbpt = (UBYTE*)((ULONG)g_pBmTiles->Planes[0] + ulSrcOffs);
 	g_pCustom->bltcpt = (UBYTE*)((ULONG)s_pBufferMain->pBack->Planes[0] + ulDstOffs);
 	g_pCustom->bltdpt = (UBYTE*)((ULONG)s_pBufferMain->pBack->Planes[0] + ulDstOffs);
 	g_pCustom->bltsize = (uwHeight << HSIZEBITS) | uwBlitWords;
