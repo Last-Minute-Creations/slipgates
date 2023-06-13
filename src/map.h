@@ -24,15 +24,22 @@ typedef struct tFix16Coord {
 	fix16_t fY;
 } tFix16Coord;
 
+typedef struct tTurretSpawn {
+	tUbCoordYX sTilePos;
+	tDirection eDirection;
+} tTurretSpawn;
+
 typedef struct tLevel {
 	tFix16Coord sSpawnPos;
 	tTile pTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
 	tFix16Coord pBoxSpawns[MAP_BOXES_MAX];
 	tUbCoordYX pSpikeTiles[MAP_SPIKES_TILES_MAX];
+	tTurretSpawn pTurretSpawns[MAP_TURRETS_MAX];
 	UBYTE ubBoxCount;
 	UBYTE ubBouncerSpawnerTileX;
 	UBYTE ubBouncerSpawnerTileY;
 	UBYTE ubSpikeTilesCount;
+	UBYTE ubTurretCount;
 	char szStoryText[MAP_STORY_TEXT_MAX];
 } tLevel;
 
@@ -42,6 +49,8 @@ extern tLevel g_sCurrentLevel;
 void mapLoad(UBYTE ubIndex);
 
 void mapSave(UBYTE ubIndex);
+
+void mapRestart(void);
 
 void mapProcess(void);
 

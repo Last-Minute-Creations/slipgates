@@ -104,10 +104,15 @@ static UBYTE boxCollisionHandler(
 
 static void loadLevel(UBYTE ubIndex) {
 	viewLoad(0);
-	s_ubCurrentLevel = ubIndex;
 	s_uwGameFrame = 0;
 	s_eExitState = EXIT_NONE;
-	mapLoad(ubIndex);
+	if(ubIndex == s_ubCurrentLevel) {
+		mapRestart();
+	}
+	else {
+		s_ubCurrentLevel = ubIndex;
+		mapLoad(ubIndex);
+	}
 	bobDiscardUndraw();
 	playerReset(&s_sPlayer, g_sCurrentLevel.sSpawnPos.fX, g_sCurrentLevel.sSpawnPos.fY);
 	for(UBYTE i = 0; i < MAP_BOXES_MAX; ++i) {
@@ -203,6 +208,7 @@ static void gameGsCreate(void) {
 	mouseSetBounds(MOUSE_PORT_1, 0, 0, SCREEN_PAL_WIDTH - 16, SCREEN_PAL_HEIGHT - 27);
 
 	systemUnuse();
+	s_ubCurrentLevel = 255;
 	loadLevel(0);
 }
 

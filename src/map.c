@@ -16,11 +16,11 @@
 
 typedef struct tTurret {
 	tUbCoordYX sTilePos;
-	UBYTE isActive;
-	UBYTE ubAttackCooldown;
 	tUwCoordYX sScanTopLeft;
 	tUwCoordYX sScanBottomRight;
 	tDirection eDirection;
+	UBYTE isActive;
+	UBYTE ubAttackCooldown;
 } tTurret;
 
 //----------------------------------------------------------------- PRIVATE VARS
@@ -37,6 +37,7 @@ static UBYTE s_ubCurrentDirtyList;
 static tTurret s_pTurrets[MAP_TURRETS_MAX];
 static UBYTE s_ubTurretCount;
 static UBYTE s_ubCurrentTurret;
+static tLevel s_sLoadedLevel;
 
 //------------------------------------------------------------ PRIVATE FUNCTIONS
 
@@ -218,30 +219,30 @@ static void mapInitTurret(tTurret *pTurret) {
 
 void mapLoad(UBYTE ubIndex) {
 	memset(s_pInteractions, 0, sizeof(s_pInteractions));
-	g_sCurrentLevel.ubSpikeTilesCount = 0;
+	s_sLoadedLevel.ubSpikeTilesCount = 0;
 	s_ubTurretCount = 0;
 
 	if(ubIndex == 0) {
 		// hadcoded level
-		memset(&g_sCurrentLevel, 0, sizeof(g_sCurrentLevel));
+		memset(&s_sLoadedLevel, 0, sizeof(s_sLoadedLevel));
 		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
-			g_sCurrentLevel.pTiles[ubX][0] = TILE_WALL_1;
-			g_sCurrentLevel.pTiles[ubX][1] = TILE_WALL_1;
-			g_sCurrentLevel.pTiles[ubX][2] = TILE_WALL_1;
-			g_sCurrentLevel.pTiles[ubX][MAP_TILE_HEIGHT - 2] = TILE_WALL_1;
-			g_sCurrentLevel.pTiles[ubX][MAP_TILE_HEIGHT - 1] = TILE_WALL_1;
+			s_sLoadedLevel.pTiles[ubX][0] = TILE_WALL_1;
+			s_sLoadedLevel.pTiles[ubX][1] = TILE_WALL_1;
+			s_sLoadedLevel.pTiles[ubX][2] = TILE_WALL_1;
+			s_sLoadedLevel.pTiles[ubX][MAP_TILE_HEIGHT - 2] = TILE_WALL_1;
+			s_sLoadedLevel.pTiles[ubX][MAP_TILE_HEIGHT - 1] = TILE_WALL_1;
 		}
 		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
-			g_sCurrentLevel.pTiles[0][ubY] = TILE_WALL_1;
-			g_sCurrentLevel.pTiles[1][ubY] = TILE_WALL_1;
-			g_sCurrentLevel.pTiles[MAP_TILE_WIDTH - 2][ubY] = TILE_WALL_1;
-			g_sCurrentLevel.pTiles[MAP_TILE_WIDTH - 1][ubY] = TILE_WALL_1;
+			s_sLoadedLevel.pTiles[0][ubY] = TILE_WALL_1;
+			s_sLoadedLevel.pTiles[1][ubY] = TILE_WALL_1;
+			s_sLoadedLevel.pTiles[MAP_TILE_WIDTH - 2][ubY] = TILE_WALL_1;
+			s_sLoadedLevel.pTiles[MAP_TILE_WIDTH - 1][ubY] = TILE_WALL_1;
 		}
-		g_sCurrentLevel.sSpawnPos.fX = fix16_from_int(100);
-		g_sCurrentLevel.sSpawnPos.fY = fix16_from_int(100);
+		s_sLoadedLevel.sSpawnPos.fX = fix16_from_int(100);
+		s_sLoadedLevel.sSpawnPos.fY = fix16_from_int(100);
 
 		strcpy(
-			g_sCurrentLevel.szStoryText,
+			s_sLoadedLevel.szStoryText,
 			"The ruins looked dormant, with no traces of previous adventurers\n"
 			"in sight, but soon first obstacles, and a helpful utility appeared."
 		);
@@ -251,14 +252,15 @@ void mapLoad(UBYTE ubIndex) {
 		sprintf(szName, "level%03hhu.dat", ubIndex);
 		systemUse();
 		tFile *pFile = fileOpen(szName, "rb");
-		fileRead(pFile, &g_sCurrentLevel.sSpawnPos.fX, sizeof(g_sCurrentLevel.sSpawnPos.fX));
-		fileRead(pFile, &g_sCurrentLevel.sSpawnPos.fY, sizeof(g_sCurrentLevel.sSpawnPos.fY));
+		fileRead(pFile, &s_sLoadedLevel.sSpawnPos.fX, sizeof(s_sLoadedLevel.sSpawnPos.fX));
+		fileRead(pFile, &s_sLoadedLevel.sSpawnPos.fY, sizeof(s_sLoadedLevel.sSpawnPos.fY));
 
 		for(UBYTE ubInteractionIndex = 0; ubInteractionIndex < MAP_INTERACTIONS_MAX; ++ubInteractionIndex) {
 			tInteraction *pInteraction = &s_pInteractions[ubInteractionIndex];
 			fileRead(pFile, &pInteraction->ubTargetCount, sizeof(pInteraction->ubTargetCount));
 			fileRead(pFile, &pInteraction->ubButtonMask, sizeof(pInteraction->ubButtonMask));
 			fileRead(pFile, &pInteraction->wasActive, sizeof(pInteraction->wasActive));
+			pInteraction->wasActive = 0;
 			for(UBYTE ubTargetIndex = 0; ubTargetIndex < pInteraction->ubTargetCount; ++ubTargetIndex) {
 				tTogglableTile *pTargetTile = &pInteraction->pTargetTiles[ubTargetIndex];
 				fileRead(pFile, &pTargetTile->eKind, sizeof(pTargetTile->eKind));
@@ -268,28 +270,28 @@ void mapLoad(UBYTE ubIndex) {
 			}
 		}
 
-		fileRead(pFile, &g_sCurrentLevel.ubBoxCount, sizeof(g_sCurrentLevel.ubBoxCount));
-		for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {
-			fileRead(pFile, &g_sCurrentLevel.pBoxSpawns[i].fX, sizeof(g_sCurrentLevel.pBoxSpawns[i].fX));
-			fileRead(pFile, &g_sCurrentLevel.pBoxSpawns[i].fY, sizeof(g_sCurrentLevel.pBoxSpawns[i].fY));
+		fileRead(pFile, &s_sLoadedLevel.ubBoxCount, sizeof(s_sLoadedLevel.ubBoxCount));
+		for(UBYTE i = 0; i < s_sLoadedLevel.ubBoxCount; ++i) {
+			fileRead(pFile, &s_sLoadedLevel.pBoxSpawns[i].fX, sizeof(s_sLoadedLevel.pBoxSpawns[i].fX));
+			fileRead(pFile, &s_sLoadedLevel.pBoxSpawns[i].fY, sizeof(s_sLoadedLevel.pBoxSpawns[i].fY));
 		}
 
-		fileRead(pFile, &g_sCurrentLevel.ubSpikeTilesCount, sizeof(g_sCurrentLevel.ubSpikeTilesCount));
-		for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
-			fileRead(pFile, &g_sCurrentLevel.pSpikeTiles[i].uwYX, sizeof(g_sCurrentLevel.pSpikeTiles[i].uwYX));
+		fileRead(pFile, &s_sLoadedLevel.ubSpikeTilesCount, sizeof(s_sLoadedLevel.ubSpikeTilesCount));
+		for(UBYTE i = 0; i < s_sLoadedLevel.ubSpikeTilesCount; ++i) {
+			fileRead(pFile, &s_sLoadedLevel.pSpikeTiles[i].uwYX, sizeof(s_sLoadedLevel.pSpikeTiles[i].uwYX));
 		}
 
-		fileRead(pFile, &s_ubTurretCount, sizeof(s_ubTurretCount));
-		for(UBYTE i = 0; i < s_ubTurretCount; ++i) {
-			fileRead(pFile, &s_pTurrets[i].sTilePos.uwYX, sizeof(s_pTurrets[i].sTilePos.uwYX));
-			fileRead(pFile, &s_pTurrets[i].eDirection, sizeof(s_pTurrets[i].eDirection));
+		fileRead(pFile, &s_sLoadedLevel.ubTurretCount, sizeof(s_sLoadedLevel.ubTurretCount));
+		for(UBYTE i = 0; i < s_sLoadedLevel.ubTurretCount; ++i) {
+			fileRead(pFile, &s_sLoadedLevel.pTurretSpawns[i].sTilePos.uwYX, sizeof(s_sLoadedLevel.pTurretSpawns[i].sTilePos.uwYX));
+			fileRead(pFile, &s_sLoadedLevel.pTurretSpawns[i].eDirection, sizeof(s_sLoadedLevel.pTurretSpawns[i].eDirection));
 		}
 
 		UBYTE ubStoryTextLength;
 		fileRead(pFile, &ubStoryTextLength, sizeof(ubStoryTextLength));
 		if(ubStoryTextLength) {
-			fileRead(pFile, g_sCurrentLevel.szStoryText, ubStoryTextLength);
-			g_sCurrentLevel.szStoryText[ubStoryTextLength] = '\0';
+			fileRead(pFile, s_sLoadedLevel.szStoryText, ubStoryTextLength);
+			s_sLoadedLevel.szStoryText[ubStoryTextLength] = '\0';
 		}
 
 		UBYTE ubReservedCount1;
@@ -302,13 +304,13 @@ void mapLoad(UBYTE ubIndex) {
 			for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
 				UWORD uwTileCode;
 				fileRead(pFile, &uwTileCode, sizeof(uwTileCode));
-				g_sCurrentLevel.pTiles[ubX][ubY] = uwTileCode;
+				s_sLoadedLevel.pTiles[ubX][ubY] = uwTileCode;
 				if(uwTileCode == TILE_BOUNCER_SPAWNER) {
-					if(g_sCurrentLevel.ubBouncerSpawnerTileX != BOUNCER_TILE_INVALID) {
+					if(s_sLoadedLevel.ubBouncerSpawnerTileX != BOUNCER_TILE_INVALID) {
 						logWrite("ERR: More than one bouncer spawner on map\n");
 					}
-					g_sCurrentLevel.ubBouncerSpawnerTileX = ubX;
-					g_sCurrentLevel.ubBouncerSpawnerTileY = ubY;
+					s_sLoadedLevel.ubBouncerSpawnerTileX = ubX;
+					s_sLoadedLevel.ubBouncerSpawnerTileY = ubY;
 				}
 			}
 		}
@@ -317,8 +319,23 @@ void mapLoad(UBYTE ubIndex) {
 		systemUnuse();
 	}
 
-	// Now that tiles are loaded, determine turret range etc
+	mapRestart();
+}
+
+void mapRestart(void) {
+	memcpy(&g_sCurrentLevel, &s_sLoadedLevel, sizeof(s_sLoadedLevel));
+
+	for(UBYTE ubInteractionIndex = 0; ubInteractionIndex < MAP_INTERACTIONS_MAX; ++ubInteractionIndex) {
+		s_pInteractions[ubInteractionIndex].wasActive = 0;
+	}
+
+	s_ubTurretCount = s_sLoadedLevel.ubTurretCount;
 	for(UBYTE i = 0; i < s_ubTurretCount; ++i)  {
+		// Populate turret vars from spawns
+		s_pTurrets[i].sTilePos.uwYX = s_sLoadedLevel.pTurretSpawns[i].sTilePos.uwYX;
+		s_pTurrets[i].eDirection = s_sLoadedLevel.pTurretSpawns[i].eDirection;
+
+		// Now that tiles are loaded, determine turret range etc
 		mapInitTurret(&s_pTurrets[i]);
 	}
 
@@ -330,6 +347,7 @@ void mapLoad(UBYTE ubIndex) {
 	s_pDirtyTileCounts[0] = 0;
 	s_pDirtyTileCounts[1] = 0;
 	s_ubCurrentDirtyList = 0;
+	s_ubCurrentTurret = 0;
 	memset(s_pDirtyTiles, 0, MAP_TILE_WIDTH * MAP_TILE_HEIGHT);
 }
 

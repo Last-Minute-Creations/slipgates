@@ -36,7 +36,7 @@ General:
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Game flow:
-	☐ Faster map restarts without file reload
+	✔ Faster map restarts without file reload @done(23-06-13 18:39)
 	☐ Menu
 	☐ Level selection
 	☐ Attract mode?
@@ -55,6 +55,7 @@ Boxes:
 	✔ Velocity-based dragging instead of position-based @done(23-06-13 12:27)
 	✔ Fix physics glitches @done(23-06-13 13:20)
 	✔ Teleport with player @done(23-06-13 13:52)
+	☐ Add friction
 	✘ Collisions between player and boxes - needed? @cancelled(23-06-13 13:20)
 
 Tiles:
