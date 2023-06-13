@@ -53,8 +53,8 @@ Boxes:
 	✔ Turn off gravity during pickup @done(23-06-13 11:45)
 	✔ Constrain range @done(23-06-13 12:10)
 	✔ Velocity-based dragging instead of position-based @done(23-06-13 12:27)
-	☐ Fix physics glitches
-	☐ Collisions between player and boxes - needed?
+	✔ Fix physics glitches @done(23-06-13 13:20)
+	✘ Collisions between player and boxes - needed? @cancelled(23-06-13 13:20)
 
 Tiles:
 	✔ No-portal wall @done(23-05-23 14:44)

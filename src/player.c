@@ -127,8 +127,8 @@ void playerProcess(tPlayer *pPlayer) {
 		fix16_t fBoxDistance = fix16_from_int(MIN(PLAYER_GRAB_RANGE,uwCursorDistance));
 		fix16_t fBoxTargetX = fix16_sub(fix16_add(fix16_from_int(uwPlayerCenterX), fix16_mul(ccos(ubAimAngle), fBoxDistance)), fHalfBoxWidth);
 		fix16_t fBoxTargetY = fix16_sub(fix16_add(fix16_from_int(uwPlayerCenterY), fix16_mul(csin(ubAimAngle), fBoxDistance)), fHalfBoxWidth);
-		fix16_t fBoxVeloX = MIN(PLAYER_GRAB_VELO_MAX, fix16_sub(fBoxTargetX, pPlayer->pGrabbedBox->fPosX));
-		fix16_t fBoxVeloY = MIN(PLAYER_GRAB_VELO_MAX, fix16_sub(fBoxTargetY, pPlayer->pGrabbedBox->fPosY));
+		fix16_t fBoxVeloX = fix16_clamp(fix16_sub(fBoxTargetX, pPlayer->pGrabbedBox->fPosX), -PLAYER_GRAB_VELO_MAX, PLAYER_GRAB_VELO_MAX);
+		fix16_t fBoxVeloY = fix16_clamp(fix16_sub(fBoxTargetY, pPlayer->pGrabbedBox->fPosY), -PLAYER_GRAB_VELO_MAX, PLAYER_GRAB_VELO_MAX);
 		pPlayer->pGrabbedBox->fVelocityX = fBoxVeloX;
 		pPlayer->pGrabbedBox->fVelocityY = fBoxVeloY;
 	}
