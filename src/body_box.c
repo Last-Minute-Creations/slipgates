@@ -11,7 +11,7 @@ static UBYTE bodyCheckCollision(
 ) {
 	tTile eTile = mapGetTileAt(ubTileX, ubTileY);
 	return pBody->cbTileCollisionHandler(
-		eTile, ubTileX, ubTileY, pBody->pOnCollidedData, eBodyMovementDirection
+		eTile, ubTileX, ubTileY, pBody->pHandlerData, eBodyMovementDirection
 	);
 }
 
@@ -24,6 +24,7 @@ void bodyInit(
 	pBody->ubHeight = ubHeight;
 	pBody->fAccelerationY = fix16_one / 4; // gravity
 	pBody->cbTileCollisionHandler = 0;
+	pBody->cbSlipgateHandler = 0;
 }
 
 static UBYTE moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
@@ -192,6 +193,9 @@ void bodySimulate(tBodyBox *pBody) {
 			if(moveBodyViaSlipgate(pBody, 0)) {
 				fNewPosX = pBody->fPosX;
 				fNewPosY = pBody->fPosY;
+				if(pBody->cbSlipgateHandler) {
+					pBody->cbSlipgateHandler(pBody->pHandlerData);
+				}
 			}
 			else {
 				// collide with wall
@@ -207,6 +211,9 @@ void bodySimulate(tBodyBox *pBody) {
 			if(moveBodyViaSlipgate(pBody, 1)) {
 				fNewPosX = pBody->fPosX;
 				fNewPosY = pBody->fPosY;
+				if(pBody->cbSlipgateHandler) {
+					pBody->cbSlipgateHandler(pBody->pHandlerData);
+				}
 			}
 			else {
 				// collide with wall
@@ -235,6 +242,9 @@ void bodySimulate(tBodyBox *pBody) {
 			if(moveBodyViaSlipgate(pBody, 0)) {
 				fNewPosX = pBody->fPosX;
 				fNewPosY = pBody->fPosY;
+				if(pBody->cbSlipgateHandler) {
+					pBody->cbSlipgateHandler(pBody->pHandlerData);
+				}
 			}
 			else {
 				// collide with wall
@@ -250,6 +260,9 @@ void bodySimulate(tBodyBox *pBody) {
 			if(moveBodyViaSlipgate(pBody, 1)) {
 				fNewPosX = pBody->fPosX;
 				fNewPosY = pBody->fPosY;
+				if(pBody->cbSlipgateHandler) {
+					pBody->cbSlipgateHandler(pBody->pHandlerData);
+				}
 			}
 			else {
 				// collide with wall
@@ -291,6 +304,9 @@ void bodySimulate(tBodyBox *pBody) {
 			// Slipgate A
 			if(moveBodyViaSlipgate(pBody, 0)) {
 				fNewPosY = pBody->fPosY;
+				if(pBody->cbSlipgateHandler) {
+					pBody->cbSlipgateHandler(pBody->pHandlerData);
+				}
 			}
 			else {
 				// collide with floor
@@ -307,6 +323,9 @@ void bodySimulate(tBodyBox *pBody) {
 			// Slipgate B
 			if(moveBodyViaSlipgate(pBody, 1)) {
 				fNewPosY = pBody->fPosY;
+				if(pBody->cbSlipgateHandler) {
+					pBody->cbSlipgateHandler(pBody->pHandlerData);
+				}
 			}
 			else {
 				// collide with floor
@@ -331,6 +350,9 @@ void bodySimulate(tBodyBox *pBody) {
 			// Slipgate A
 			if(moveBodyViaSlipgate(pBody, 0)) {
 				fNewPosY = pBody->fPosY;
+				if(pBody->cbSlipgateHandler) {
+					pBody->cbSlipgateHandler(pBody->pHandlerData);
+				}
 			}
 			else {
 				// collide with ceil
@@ -342,6 +364,9 @@ void bodySimulate(tBodyBox *pBody) {
 			// Slipgate B
 			if(moveBodyViaSlipgate(pBody, 1)) {
 				fNewPosY = pBody->fPosY;
+				if(pBody->cbSlipgateHandler) {
+					pBody->cbSlipgateHandler(pBody->pHandlerData);
+				}
 			}
 			else {
 				// collide with ceil

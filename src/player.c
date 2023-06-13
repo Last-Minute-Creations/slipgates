@@ -61,6 +61,11 @@ static UBYTE playerCollisionHandler(
 	return isColliding;
 }
 
+static void playerSlipgateHandler(void *pData) {
+	tPlayer *pPlayer = pData;
+	pPlayer->isSlipgated = 1;
+}
+
 static void playerDropBox(tPlayer *pPlayer) {
 	pPlayer->pGrabbedBox->fAccelerationY = fix16_one / 4;// restore gravity
 	pPlayer->pGrabbedBox = 0;
@@ -98,7 +103,8 @@ UBYTE playerTryShootSlipgateAt(
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	bodyInit(&pPlayer->sBody, fPosX, fPosY, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT);
 	pPlayer->sBody.cbTileCollisionHandler = playerCollisionHandler;
-	pPlayer->sBody.pOnCollidedData = pPlayer;
+	pPlayer->sBody.cbSlipgateHandler = playerSlipgateHandler;
+	pPlayer->sBody.pHandlerData = pPlayer;
 	pPlayer->pGrabbedBox = 0;
 	pPlayer->bHealth = 10;
 	s_ubAnimFrame = 0;
@@ -116,6 +122,15 @@ void playerProcess(tPlayer *pPlayer) {
 	UBYTE ubAimAngle = getAngleBetweenPoints(
 		uwPlayerCenterX, uwPlayerCenterY, sPosCross.uwX, sPosCross.uwY
 	);
+
+	if(pPlayer->isSlipgated) {
+		if(pPlayer->pGrabbedBox) {
+			fix16_t fHalfBoxWidth = fix16_from_int(pPlayer->pGrabbedBox->ubWidth / 2);
+			pPlayer->pGrabbedBox->fPosX = fix16_sub(fix16_from_int(uwPlayerCenterX), fHalfBoxWidth);
+			pPlayer->pGrabbedBox->fPosY = fix16_sub(fix16_from_int(uwPlayerCenterY), fHalfBoxWidth);
+		}
+		pPlayer->isSlipgated = 0;
+	}
 
 	// Player's grabbed box
 	if(pPlayer->pGrabbedBox) {

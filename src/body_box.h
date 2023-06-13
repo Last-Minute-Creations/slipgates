@@ -14,6 +14,8 @@ typedef UBYTE (*tTileCollisionHandler)(
 	tDirection eBodyMovementDirection
 );
 
+typedef void (*tSlipgateHandler)(void *pData);
+
 typedef struct tBodyBox {
 	tBob sBob;
 	fix16_t fPosX;
@@ -23,7 +25,8 @@ typedef struct tBodyBox {
 	fix16_t fAccelerationX;
 	fix16_t fAccelerationY;
 	tTileCollisionHandler cbTileCollisionHandler;
-	void *pOnCollidedData;
+	tSlipgateHandler cbSlipgateHandler;
+	void *pHandlerData;
 	UBYTE ubWidth;
 	UBYTE ubHeight;
 	UBYTE isOnGround;

@@ -11,6 +11,7 @@ typedef struct tPlayer {
 	tBodyBox sBody;
 	tBodyBox *pGrabbedBox;
 	BYTE bHealth;
+	UBYTE isSlipgated;
 } tPlayer;
 
 void playerManagerInit(void);
