@@ -50,9 +50,9 @@ Editor:
 
 Boxes:
 	✔ Generalize @done(23-05-26 20:26)
-	☐ Constrain range
+	✔ Turn off gravity during pickup @done(23-06-13 11:45)
+	✔ Constrain range @done(23-06-13 12:10)
 	☐ Velocity-based dragging instead of position-based
-	☐ Turn off gravity during pickup
 	☐ Collisions between player and boxes - needed?
 
 Tiles:

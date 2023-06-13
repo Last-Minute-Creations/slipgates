@@ -17,6 +17,7 @@
 #define PLAYER_FRAME_COUNT 4
 #define PLAYER_FRAME_DIR_LEFT 0
 #define PLAYER_FRAME_DIR_RIGHT 1
+#define PLAYER_GRAB_RANGE 40
 
 typedef struct tAnimFrameDef {
 	UBYTE *pFrame;
@@ -57,6 +58,11 @@ static UBYTE playerCollisionHandler(
 		}
 	}
 	return isColliding;
+}
+
+static void playerDropBox(tPlayer *pPlayer) {
+	pPlayer->pGrabbedBox->fAccelerationY = fix16_one / 4;// restore gravity
+	pPlayer->pGrabbedBox = 0;
 }
 
 //------------------------------------------------------------------- PUBLIC FNS
@@ -104,27 +110,46 @@ void playerProcess(tPlayer *pPlayer) {
 	}
 
 	tUwCoordYX sPosCross = gameGetCrossPosition();
-	// Player's grabbed box
-	if(pPlayer->pGrabbedBox) {
-		pPlayer->pGrabbedBox->fPosX = fix16_from_int(sPosCross.uwX - pPlayer->pGrabbedBox->ubWidth / 2);
-		pPlayer->pGrabbedBox->fPosY = fix16_from_int(sPosCross.uwY - pPlayer->pGrabbedBox->ubHeight / 2);
-	}
-
-	// Player shooting slipgates
 	UWORD uwPlayerCenterX = fix16_to_int(pPlayer->sBody.fPosX) + pPlayer->sBody.ubWidth / 2;
 	UWORD uwPlayerCenterY = fix16_to_int(pPlayer->sBody.fPosY) + pPlayer->sBody.ubHeight / 2;
 	UBYTE ubAimAngle = getAngleBetweenPoints(
 		uwPlayerCenterX, uwPlayerCenterY, sPosCross.uwX, sPosCross.uwY
 	);
+
+	// Player's grabbed box
+	if(pPlayer->pGrabbedBox) {
+		UWORD uwCursorDistance = fastMagnitude(
+			ABS((WORD)sPosCross.uwX - (WORD)uwPlayerCenterX),
+			ABS((WORD)sPosCross.uwY - (WORD)uwPlayerCenterY)
+		);
+		fix16_t fHalfBoxWidth = fix16_from_int(pPlayer->pGrabbedBox->ubWidth / 2);
+		fix16_t fBoxDistance = fix16_from_int(MIN(PLAYER_GRAB_RANGE,uwCursorDistance));
+		fix16_t fBoxTargetX = fix16_sub(fix16_add(fix16_from_int(uwPlayerCenterX), fix16_mul(ccos(ubAimAngle), fBoxDistance)), fHalfBoxWidth);
+		fix16_t fBoxTargetY = fix16_sub(fix16_add(fix16_from_int(uwPlayerCenterY), fix16_mul(csin(ubAimAngle), fBoxDistance)), fHalfBoxWidth);
+		pPlayer->pGrabbedBox->fPosX = fBoxTargetX;
+		pPlayer->pGrabbedBox->fPosY = fBoxTargetY;
+	}
+
 	// TODO: don't update after death
 	UBYTE ubAnimDirection = (uwPlayerCenterX <= sPosCross.uwX) ? PLAYER_FRAME_DIR_RIGHT : PLAYER_FRAME_DIR_LEFT;
 
+	// Player shooting slipgates
 	tracerProcess(&g_sTracerSlipgate);
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB) || keyUse(KEY_Q)) {
-		playerTryShootSlipgateAt(pPlayer, 0, ubAimAngle);
+		if(pPlayer->pGrabbedBox) {
+			playerDropBox(pPlayer);
+		}
+		else {
+			playerTryShootSlipgateAt(pPlayer, 0, ubAimAngle);
+		}
 	}
 	else if(mouseUse(MOUSE_PORT_1, MOUSE_RMB) || keyUse(KEY_E)) {
-		playerTryShootSlipgateAt(pPlayer, 1, ubAimAngle);
+		if(pPlayer->pGrabbedBox) {
+			playerDropBox(pPlayer);
+		}
+		else {
+			playerTryShootSlipgateAt(pPlayer, 1, ubAimAngle);
+		}
 	}
 
 	// Player movement
@@ -164,18 +189,25 @@ void playerProcess(tPlayer *pPlayer) {
 	if(keyUse(KEY_F)) {
 		// TODO: generalize using collision tilemap
 		if(pPlayer->pGrabbedBox) {
-			pPlayer->pGrabbedBox = 0;
+			playerDropBox(pPlayer);
 		}
 		else {
-			tBodyBox *pBox = gameGetBoxAt(sPosCross.uwX, sPosCross.uwY);
-			if(pBox) {
-				UWORD uwBoxX = fix16_to_int(pBox->fPosX);
-				UWORD uwBoxY = fix16_to_int(pBox->fPosY);
-				if(
-					uwBoxX <= sPosCross.uwX && sPosCross.uwX < uwBoxX + pBox->ubWidth &&
-					uwBoxY <= sPosCross.uwY && sPosCross.uwY < uwBoxY + pBox->ubHeight
-				) {
-					pPlayer->pGrabbedBox = pBox;
+			UWORD uwCursorDistance = fastMagnitude(
+				ABS((WORD)sPosCross.uwX - (WORD)uwPlayerCenterX),
+				ABS((WORD)sPosCross.uwY - (WORD)uwPlayerCenterY)
+			);
+			if(uwCursorDistance < PLAYER_GRAB_RANGE) {
+				tBodyBox *pBox = gameGetBoxAt(sPosCross.uwX, sPosCross.uwY);
+				if(pBox) {
+					UWORD uwBoxX = fix16_to_int(pBox->fPosX);
+					UWORD uwBoxY = fix16_to_int(pBox->fPosY);
+					if(
+						uwBoxX <= sPosCross.uwX && sPosCross.uwX < uwBoxX + pBox->ubWidth &&
+						uwBoxY <= sPosCross.uwY && sPosCross.uwY < uwBoxY + pBox->ubHeight
+					) {
+						pPlayer->pGrabbedBox = pBox;
+						pPlayer->pGrabbedBox->fAccelerationY = 0;
+					}
 				}
 			}
 		}
