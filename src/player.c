@@ -18,6 +18,7 @@
 #define PLAYER_FRAME_DIR_LEFT 0
 #define PLAYER_FRAME_DIR_RIGHT 1
 #define PLAYER_GRAB_RANGE 40
+#define PLAYER_GRAB_VELO_MAX F16(4)
 
 typedef struct tAnimFrameDef {
 	UBYTE *pFrame;
@@ -126,8 +127,10 @@ void playerProcess(tPlayer *pPlayer) {
 		fix16_t fBoxDistance = fix16_from_int(MIN(PLAYER_GRAB_RANGE,uwCursorDistance));
 		fix16_t fBoxTargetX = fix16_sub(fix16_add(fix16_from_int(uwPlayerCenterX), fix16_mul(ccos(ubAimAngle), fBoxDistance)), fHalfBoxWidth);
 		fix16_t fBoxTargetY = fix16_sub(fix16_add(fix16_from_int(uwPlayerCenterY), fix16_mul(csin(ubAimAngle), fBoxDistance)), fHalfBoxWidth);
-		pPlayer->pGrabbedBox->fPosX = fBoxTargetX;
-		pPlayer->pGrabbedBox->fPosY = fBoxTargetY;
+		fix16_t fBoxVeloX = MIN(PLAYER_GRAB_VELO_MAX, fix16_sub(fBoxTargetX, pPlayer->pGrabbedBox->fPosX));
+		fix16_t fBoxVeloY = MIN(PLAYER_GRAB_VELO_MAX, fix16_sub(fBoxTargetY, pPlayer->pGrabbedBox->fPosY));
+		pPlayer->pGrabbedBox->fVelocityX = fBoxVeloX;
+		pPlayer->pGrabbedBox->fVelocityY = fBoxVeloY;
 	}
 
 	// TODO: don't update after death
