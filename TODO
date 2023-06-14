@@ -55,7 +55,7 @@ Boxes:
 	✔ Velocity-based dragging instead of position-based @done(23-06-13 12:27)
 	✔ Fix physics glitches @done(23-06-13 13:20)
 	✔ Teleport with player @done(23-06-13 13:52)
-	☐ Add friction
+	✔ Add friction @done(23-06-14 15:29)
 	✘ Collisions between player and boxes - needed? @cancelled(23-06-13 13:20)
 
 Tiles:

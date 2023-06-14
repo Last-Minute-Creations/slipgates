@@ -296,6 +296,15 @@ void bodySimulate(tBodyBox *pBody) {
 			fNewPosY = fix16_from_int(uwTop);
 			pBody->fVelocityY = 0;
 			pBody->isOnGround = 1;
+			if(pBody->fVelocityX) {
+				static fix16_t fFriction = fix16_one/2;
+				if(pBody->fVelocityX > 0) {
+					pBody->fVelocityX = fix16_max(fix16_sub(pBody->fVelocityX, fFriction), 0);
+				}
+				else {
+					pBody->fVelocityX = fix16_min(fix16_add(pBody->fVelocityX, fFriction), 0);
+				}
+			}
 		}
 		else if(
 			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTileBottom) == TILE_SLIPGATE_1 &&
