@@ -37,7 +37,7 @@ static UBYTE playerCanJump(tPlayer *pPlayer) {
 }
 
 static UBYTE playerCollisionHandler(
-	tTile eTile, UNUSED_ARG UBYTE ubTileX, UNUSED_ARG UBYTE ubTileY, void *pData,
+	tTile eTile, UBYTE ubTileX, UBYTE ubTileY, void *pData,
 	tDirection eBodyMovementDirection
 ) {
 	UBYTE isColliding = mapTileIsCollidingWithPlayers(eTile);
@@ -47,7 +47,7 @@ static UBYTE playerCollisionHandler(
 			playerDamage(pPlayer, 100);
 		}
 		else if(mapTileIsExit(eTile)) {
-			gameMarkExitReached();
+			gameMarkExitReached(ubTileX, ubTileY);
 		}
 		else if(mapTileIsButton(eTile)) {
 			mapPressButtonAt(ubTileX, ubTileY);

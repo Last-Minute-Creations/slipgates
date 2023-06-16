@@ -26,7 +26,7 @@ typedef struct tTurret {
 //----------------------------------------------------------------- PRIVATE VARS
 
 static tInteraction s_pInteractions[MAP_INTERACTIONS_MAX];
-static UBYTE s_ubButtonPressMask;
+static UWORD s_uwButtonPressMask;
 static UBYTE s_ubCurrentInteraction;
 static UWORD s_uwSpikeCooldown;
 static UBYTE s_isSpikeActive;
@@ -72,8 +72,8 @@ static void mapProcessNextInteraction(void) {
 
 	// Process effects of next interaction
 	if(
-		pInteraction->ubButtonMask &&
-		(pInteraction->ubButtonMask & s_ubButtonPressMask) == pInteraction->ubButtonMask
+		pInteraction->uwButtonMask &&
+		(pInteraction->uwButtonMask & s_uwButtonPressMask) == pInteraction->uwButtonMask
 	) {
 		if(!pInteraction->wasActive) {
 			for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
@@ -248,8 +248,8 @@ void mapLoad(UBYTE ubIndex) {
 		);
 	}
 	else {
-		char szName[13];
-		sprintf(szName, "level%03hhu.dat", ubIndex);
+		char szName[30];
+		sprintf(szName, "data/levels/L%03hhu.dat", ubIndex);
 		systemUse();
 		tFile *pFile = fileOpen(szName, "rb");
 		fileRead(pFile, &s_sLoadedLevel.sSpawnPos.fX, sizeof(s_sLoadedLevel.sSpawnPos.fX));
@@ -258,7 +258,7 @@ void mapLoad(UBYTE ubIndex) {
 		for(UBYTE ubInteractionIndex = 0; ubInteractionIndex < MAP_INTERACTIONS_MAX; ++ubInteractionIndex) {
 			tInteraction *pInteraction = &s_pInteractions[ubInteractionIndex];
 			fileRead(pFile, &pInteraction->ubTargetCount, sizeof(pInteraction->ubTargetCount));
-			fileRead(pFile, &pInteraction->ubButtonMask, sizeof(pInteraction->ubButtonMask));
+			fileRead(pFile, &pInteraction->uwButtonMask, sizeof(pInteraction->uwButtonMask));
 			fileRead(pFile, &pInteraction->wasActive, sizeof(pInteraction->wasActive));
 			pInteraction->wasActive = 0;
 			for(UBYTE ubTargetIndex = 0; ubTargetIndex < pInteraction->ubTargetCount; ++ubTargetIndex) {
@@ -355,8 +355,8 @@ void mapSave(UBYTE ubIndex) {
 	mapCloseSlipgate(0);
 	mapCloseSlipgate(1);
 
-	char szName[13];
-	sprintf(szName, "level%03hhu.dat", ubIndex);
+	char szName[30];
+	sprintf(szName, "data/levels/L%03hhu.dat", ubIndex);
 	systemUse();
 	tFile *pFile = fileOpen(szName, "wb");
 	fileWrite(pFile, &g_sCurrentLevel.sSpawnPos.fX, sizeof(g_sCurrentLevel.sSpawnPos.fX));
@@ -365,7 +365,7 @@ void mapSave(UBYTE ubIndex) {
 	for(UBYTE ubInteractionIndex = 0; ubInteractionIndex < MAP_INTERACTIONS_MAX; ++ubInteractionIndex) {
 		tInteraction *pInteraction = mapGetInteractionByIndex(ubInteractionIndex);
 		fileWrite(pFile, &pInteraction->ubTargetCount, sizeof(pInteraction->ubTargetCount));
-		fileWrite(pFile, &pInteraction->ubButtonMask, sizeof(pInteraction->ubButtonMask));
+		fileWrite(pFile, &pInteraction->uwButtonMask, sizeof(pInteraction->uwButtonMask));
 		fileWrite(pFile, &pInteraction->wasActive, sizeof(pInteraction->wasActive));
 		for(UBYTE ubTargetIndex = 0; ubTargetIndex < pInteraction->ubTargetCount; ++ubTargetIndex) {
 			tTogglableTile *pTargetTile = &pInteraction->pTargetTiles[ubTargetIndex];
@@ -424,7 +424,7 @@ void mapProcess(void) {
 	mapDrawPendingTiles();
 
 	// Reset button mask for refresh by body collisions
-	s_ubButtonPressMask = 0;
+	s_uwButtonPressMask = 0;
 }
 
 void mapPressButtonAt(UBYTE ubX, UBYTE ubY) {
@@ -454,7 +454,12 @@ void mapDisableTurretAt(UBYTE ubX, UBYTE ubY) {
 }
 
 void mapPressButtonIndex(UBYTE ubButtonIndex) {
-	s_ubButtonPressMask |= BV(ubButtonIndex);
+	s_uwButtonPressMask |= BV(ubButtonIndex);
+}
+
+UWORD mapGetButtonPresses(void)
+{
+	return s_uwButtonPressMask;
 }
 
 void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY) {

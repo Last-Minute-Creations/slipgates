@@ -31,14 +31,15 @@ General:
 	☐ Increase tracer precision in steep angles, e.g. shooting floor on the ground
 	☐ Show where portal will be opened? Realtime tracing
 	☐ Multi-bob character body
-	☐ Entrance tiles?
+	☐ Entrance tiles - exit to hub
 	☐ Bigger max velocity
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Game flow:
 	✔ Faster map restarts without file reload @done(23-06-13 18:39)
 	☐ Menu
-	☐ Level selection
+	✔ Level selection hub @done(23-06-16 22:24)
+	☐ Fade during loadings
 	☐ Attract mode?
 	☐ Intro/outro screen
 	☐ Credits

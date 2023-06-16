@@ -13,11 +13,13 @@
 #define MAP_TILE_SIZE (1 << MAP_TILE_SHIFT)
 #define MAP_TILE_WIDTH 40
 #define MAP_TILE_HEIGHT 32
-#define MAP_INTERACTIONS_MAX 4
+#define MAP_USER_INTERACTIONS_MAX 10
+#define MAP_INTERACTIONS_MAX 10
 #define MAP_BOXES_MAX 5
 #define MAP_TURRETS_MAX 5
 #define MAP_SPIKES_TILES_MAX 10
 #define MAP_STORY_TEXT_MAX 200
+#define MAP_INDEX_HUB 100
 
 typedef struct tFix16Coord {
 	fix16_t fX;
@@ -57,6 +59,8 @@ void mapProcess(void);
 void mapPressButtonAt(UBYTE ubX, UBYTE ubY);
 
 void mapPressButtonIndex(UBYTE ubButtonIndex);
+
+UWORD mapGetButtonPresses(void);
 
 void mapDisableTurretAt(UBYTE ubX, UBYTE ubY);
 

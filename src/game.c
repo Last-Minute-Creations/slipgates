@@ -49,8 +49,13 @@ static tSprite *s_pSpriteCrosshair;
 static tTextBitMap *s_pTextBuffer;
 
 static UWORD s_uwGameFrame;
-static UBYTE s_ubCurrentLevel;
+static UBYTE s_ubCurrentLevelIndex;
 static tExitState s_eExitState;
+static BYTE s_bHubActiveDoors;
+static UBYTE s_ubHubLevelTens;
+static UBYTE s_ubUnlockedLevels;
+static UWORD s_uwPrevButtonPresses;
+
 // static char s_szPosX[13];
 // static char s_szPosY[13];
 // static char s_szVelocityX[13];
@@ -102,15 +107,25 @@ static UBYTE boxCollisionHandler(
 	return isColliding;
 }
 
-static void loadLevel(UBYTE ubIndex) {
+static void loadLevel(UBYTE ubIndex, UBYTE isForce) {
 	viewLoad(0);
 	s_uwGameFrame = 0;
 	s_eExitState = EXIT_NONE;
-	if(ubIndex == s_ubCurrentLevel) {
+	if(ubIndex == s_ubCurrentLevelIndex && !isForce) {
 		mapRestart();
 	}
 	else {
-		s_ubCurrentLevel = ubIndex;
+		s_ubCurrentLevelIndex = ubIndex;
+
+		if(ubIndex != MAP_INDEX_HUB) {
+			s_ubUnlockedLevels = MAX(ubIndex, s_ubUnlockedLevels);
+			systemUse();
+			tFile *pFile = fileOpen("save.dat", "wb");
+			fileWrite(pFile, &s_ubUnlockedLevels, sizeof(s_ubUnlockedLevels));
+			fileClose(pFile);
+			systemUnuse();
+		}
+
 		mapLoad(ubIndex);
 	}
 	bobDiscardUndraw();
@@ -129,6 +144,10 @@ static void loadLevel(UBYTE ubIndex) {
 		g_sCurrentLevel.ubBouncerSpawnerTileY
 	);
 	tracerInit(&g_sTracerSlipgate);
+
+	s_bHubActiveDoors = 0;
+	s_uwPrevButtonPresses = 0;
+
 	drawMap();
 	blitCopyAligned(
 		s_pBufferMain->pBack, 0, 0,
@@ -153,6 +172,40 @@ static void saveLevel(UBYTE ubIndex) {
 	}
 
 	mapSave(ubIndex);
+}
+
+static void hubProcess(void) {
+	if(s_ubCurrentLevelIndex != MAP_INDEX_HUB) {
+		return;
+	}
+
+	static const UWORD uwHubButtonPressMask = BV(0) | BV(1) | BV(2);
+	UWORD uwButtonPresses = mapGetButtonPresses() & uwHubButtonPressMask;
+	if(uwButtonPresses != s_uwPrevButtonPresses) {
+		if(uwButtonPresses == BV(0)) { // 0..9
+			s_ubHubLevelTens = 0;
+		}
+		else if(uwButtonPresses == BV(1)) { // 10..19
+			s_ubHubLevelTens = 10;
+		}
+		else if(uwButtonPresses == BV(2)) { // 20..29
+			s_ubHubLevelTens = 20;
+		}
+		else if(uwButtonPresses == BV(3)) { // 20..39
+			s_ubHubLevelTens = 30;
+		}
+		else {
+			// Don't change anything
+			// s_bHubActiveDoors = 0;
+		}
+		s_bHubActiveDoors = s_ubUnlockedLevels - s_ubHubLevelTens;
+		s_bHubActiveDoors = CLAMP(s_bHubActiveDoors, 0, 10);
+		s_uwPrevButtonPresses = uwButtonPresses;
+	}
+
+	for(UBYTE i = 0; i < s_bHubActiveDoors; ++i) {
+		mapPressButtonIndex(4 + i);
+	}
 }
 
 static void gameGsCreate(void) {
@@ -207,9 +260,17 @@ static void gameGsCreate(void) {
 	spriteProcessChannel(0);
 	mouseSetBounds(MOUSE_PORT_1, 0, 0, SCREEN_PAL_WIDTH - 16, SCREEN_PAL_HEIGHT - 27);
 
+	s_ubCurrentLevelIndex = 255;
+	s_ubUnlockedLevels = 1;
+	tFile *pFile = fileOpen("save.dat", "rb");
+	if(pFile) {
+		fileRead(pFile, &s_ubUnlockedLevels, sizeof(s_ubUnlockedLevels));
+		fileClose(pFile);
+	}
+	s_ubUnlockedLevels = 15;
+
 	systemUnuse();
-	s_ubCurrentLevel = 255;
-	loadLevel(0);
+	loadLevel(0, 1);
 }
 
 static void gameGsLoop(void) {
@@ -217,10 +278,10 @@ static void gameGsLoop(void) {
 
 	if(s_eExitState != EXIT_NONE) {
 		if(s_eExitState == EXIT_NEXT) {
-			loadLevel(++s_ubCurrentLevel);
+			loadLevel(++s_ubCurrentLevelIndex, 1);
 		}
 		else if(s_eExitState == EXIT_RESTART) {
-			loadLevel(s_ubCurrentLevel);
+			loadLevel(s_ubCurrentLevelIndex, 0);
 		}
 		return;
 	}
@@ -236,7 +297,7 @@ static void gameGsLoop(void) {
 					saveLevel(1 + i);
 				}
 				else {
-					loadLevel(1 + i);
+					loadLevel(1 + i, 1);
 				}
 				break;
 			}
@@ -244,6 +305,10 @@ static void gameGsLoop(void) {
 	}
 
  	bobBegin(s_pBufferMain->pBack);
+
+	// Custom hub button presses after all bodies have been simulated
+	// and before mapProcess() have erased button press states.
+	hubProcess();
 
 	mapProcess();
 	tUwCoordYX sPosCross = gameGetCrossPosition();
@@ -341,24 +406,36 @@ static void gameGsLoop(void) {
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 
-	for(UBYTE i = 0; i < MAP_INTERACTIONS_MAX; ++i) {
-		if(keyUse(KEY_1 + i)) {
+	for(UBYTE i = 0; i < MAP_USER_INTERACTIONS_MAX; ++i) {
+		static const UBYTE pInteractionKeys[] = {KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_EQUALS, KEY_BACKSPACE, KEY_RETURN};
+		if(keyUse(pInteractionKeys[i])) {
 			if(keyCheck(KEY_CONTROL)) {
-				// Add/remove tile to/from interaction group
-				tInteraction *pInteraction = mapGetInteractionByIndex(i);
-				if(*pTileUnderCursor == TILE_GATE_OPEN_1 || *pTileUnderCursor == TILE_GATE_CLOSED_1) {
+				// Remove tile from current interaction if it's already assigned
+				tInteraction *pOldInteraction = mapGetInteractionByTile(uwCursorTileX, uwCursorTileY);
+				if(pOldInteraction) {
 					interactionAddOrRemoveTile(
-						pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
+						pOldInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
 						TILE_GATE_OPEN_1, TILE_GATE_CLOSED_1
 					);
 				}
-				else if(*pTileUnderCursor == TILE_SLIPGATABLE_OFF_1 || *pTileUnderCursor == TILE_SLIPGATABLE_ON_1) {
-					interactionAddOrRemoveTile(
-						pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_SLIPGATABLE,
-						TILE_SLIPGATABLE_ON_1, TILE_SLIPGATABLE_OFF_1
-					);
+
+				// Reassign to interaction group if other
+				tInteraction *pInteraction = mapGetInteractionByIndex(i);
+				if(pInteraction && pInteraction != pOldInteraction) {
+					if(*pTileUnderCursor == TILE_GATE_OPEN_1 || *pTileUnderCursor == TILE_GATE_CLOSED_1) {
+						interactionAddOrRemoveTile(
+							pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
+							TILE_GATE_OPEN_1, TILE_GATE_CLOSED_1
+						);
+					}
+					else if(*pTileUnderCursor == TILE_SLIPGATABLE_OFF_1 || *pTileUnderCursor == TILE_SLIPGATABLE_ON_1) {
+						interactionAddOrRemoveTile(
+							pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_SLIPGATABLE,
+							TILE_SLIPGATABLE_ON_1, TILE_SLIPGATABLE_OFF_1
+						);
+					}
+					gameDrawInteractionTiles(pInteraction);
 				}
-				gameDrawInteractionTiles(pInteraction);
 			}
 			else {
 				// change interaction group's activation mask
@@ -366,7 +443,7 @@ static void gameGsLoop(void) {
 					uwCursorTileX, uwCursorTileY
 				);
 				if(pInteraction) {
-					pInteraction->ubButtonMask ^= BV(i);
+					pInteraction->uwButtonMask ^= BV(i);
 					gameDrawInteractionTiles(pInteraction);
 				}
 			}
@@ -449,24 +526,24 @@ static void gameGsDestroy(void) {
 	assetsGameDestroy();
 }
 
-static void gameDrawTileInteractionMask(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubMask) {
+static void gameDrawTileInteractionMask(UBYTE ubTileX, UBYTE ubTileY, UWORD uwMask) {
 	UBYTE ubBitIndex = 0;
 	blitRect(s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE + 1, ubTileY * MAP_TILE_SIZE + 1, 6, 6, 15);
-
-	while(ubMask) {
-		if(ubMask & 1) {
+	while(uwMask) {
+		if(uwMask & 1) {
+			UBYTE ubColor = (ubBitIndex >= 9) ? 8 : 1;
 			UBYTE ubIndicatorX = 1 + (ubBitIndex % 3) * 2;
-			UBYTE ubIndicatorY = 1 + (ubBitIndex / 3) * 2;
+			UBYTE ubIndicatorY = 1 + ((ubBitIndex % 9) / 3) * 2;
 			blitRect(
 				s_pBufferMain->pBack,
 				ubTileX * MAP_TILE_SIZE + ubIndicatorX,
 				ubTileY * MAP_TILE_SIZE + ubIndicatorY,
-				1, 1, 1
+				1, 1, ubColor
 			);
 		}
 
 		++ubBitIndex;
-		ubMask >>= 1;
+		uwMask >>= 1;
 	}
 }
 
@@ -531,7 +608,7 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	else {
 		tInteraction *pInteraction = mapGetInteractionByTile(ubTileX, ubTileY);
 		if(pInteraction) {
-			gameDrawTileInteractionMask(ubTileX, ubTileY, pInteraction->ubButtonMask);
+			gameDrawTileInteractionMask(ubTileX, ubTileY, pInteraction->uwButtonMask);
 		}
 	}
 #endif
@@ -555,7 +632,47 @@ tUwCoordYX gameGetCrossPosition(void) {
 	return sPos;
 }
 
-void gameMarkExitReached(void) {
+void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY) {
+	if(s_ubCurrentLevelIndex == MAP_INDEX_HUB) {
+		UBYTE ubHubLevelOnes = 0;
+		if(ubTileX == 2) { // leftmost: 0, 2, 4, 6
+			if(ubTileY <= 5) {
+				ubHubLevelOnes = 6;
+			}
+			else if(ubTileY <= 11) {
+				ubHubLevelOnes = 4;
+			}
+			else if(ubTileY <= 17) {
+				ubHubLevelOnes = 2;
+			}
+			else if(ubTileY <= 23) {
+				ubHubLevelOnes = 0;
+			}
+		}
+		else if(ubTileX == 14) { // middle left
+				ubHubLevelOnes = 8;
+		}
+		else if(ubTileX == 25) { // middle right
+				ubHubLevelOnes = 9;
+		}
+		else if(ubTileX == 37) { // rightmost: 1, 3, 5, 7
+			if(ubTileY <= 5) {
+				ubHubLevelOnes = 7;
+			}
+			else if(ubTileY <= 11) {
+				ubHubLevelOnes = 5;
+			}
+			else if(ubTileY <= 17) {
+				ubHubLevelOnes = 3;
+			}
+			else if(ubTileY <= 23) {
+				ubHubLevelOnes = 1;
+			}
+		}
+
+		// Subtract level index so that exit transition will increment to to proper one
+		s_ubCurrentLevelIndex = s_ubHubLevelTens + ubHubLevelOnes - 1;
+	}
 	s_eExitState = EXIT_NEXT;
 }
 

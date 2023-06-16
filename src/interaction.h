@@ -26,7 +26,7 @@ typedef struct tTogglableTile {
 typedef struct tInteraction {
 	tTogglableTile pTargetTiles[INTERACTION_TARGET_MAX];
 	UBYTE ubTargetCount;
-	UBYTE ubButtonMask;
+	UWORD uwButtonMask;
 	UBYTE wasActive;
 } tInteraction;
 
