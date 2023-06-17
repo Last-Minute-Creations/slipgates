@@ -186,7 +186,7 @@ void bodySimulate(tBodyBox *pBody) {
 			pBody->fVelocityX = 0;
 		}
 		else if(
-			mapGetTileAt(uwTileRight, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_1 &&
+			mapGetTileAt(uwTileRight, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_A &&
 			g_pSlipgates[0].eNormal == DIRECTION_LEFT
 		) {
 			// Slipgate A
@@ -204,7 +204,7 @@ void bodySimulate(tBodyBox *pBody) {
 			}
 		}
 		else if(
-			mapGetTileAt(uwTileRight, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_2 &&
+			mapGetTileAt(uwTileRight, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_B &&
 			g_pSlipgates[1].eNormal == DIRECTION_LEFT
 		) {
 			// Slipgate B
@@ -235,7 +235,7 @@ void bodySimulate(tBodyBox *pBody) {
 			pBody->fVelocityX = 0;
 		}
 		else if(
-			mapGetTileAt(uwTileLeft, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_1 &&
+			mapGetTileAt(uwTileLeft, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_A &&
 			g_pSlipgates[0].eNormal == DIRECTION_RIGHT
 		) {
 			// Slipgate A
@@ -253,7 +253,7 @@ void bodySimulate(tBodyBox *pBody) {
 			}
 		}
 		else if(
-			mapGetTileAt(uwTileLeft, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_2 &&
+			mapGetTileAt(uwTileLeft, uwBottom  / MAP_TILE_SIZE) == TILE_SLIPGATE_B &&
 			g_pSlipgates[1].eNormal == DIRECTION_RIGHT
 		) {
 			// Slipgate B
@@ -307,7 +307,7 @@ void bodySimulate(tBodyBox *pBody) {
 			}
 		}
 		else if(
-			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTileBottom) == TILE_SLIPGATE_1 &&
+			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTileBottom) == TILE_SLIPGATE_A &&
 			g_pSlipgates[0].eNormal == DIRECTION_UP
 		) {
 			// Slipgate A
@@ -326,7 +326,7 @@ void bodySimulate(tBodyBox *pBody) {
 			}
 		}
 		else if(
-			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTileBottom) == TILE_SLIPGATE_2 &&
+			mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTileBottom) == TILE_SLIPGATE_B &&
 			g_pSlipgates[1].eNormal == DIRECTION_UP
 		) {
 			// Slipgate B
@@ -355,7 +355,7 @@ void bodySimulate(tBodyBox *pBody) {
 			fNewPosY = fix16_from_int((uwTop / MAP_TILE_SIZE + 1) * MAP_TILE_SIZE);
 			// pBody->fVelocityY = 0;
 		}
-		else if(mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) == TILE_SLIPGATE_1) {
+		else if(mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) == TILE_SLIPGATE_A) {
 			// Slipgate A
 			if(moveBodyViaSlipgate(pBody, 0)) {
 				fNewPosY = pBody->fPosY;
@@ -369,7 +369,7 @@ void bodySimulate(tBodyBox *pBody) {
 				// pBody->fVelocityY = 0;
 			}
 		}
-		else if(mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) == TILE_SLIPGATE_2) {
+		else if(mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) == TILE_SLIPGATE_B) {
 			// Slipgate B
 			if(moveBodyViaSlipgate(pBody, 1)) {
 				fNewPosY = pBody->fPosY;

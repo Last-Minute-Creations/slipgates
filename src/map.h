@@ -33,6 +33,7 @@ typedef struct tTurretSpawn {
 
 typedef struct tLevel {
 	tFix16Coord sSpawnPos;
+	tTile pVisualTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
 	tTile pTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
 	tFix16Coord pBoxSpawns[MAP_BOXES_MAX];
 	tUbCoordYX pSpikeTiles[MAP_SPIKES_TILES_MAX];

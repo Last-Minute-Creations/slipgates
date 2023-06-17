@@ -48,9 +48,9 @@ static void mapOpenSlipgate(UBYTE ubIndex) {
 	pSlipgate->pPrevTiles[1] = g_sCurrentLevel.pTiles[pSlipgate->sTilePosOther.ubX][pSlipgate->sTilePosOther.ubY];
 
 	// Draw slipgate tiles
-	g_sCurrentLevel.pTiles[pSlipgate->sTilePos.ubX][pSlipgate->sTilePos.ubY] = TILE_SLIPGATE_1 + ubIndex;
+	g_sCurrentLevel.pTiles[pSlipgate->sTilePos.ubX][pSlipgate->sTilePos.ubY] = TILE_SLIPGATE_A + ubIndex;
 	mapRequestTileDraw(pSlipgate->sTilePos.ubX, pSlipgate->sTilePos.ubY);
-	g_sCurrentLevel.pTiles[pSlipgate->sTilePosOther.ubX][pSlipgate->sTilePosOther.ubY] = TILE_SLIPGATE_1 + ubIndex;
+	g_sCurrentLevel.pTiles[pSlipgate->sTilePosOther.ubX][pSlipgate->sTilePosOther.ubY] = TILE_SLIPGATE_A + ubIndex;
 	mapRequestTileDraw(pSlipgate->sTilePosOther.ubX, pSlipgate->sTilePosOther.ubY);
 }
 
@@ -142,18 +142,18 @@ static UBYTE mapProcessSpikes(void) {
 		if(s_isSpikeActive)  {
 			for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
 				tUbCoordYX sSpikeCoord = g_sCurrentLevel.pSpikeTiles[i];
-				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = TILE_SPIKES_ON_FLOOR_1;
+				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = TILE_SPIKES_ON_FLOOR;
 				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY);
-				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = TILE_SPIKES_ON_BG_1;
+				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = TILE_SPIKES_ON_BG;
 				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY - 1);
 			}
 		}
 		else {
 			for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
 				tUbCoordYX sSpikeCoord = g_sCurrentLevel.pSpikeTiles[i];
-				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = TILE_SPIKES_OFF_FLOOR_1;
+				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = TILE_SPIKES_OFF_FLOOR;
 				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY);
-				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = TILE_SPIKES_OFF_BG_1;
+				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = TILE_SPIKES_OFF_BG;
 				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY - 1);
 			}
 		}
@@ -226,17 +226,17 @@ void mapLoad(UBYTE ubIndex) {
 		// hadcoded level
 		memset(&s_sLoadedLevel, 0, sizeof(s_sLoadedLevel));
 		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
-			s_sLoadedLevel.pTiles[ubX][0] = TILE_WALL_1;
-			s_sLoadedLevel.pTiles[ubX][1] = TILE_WALL_1;
-			s_sLoadedLevel.pTiles[ubX][2] = TILE_WALL_1;
-			s_sLoadedLevel.pTiles[ubX][MAP_TILE_HEIGHT - 2] = TILE_WALL_1;
-			s_sLoadedLevel.pTiles[ubX][MAP_TILE_HEIGHT - 1] = TILE_WALL_1;
+			s_sLoadedLevel.pTiles[ubX][0] = TILE_WALL;
+			s_sLoadedLevel.pTiles[ubX][1] = TILE_WALL;
+			s_sLoadedLevel.pTiles[ubX][2] = TILE_WALL;
+			s_sLoadedLevel.pTiles[ubX][MAP_TILE_HEIGHT - 2] = TILE_WALL;
+			s_sLoadedLevel.pTiles[ubX][MAP_TILE_HEIGHT - 1] = TILE_WALL;
 		}
 		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
-			s_sLoadedLevel.pTiles[0][ubY] = TILE_WALL_1;
-			s_sLoadedLevel.pTiles[1][ubY] = TILE_WALL_1;
-			s_sLoadedLevel.pTiles[MAP_TILE_WIDTH - 2][ubY] = TILE_WALL_1;
-			s_sLoadedLevel.pTiles[MAP_TILE_WIDTH - 1][ubY] = TILE_WALL_1;
+			s_sLoadedLevel.pTiles[0][ubY] = TILE_WALL;
+			s_sLoadedLevel.pTiles[1][ubY] = TILE_WALL;
+			s_sLoadedLevel.pTiles[MAP_TILE_WIDTH - 2][ubY] = TILE_WALL;
+			s_sLoadedLevel.pTiles[MAP_TILE_WIDTH - 1][ubY] = TILE_WALL;
 		}
 		s_sLoadedLevel.sSpawnPos.fX = fix16_from_int(100);
 		s_sLoadedLevel.sSpawnPos.fY = fix16_from_int(100);
@@ -432,7 +432,7 @@ void mapPressButtonAt(UBYTE ubX, UBYTE ubY) {
 	if(!mapTileIsButton(eTile)) {
 		logWrite("ERR: Tile %d at %hhu,%hhu is not a button!\n", eTile, ubX, ubY);
 	}
-	mapPressButtonIndex(eTile - TILE_BUTTON_1);
+	mapPressButtonIndex(eTile - TILE_BUTTON_A);
 }
 
 void mapDisableTurretAt(UBYTE ubX, UBYTE ubY) {
@@ -467,8 +467,8 @@ void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY) {
 	// Remove if list already contains pos
 	for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
 		if(g_sCurrentLevel.pSpikeTiles[i].uwYX == sPos.uwYX) {
-			g_sCurrentLevel.pTiles[ubX][ubY] = TILE_WALL_1;
-			g_sCurrentLevel.pTiles[ubX][ubY - 1] = TILE_BG_1;
+			g_sCurrentLevel.pTiles[ubX][ubY] = TILE_WALL;
+			g_sCurrentLevel.pTiles[ubX][ubY - 1] = TILE_BG;
 			while(++i < g_sCurrentLevel.ubSpikeTilesCount) {
 				g_sCurrentLevel.pSpikeTiles[i - 1].uwYX = g_sCurrentLevel.pSpikeTiles[i].uwYX;
 			}
@@ -479,8 +479,8 @@ void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY) {
 
 	if(g_sCurrentLevel.ubSpikeTilesCount < MAP_SPIKES_TILES_MAX) {
 		g_sCurrentLevel.pSpikeTiles[g_sCurrentLevel.ubSpikeTilesCount++].uwYX = sPos.uwYX;
-		g_sCurrentLevel.pTiles[ubX][ubY] = s_isSpikeActive ? TILE_SPIKES_ON_FLOOR_1 : TILE_SPIKES_OFF_FLOOR_1;
-		g_sCurrentLevel.pTiles[ubX][ubY - 1] = s_isSpikeActive ? TILE_SPIKES_ON_BG_1 : TILE_SPIKES_OFF_BG_1;
+		g_sCurrentLevel.pTiles[ubX][ubY] = s_isSpikeActive ? TILE_SPIKES_ON_FLOOR : TILE_SPIKES_OFF_FLOOR;
+		g_sCurrentLevel.pTiles[ubX][ubY - 1] = s_isSpikeActive ? TILE_SPIKES_ON_BG : TILE_SPIKES_OFF_BG;
 	}
 }
 
@@ -489,7 +489,7 @@ void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY, tDirection eDirection) {
 	// Remove if list already contains pos
 	for(UBYTE i = 0; i < s_ubTurretCount; ++i) {
 		if(s_pTurrets[i].sTilePos.uwYX == sPos.uwYX) {
-			g_sCurrentLevel.pTiles[ubX][ubY] = TILE_BG_1;
+			g_sCurrentLevel.pTiles[ubX][ubY] = TILE_BG;
 			while(++i < s_ubTurretCount) {
 				s_pTurrets[i - 1] = s_pTurrets[i];
 			}
@@ -550,7 +550,7 @@ tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY) {
 }
 
 UBYTE mapIsEmptyAt(UBYTE ubTileX, UBYTE ubTileY) {
-	return g_sCurrentLevel.pTiles[ubTileX][ubTileY] == TILE_BG_1;
+	return g_sCurrentLevel.pTiles[ubTileX][ubTileY] == TILE_BG;
 }
 
 UBYTE mapIsCollidingWithPortalProjectilesAt(UBYTE ubTileX, UBYTE ubTileY) {

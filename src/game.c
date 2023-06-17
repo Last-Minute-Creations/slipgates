@@ -321,34 +321,34 @@ static void gameGsLoop(void) {
 	UWORD uwCursorTileY = sPosCross.uwY / MAP_TILE_SIZE;
 	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[uwCursorTileX][uwCursorTileY];
 	if(keyCheck(KEY_Z)) {
-		*pTileUnderCursor = TILE_BG_1;
+		*pTileUnderCursor = TILE_BG;
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_X)) {
-		*pTileUnderCursor = TILE_WALL_1;
+		*pTileUnderCursor = TILE_WALL;
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_C)) {
-		*pTileUnderCursor = TILE_WALL_NO_SLIPGATE_1;
+		*pTileUnderCursor = TILE_WALL_NO_SLIPGATE;
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_V)) {
-		*pTileUnderCursor = TILE_FORCE_FIELD_1;
+		*pTileUnderCursor = TILE_FORCE_FIELD;
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_B)) {
-		*pTileUnderCursor = TILE_DEATH_FIELD_1;
+		*pTileUnderCursor = TILE_DEATH_FIELD;
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_N)) {
-		*pTileUnderCursor = TILE_EXIT_1;
+		*pTileUnderCursor = TILE_EXIT;
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_M)) {
 		if(mapTileIsButton(*pTileUnderCursor)) {
 			if(keyUse(KEY_M)) {
-				if(*pTileUnderCursor == TILE_BUTTON_8) {
-					*pTileUnderCursor = TILE_BUTTON_1;
+				if(*pTileUnderCursor == TILE_BUTTON_H) {
+					*pTileUnderCursor = TILE_BUTTON_A;
 				}
 				else {
 					++*pTileUnderCursor;
@@ -358,12 +358,12 @@ static void gameGsLoop(void) {
 		}
 		else {
 			keyUse(KEY_M); // prevent double-processing of same tile
-			*pTileUnderCursor = TILE_BUTTON_1;
+			*pTileUnderCursor = TILE_BUTTON_A;
 			mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 		}
 	}
 	else if(keyCheck(KEY_COMMA)) {
-		*pTileUnderCursor = TILE_GATE_CLOSED_1;
+		*pTileUnderCursor = TILE_GATE_CLOSED;
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_PERIOD)) {
@@ -372,7 +372,7 @@ static void gameGsLoop(void) {
 	}
 	else if(keyUse(KEY_SLASH)) {
 		if(g_sCurrentLevel.ubBouncerSpawnerTileX != BOUNCER_TILE_INVALID) {
-			g_sCurrentLevel.pTiles[g_sCurrentLevel.ubBouncerSpawnerTileX][g_sCurrentLevel.ubBouncerSpawnerTileY] = TILE_WALL_1;
+			g_sCurrentLevel.pTiles[g_sCurrentLevel.ubBouncerSpawnerTileX][g_sCurrentLevel.ubBouncerSpawnerTileY] = TILE_WALL;
 			mapRequestTileDraw(
 				g_sCurrentLevel.ubBouncerSpawnerTileX,
 				g_sCurrentLevel.ubBouncerSpawnerTileY
@@ -389,7 +389,7 @@ static void gameGsLoop(void) {
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_L)) {
-		*pTileUnderCursor = TILE_SLIPGATABLE_OFF_1;
+		*pTileUnderCursor = TILE_SLIPGATABLE_OFF;
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_K)) {
@@ -415,23 +415,23 @@ static void gameGsLoop(void) {
 				if(pOldInteraction) {
 					interactionAddOrRemoveTile(
 						pOldInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
-						TILE_GATE_OPEN_1, TILE_GATE_CLOSED_1
+						TILE_GATE_OPEN, TILE_GATE_CLOSED
 					);
 				}
 
 				// Reassign to interaction group if other
 				tInteraction *pInteraction = mapGetInteractionByIndex(i);
 				if(pInteraction && pInteraction != pOldInteraction) {
-					if(*pTileUnderCursor == TILE_GATE_OPEN_1 || *pTileUnderCursor == TILE_GATE_CLOSED_1) {
+					if(*pTileUnderCursor == TILE_GATE_OPEN || *pTileUnderCursor == TILE_GATE_CLOSED) {
 						interactionAddOrRemoveTile(
 							pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
-							TILE_GATE_OPEN_1, TILE_GATE_CLOSED_1
+							TILE_GATE_OPEN, TILE_GATE_CLOSED
 						);
 					}
-					else if(*pTileUnderCursor == TILE_SLIPGATABLE_OFF_1 || *pTileUnderCursor == TILE_SLIPGATABLE_ON_1) {
+					else if(*pTileUnderCursor == TILE_SLIPGATABLE_OFF || *pTileUnderCursor == TILE_SLIPGATABLE_ON) {
 						interactionAddOrRemoveTile(
 							pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_SLIPGATABLE,
-							TILE_SLIPGATABLE_ON_1, TILE_SLIPGATABLE_OFF_1
+							TILE_SLIPGATABLE_ON, TILE_SLIPGATABLE_OFF
 						);
 					}
 					gameDrawInteractionTiles(pInteraction);
@@ -599,7 +599,7 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 
 #if defined(GAME_EDITOR_ENABLED)
 	if(mapTileIsButton(eTile)) {
-		UBYTE ubButtonIndex = eTile - TILE_BUTTON_1;
+		UBYTE ubButtonIndex = eTile - TILE_BUTTON_A;
 		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(ubButtonIndex));
 	}
 	else if(eTile == TILE_RECEIVER) {

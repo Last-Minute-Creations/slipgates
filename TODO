@@ -48,6 +48,7 @@ Game flow:
 Editor:
 	☐ Editable story text
 	☐ Togglable edit mode
+	☐ Autotiles
 
 Boxes:
 	✔ Generalize @done(23-05-26 20:26)
