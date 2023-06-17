@@ -603,7 +603,7 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(ubButtonIndex));
 	}
 	else if(eTile == TILE_RECEIVER) {
-		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(3));
+		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(MAP_BOUNCER_BUTTON_INDEX));
 	}
 	else {
 		tInteraction *pInteraction = mapGetInteractionByTile(ubTileX, ubTileY);

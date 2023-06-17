@@ -20,6 +20,7 @@
 #define MAP_SPIKES_TILES_MAX 10
 #define MAP_STORY_TEXT_MAX 200
 #define MAP_INDEX_HUB 100
+#define MAP_BOUNCER_BUTTON_INDEX 6
 
 typedef struct tFix16Coord {
 	fix16_t fX;

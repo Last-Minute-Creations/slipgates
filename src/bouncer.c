@@ -132,7 +132,7 @@ UBYTE bouncerProcess(void) {
 			}
 			break;
 		case BOUNCER_STATE_RECEIVER_REACHED:
-			mapPressButtonIndex(3);
+			mapPressButtonIndex(MAP_BOUNCER_BUTTON_INDEX);
 			break;
 	}
 	return 0;
