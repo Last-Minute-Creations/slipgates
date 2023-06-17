@@ -567,7 +567,7 @@ tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY) {
 // TODO: move to map.c?
 void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	tTile eTile = mapGetTileAt(ubTileX, ubTileY);
-	UWORD uwTileIndex = eTile & MAP_TILE_INDEX_MASK;
+	UWORD uwTileIndex = mapGetVisTileAt(ubTileX, ubTileY);
 
 	// A: tile mask, B: tile source, C/D: bg
 	UWORD uwHeight = MAP_TILE_SIZE * g_pBmTiles->Depth;

@@ -6,6 +6,7 @@
 #define SLIPGATES_MAP_H
 
 #include <fixmath/fix16.h>
+#include "vis_tile.h"
 #include "slipgate.h"
 #include "interaction.h"
 
@@ -34,8 +35,8 @@ typedef struct tTurretSpawn {
 
 typedef struct tLevel {
 	tFix16Coord sSpawnPos;
-	tTile pVisualTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
 	tTile pTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
+	tVisTile pVisTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
 	tFix16Coord pBoxSpawns[MAP_BOXES_MAX];
 	tUbCoordYX pSpikeTiles[MAP_SPIKES_TILES_MAX];
 	tTurretSpawn pTurretSpawns[MAP_TURRETS_MAX];
@@ -81,6 +82,8 @@ tInteraction *mapGetInteractionByIndex(UBYTE ubInteractionIndex);
 tInteraction *mapGetInteractionByTile(UBYTE ubTileX, UBYTE ubTileY);
 
 //----------------------------------------------------------------- MAP CHECKERS
+
+tVisTile mapGetVisTileAt(UBYTE ubTileX, UBYTE ubTileY);
 
 tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY);
 
