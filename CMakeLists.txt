@@ -79,7 +79,7 @@ extractBitmaps(
 		${GEN_DIR}/tiles/2.png  160 192 8 8 # VIS_TILE_BG_CONVEX_NE
 		${GEN_DIR}/tiles/3.png  160 208 8 8 # VIS_TILE_BG_CONVEX_E
 		${GEN_DIR}/tiles/4.png  160 224 8 8 # VIS_TILE_BG_CONVEX_SE
-		${GEN_DIR}/tiles/5.png  144 244 8 8 # VIS_TILE_BG_CONVEX_S
+		${GEN_DIR}/tiles/5.png  144 224 8 8 # VIS_TILE_BG_CONVEX_S
 		${GEN_DIR}/tiles/6.png  128 224 8 8 # VIS_TILE_BG_CONVEX_SW
 		${GEN_DIR}/tiles/7.png  128 208 8 8 # VIS_TILE_BG_CONVEX_W
 		${GEN_DIR}/tiles/8.png  128 192 8 8 # VIS_TILE_BG_CONVEX_NW

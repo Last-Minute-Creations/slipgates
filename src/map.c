@@ -226,7 +226,41 @@ static void mapInitTurret(tTurret *pTurret) {
 		// }
 }
 
-static tVisTile mapCalculateVisTile(tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY) {
+static tNeighborFlag mapGetWallNeighborsOnLevel(
+	tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY
+) {
+	tNeighborFlag eNeighbors = 0;
+	if(pLevel->pTiles[ubTileX - 1][ubTileY] == TILE_WALL) {
+		eNeighbors |= NEIGHBOR_FLAG_W;
+	}
+	if(pLevel->pTiles[ubTileX + 1][ubTileY] == TILE_WALL) {
+		eNeighbors |= NEIGHBOR_FLAG_E;
+	}
+	if(pLevel->pTiles[ubTileX - 1][ubTileY - 1] == TILE_WALL) {
+		eNeighbors |= NEIGHBOR_FLAG_NW;
+	}
+	if(pLevel->pTiles[ubTileX + 1][ubTileY - 1] == TILE_WALL) {
+		eNeighbors |= NEIGHBOR_FLAG_NE;
+	}
+	if(pLevel->pTiles[ubTileX - 1][ubTileY + 1] == TILE_WALL) {
+		eNeighbors |= NEIGHBOR_FLAG_SW;
+	}
+	if(pLevel->pTiles[ubTileX + 1][ubTileY + 1] == TILE_WALL) {
+		eNeighbors |= NEIGHBOR_FLAG_SE;
+	}
+	if(pLevel->pTiles[ubTileX][ubTileY - 1] == TILE_WALL) {
+		eNeighbors |= NEIGHBOR_FLAG_N;
+	}
+	if(pLevel->pTiles[ubTileX][ubTileY + 1] == TILE_WALL) {
+		eNeighbors |= NEIGHBOR_FLAG_S;
+	}
+
+	return eNeighbors;
+}
+
+static tVisTile mapCalculateVisTileOnLevel(
+	tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY
+) {
 	if(
 		ubTileX == 0 || ubTileX == MAP_TILE_WIDTH - 1 ||
 		ubTileY == 0 || ubTileY == MAP_TILE_HEIGHT - 1
@@ -234,33 +268,8 @@ static tVisTile mapCalculateVisTile(tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY
 		return VIS_TILE_WALL_1;
 	}
 
+	tNeighborFlag eNeighbors = mapGetWallNeighborsOnLevel(pLevel, ubTileX, ubTileY);
 	if(pLevel->pTiles[ubTileX][ubTileY] == TILE_WALL) { // TODO: better?
-		tNeighborFlag eNeighbors = 0;
-		if(pLevel->pTiles[ubTileX - 1][ubTileY] == TILE_WALL) {
-			eNeighbors |= NEIGHBOR_FLAG_W;
-		}
-		if(pLevel->pTiles[ubTileX + 1][ubTileY] == TILE_WALL) {
-			eNeighbors |= NEIGHBOR_FLAG_E;
-		}
-		if(pLevel->pTiles[ubTileX - 1][ubTileY - 1] == TILE_WALL) {
-			eNeighbors |= NEIGHBOR_FLAG_NW;
-		}
-		if(pLevel->pTiles[ubTileX + 1][ubTileY - 1] == TILE_WALL) {
-			eNeighbors |= NEIGHBOR_FLAG_NE;
-		}
-		if(pLevel->pTiles[ubTileX - 1][ubTileY + 1] == TILE_WALL) {
-			eNeighbors |= NEIGHBOR_FLAG_SW;
-		}
-		if(pLevel->pTiles[ubTileX + 1][ubTileY + 1] == TILE_WALL) {
-			eNeighbors |= NEIGHBOR_FLAG_SE;
-		}
-		if(pLevel->pTiles[ubTileX][ubTileY - 1] == TILE_WALL) {
-			eNeighbors |= NEIGHBOR_FLAG_N;
-		}
-		if(pLevel->pTiles[ubTileX][ubTileY + 1] == TILE_WALL) {
-			eNeighbors |= NEIGHBOR_FLAG_S;
-		}
-
 		static const UBYTE pWallLookup[256] = {
 			0,
 			[NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W] = VIS_TILE_WALL_CONVEX_N,
@@ -299,7 +308,59 @@ static tVisTile mapCalculateVisTile(tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY
 		logWrite("Unhandled tile at %hhu,%hhu", ubTileX, ubTileY);
 	}
 	else {
-		// TODO: BG NEAR WALLS
+		static const UBYTE pBgLookup[256] = {
+			0,
+
+			[NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW] = VIS_TILE_BG_CONVEX_N,
+			[NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW] = VIS_TILE_BG_CONVEX_N,
+			[NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S] = VIS_TILE_BG_CONVEX_N,
+			[NEIGHBOR_FLAG_S] = VIS_TILE_BG_CONVEX_N,
+
+			[NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NW] = VIS_TILE_BG_CONCAVE_NE,
+			[NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NW] = VIS_TILE_BG_CONCAVE_NE,
+			[NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_N] = VIS_TILE_BG_CONCAVE_NE,
+			[NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_N] = VIS_TILE_BG_CONCAVE_NE,
+
+			[NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW] = VIS_TILE_BG_CONVEX_E,
+			[NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW] = VIS_TILE_BG_CONVEX_E,
+			[NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W] = VIS_TILE_BG_CONVEX_E,
+			[NEIGHBOR_FLAG_W] = VIS_TILE_BG_CONVEX_E,
+
+			[NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW] = VIS_TILE_BG_CONCAVE_SE,
+			[NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW] = VIS_TILE_BG_CONCAVE_SE,
+			[NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S] = VIS_TILE_BG_CONCAVE_SE,
+			[NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S] = VIS_TILE_BG_CONCAVE_SE,
+
+			[NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NW] = VIS_TILE_BG_CONVEX_S,
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NW] = VIS_TILE_BG_CONVEX_S,
+			[NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_N] = VIS_TILE_BG_CONVEX_S,
+			[NEIGHBOR_FLAG_N] = VIS_TILE_BG_CONVEX_S,
+
+			[NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW] = VIS_TILE_BG_CONCAVE_SW,
+			[NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW] = VIS_TILE_BG_CONCAVE_SW,
+			[NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W] = VIS_TILE_BG_CONCAVE_SW,
+			[NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W] = VIS_TILE_BG_CONCAVE_SW,
+
+			[NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_NE] = VIS_TILE_BG_CONVEX_W,
+			[NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_NE] = VIS_TILE_BG_CONVEX_W,
+			[NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_E] = VIS_TILE_BG_CONVEX_W,
+			[NEIGHBOR_FLAG_E] = VIS_TILE_BG_CONVEX_W,
+
+			[NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW | NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE] = VIS_TILE_BG_CONCAVE_NW,
+			[NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW | NEIGHBOR_FLAG_N] = VIS_TILE_BG_CONCAVE_NW,
+			[NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW | NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE] = VIS_TILE_BG_CONCAVE_NW,
+			[NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW | NEIGHBOR_FLAG_N] = VIS_TILE_BG_CONCAVE_NW,
+
+			[NEIGHBOR_FLAG_SW] = VIS_TILE_BG_CONVEX_NE,
+			[NEIGHBOR_FLAG_NW] = VIS_TILE_BG_CONVEX_SE,
+			[NEIGHBOR_FLAG_NE] = VIS_TILE_BG_CONVEX_SW,
+			[NEIGHBOR_FLAG_SE] = VIS_TILE_BG_CONVEX_NW,
+
+		};
+
+		if(pBgLookup[eNeighbors] != 0) {
+			return pBgLookup[eNeighbors];
+		}
 	}
 
 	return VIS_TILE_BG_1;
@@ -308,7 +369,7 @@ static tVisTile mapCalculateVisTile(tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY
 static void mapFillVisTiles(tLevel *pLevel) {
 	for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
 		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
-			pLevel->pVisTiles[ubX][ubY] = mapCalculateVisTile(pLevel, ubX, ubY);
+			pLevel->pVisTiles[ubX][ubY] = mapCalculateVisTileOnLevel(pLevel, ubX, ubY);
 		}
 	}
 }
