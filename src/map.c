@@ -23,6 +23,17 @@ typedef struct tTurret {
 	UBYTE ubAttackCooldown;
 } tTurret;
 
+typedef enum tNeighborFlag {
+	NEIGHBOR_FLAG_N  = BV(0),
+	NEIGHBOR_FLAG_NE = BV(1),
+	NEIGHBOR_FLAG_E  = BV(2),
+	NEIGHBOR_FLAG_SE = BV(3),
+	NEIGHBOR_FLAG_S  = BV(4),
+	NEIGHBOR_FLAG_SW = BV(5),
+	NEIGHBOR_FLAG_W  = BV(6),
+	NEIGHBOR_FLAG_NW = BV(7),
+} tNeighborFlag;
+
 //----------------------------------------------------------------- PRIVATE VARS
 
 static tInteraction s_pInteractions[MAP_INTERACTIONS_MAX];
@@ -215,6 +226,93 @@ static void mapInitTurret(tTurret *pTurret) {
 		// }
 }
 
+static tVisTile mapCalculateVisTile(tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY) {
+	if(
+		ubTileX == 0 || ubTileX == MAP_TILE_WIDTH - 1 ||
+		ubTileY == 0 || ubTileY == MAP_TILE_HEIGHT - 1
+	) {
+		return VIS_TILE_WALL_1;
+	}
+
+	if(pLevel->pTiles[ubTileX][ubTileY] == TILE_WALL) { // TODO: better?
+		tNeighborFlag eNeighbors = 0;
+		if(pLevel->pTiles[ubTileX - 1][ubTileY] == TILE_WALL) {
+			eNeighbors |= NEIGHBOR_FLAG_W;
+		}
+		if(pLevel->pTiles[ubTileX + 1][ubTileY] == TILE_WALL) {
+			eNeighbors |= NEIGHBOR_FLAG_E;
+		}
+		if(pLevel->pTiles[ubTileX - 1][ubTileY - 1] == TILE_WALL) {
+			eNeighbors |= NEIGHBOR_FLAG_NW;
+		}
+		if(pLevel->pTiles[ubTileX + 1][ubTileY - 1] == TILE_WALL) {
+			eNeighbors |= NEIGHBOR_FLAG_NE;
+		}
+		if(pLevel->pTiles[ubTileX - 1][ubTileY + 1] == TILE_WALL) {
+			eNeighbors |= NEIGHBOR_FLAG_SW;
+		}
+		if(pLevel->pTiles[ubTileX + 1][ubTileY + 1] == TILE_WALL) {
+			eNeighbors |= NEIGHBOR_FLAG_SE;
+		}
+		if(pLevel->pTiles[ubTileX][ubTileY - 1] == TILE_WALL) {
+			eNeighbors |= NEIGHBOR_FLAG_N;
+		}
+		if(pLevel->pTiles[ubTileX][ubTileY + 1] == TILE_WALL) {
+			eNeighbors |= NEIGHBOR_FLAG_S;
+		}
+
+		static const UBYTE pWallLookup[256] = {
+			0,
+			[NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W] = VIS_TILE_WALL_CONVEX_N,
+			[NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W] = VIS_TILE_WALL_CONVEX_NE,
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW] = VIS_TILE_WALL_CONVEX_E,
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW] = VIS_TILE_WALL_CONVEX_SE,
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW] = VIS_TILE_WALL_CONVEX_S,
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E] = VIS_TILE_WALL_CONVEX_SW,
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S] = VIS_TILE_WALL_CONVEX_W,
+			[NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S] = VIS_TILE_WALL_CONVEX_NW,
+			[255] = VIS_TILE_WALL_1,
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW] = VIS_TILE_WALL_CONCAVE_N,
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW] = VIS_TILE_WALL_CONCAVE_N,
+
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW] = VIS_TILE_WALL_CONCAVE_NE,
+
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_NW] = VIS_TILE_WALL_CONCAVE_E,
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW] = VIS_TILE_WALL_CONCAVE_E,
+
+			[NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W] = VIS_TILE_WALL_CONCAVE_SE,
+
+			[NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W] = VIS_TILE_WALL_CONCAVE_S,
+			[NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW] = VIS_TILE_WALL_CONCAVE_S,
+
+			[NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW | NEIGHBOR_FLAG_N] = VIS_TILE_WALL_CONCAVE_SW,
+
+			[NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW | NEIGHBOR_FLAG_N] = VIS_TILE_WALL_CONCAVE_W,
+			[NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW | NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE] = VIS_TILE_WALL_CONCAVE_W,
+
+			[NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW | NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E] = VIS_TILE_WALL_CONCAVE_NW,
+		};
+		if(pWallLookup[eNeighbors] != 0) {
+			return pWallLookup[eNeighbors];
+		}
+
+		logWrite("Unhandled tile at %hhu,%hhu", ubTileX, ubTileY);
+	}
+	else {
+		// TODO: BG NEAR WALLS
+	}
+
+	return VIS_TILE_BG_1;
+}
+
+static void mapFillVisTiles(tLevel *pLevel) {
+	for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
+		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
+			pLevel->pVisTiles[ubX][ubY] = mapCalculateVisTile(pLevel, ubX, ubY);
+		}
+	}
+}
+
 //------------------------------------------------------------- PUBLIC FUNCTIONS
 
 void mapLoad(UBYTE ubIndex) {
@@ -319,6 +417,7 @@ void mapLoad(UBYTE ubIndex) {
 		systemUnuse();
 	}
 
+	mapFillVisTiles(&s_sLoadedLevel);
 	mapRestart();
 }
 
@@ -544,6 +643,10 @@ tInteraction *mapGetInteractionByTile(UBYTE ubTileX, UBYTE ubTileY) {
 }
 
 //----------------------------------------------------------------- MAP CHECKERS
+
+tVisTile mapGetVisTileAt(UBYTE ubTileX, UBYTE ubTileY) {
+	return g_sCurrentLevel.pVisTiles[ubTileX][ubTileY];
+}
 
 tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY) {
 	return g_sCurrentLevel.pTiles[ubTileX][ubTileY];
