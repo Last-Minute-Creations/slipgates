@@ -230,28 +230,28 @@ static tNeighborFlag mapGetWallNeighborsOnLevel(
 	tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY
 ) {
 	tNeighborFlag eNeighbors = 0;
-	if(mapTileIsCollidingWithBouncers(pLevel->pTiles[ubTileX - 1][ubTileY])) {
+	if(mapTileIsOnWall(pLevel->pTiles[ubTileX - 1][ubTileY])) {
 		eNeighbors |= NEIGHBOR_FLAG_W;
 	}
-	if(mapTileIsCollidingWithBouncers(pLevel->pTiles[ubTileX + 1][ubTileY])) {
+	if(mapTileIsOnWall(pLevel->pTiles[ubTileX + 1][ubTileY])) {
 		eNeighbors |= NEIGHBOR_FLAG_E;
 	}
-	if(mapTileIsCollidingWithBouncers(pLevel->pTiles[ubTileX - 1][ubTileY - 1])) {
+	if(mapTileIsOnWall(pLevel->pTiles[ubTileX - 1][ubTileY - 1])) {
 		eNeighbors |= NEIGHBOR_FLAG_NW;
 	}
-	if(mapTileIsCollidingWithBouncers(pLevel->pTiles[ubTileX + 1][ubTileY - 1])) {
+	if(mapTileIsOnWall(pLevel->pTiles[ubTileX + 1][ubTileY - 1])) {
 		eNeighbors |= NEIGHBOR_FLAG_NE;
 	}
-	if(mapTileIsCollidingWithBouncers(pLevel->pTiles[ubTileX - 1][ubTileY + 1])) {
+	if(mapTileIsOnWall(pLevel->pTiles[ubTileX - 1][ubTileY + 1])) {
 		eNeighbors |= NEIGHBOR_FLAG_SW;
 	}
-	if(mapTileIsCollidingWithBouncers(pLevel->pTiles[ubTileX + 1][ubTileY + 1])) {
+	if(mapTileIsOnWall(pLevel->pTiles[ubTileX + 1][ubTileY + 1])) {
 		eNeighbors |= NEIGHBOR_FLAG_SE;
 	}
-	if(mapTileIsCollidingWithBouncers(pLevel->pTiles[ubTileX][ubTileY - 1])) {
+	if(mapTileIsOnWall(pLevel->pTiles[ubTileX][ubTileY - 1])) {
 		eNeighbors |= NEIGHBOR_FLAG_N;
 	}
-	if(mapTileIsCollidingWithBouncers(pLevel->pTiles[ubTileX][ubTileY + 1])) {
+	if(mapTileIsOnWall(pLevel->pTiles[ubTileX][ubTileY + 1])) {
 		eNeighbors |= NEIGHBOR_FLAG_S;
 	}
 
@@ -292,6 +292,28 @@ static tVisTile mapCalculateVisTileOnLevel(
 				return VIS_TILE_BUTTON_WALL_RIGHT_2;
 			}
 			break;
+		case TILE_EXIT: {
+			tTile eTileAbove = pLevel->pTiles[ubTileX][ubTileY - 1];
+			tTile eTileBelow = pLevel->pTiles[ubTileX][ubTileY + 1];
+			if(ubTileX < MAP_TILE_WIDTH / 2) {
+				if(eTileAbove != eTile) {
+					return VIS_TILE_EXIT_WALL_LEFT_TOP;
+				}
+				if(eTileBelow != eTile) {
+					return VIS_TILE_EXIT_WALL_LEFT_BOTTOM;
+				}
+				return VIS_TILE_EXIT_WALL_LEFT_MID;
+			}
+			else {
+				if(eTileAbove != eTile) {
+					return VIS_TILE_EXIT_WALL_RIGHT_TOP;
+				}
+				if(eTileBelow != eTile) {
+					return VIS_TILE_EXIT_WALL_RIGHT_BOTTOM;
+				}
+				return VIS_TILE_EXIT_WALL_RIGHT_MID;
+			}
+		} break;
 		case TILE_WALL: {
 			static const UBYTE pWallLookup[256] = {
 				0,
@@ -331,7 +353,29 @@ static tVisTile mapCalculateVisTileOnLevel(
 			logWrite("Unhandled tile at %hhu,%hhu", ubTileX, ubTileY);
 		} break;
 		case TILE_BG: {
+			tTile eTileLeft = pLevel->pTiles[ubTileX - 1][ubTileY];
+			tTile eTileRight = pLevel->pTiles[ubTileX + 1][ubTileY];
+			// tTile eTileAbove = pLevel->pTiles[ubTileX][ubTileY - 1];
 			tTile eTileBelow = pLevel->pTiles[ubTileX][ubTileY + 1];
+
+			if(eTileLeft == TILE_EXIT) {
+				if(pLevel->pTiles[ubTileX - 1][ubTileY - 1] != TILE_EXIT) {
+					return VIS_TILE_EXIT_BG_LEFT_TOP;
+				}
+				if(pLevel->pTiles[ubTileX - 1][ubTileY + 1] != TILE_EXIT) {
+					return VIS_TILE_EXIT_BG_LEFT_BOTTOM;
+				}
+				return VIS_TILE_EXIT_BG_LEFT_MID;
+			}
+			if(eTileRight == TILE_EXIT) {
+				if(pLevel->pTiles[ubTileX + 1][ubTileY - 1] != TILE_EXIT) {
+					return VIS_TILE_EXIT_BG_RIGHT_TOP;
+				}
+				if(pLevel->pTiles[ubTileX + 1][ubTileY + 1] != TILE_EXIT) {
+					return VIS_TILE_EXIT_BG_RIGHT_BOTTOM;
+				}
+				return VIS_TILE_EXIT_BG_RIGHT_MID;
+			}
 			if(mapTileIsButton(eTileBelow)) {
 				if(ubTileX < MAP_TILE_WIDTH / 2) {
 					if(pLevel->pTiles[ubTileX + 1][ubTileY + 1] == eTileBelow) {
@@ -402,6 +446,14 @@ static tVisTile mapCalculateVisTileOnLevel(
 				return pBgLookup[eNeighbors];
 			}
 		} break;
+		case TILE_TURRET_ACTIVE_LEFT:
+			return VIS_TILE_TURRET_ACTIVE_LEFT;
+		case TILE_TURRET_ACTIVE_RIGHT:
+			return VIS_TILE_TURRET_ACTIVE_RIGHT;
+		case TILE_TURRET_INACTIVE_LEFT:
+			return VIS_TILE_TURRET_INACTIVE_LEFT;
+		case TILE_TURRET_INACTIVE_RIGHT:
+			return VIS_TILE_TURRET_INACTIVE_RIGHT;
 		default:
 			return VIS_TILE_BG_1;
 			break;
@@ -647,10 +699,14 @@ void mapDisableTurretAt(UBYTE ubX, UBYTE ubY) {
 			s_pTurrets[i].isActive = 0;
 
 			// Update turret tile
-			g_sCurrentLevel.pTiles[ubX][ubY] = (
-				(g_sCurrentLevel.pTiles[ubX][ubY] == TILE_TURRET_ACTIVE_LEFT) ?
-				TILE_TURRET_INACTIVE_LEFT : TILE_TURRET_INACTIVE_RIGHT
-			);
+			if(g_sCurrentLevel.pTiles[ubX][ubY] == TILE_TURRET_ACTIVE_LEFT) {
+				g_sCurrentLevel.pTiles[ubX][ubY] = TILE_TURRET_INACTIVE_LEFT;
+				g_sCurrentLevel.pVisTiles[ubX][ubY] = VIS_TILE_TURRET_INACTIVE_LEFT;
+			}
+			else {
+				g_sCurrentLevel.pTiles[ubX][ubY] = TILE_TURRET_INACTIVE_RIGHT;
+				g_sCurrentLevel.pVisTiles[ubX][ubY] = VIS_TILE_TURRET_INACTIVE_RIGHT;
+			}
 			mapRequestTileDraw(ubX, ubY);
 			break;
 		}
@@ -702,7 +758,7 @@ void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY, tDirection eDirection) {
 		}
 	}
 
-	if(s_ubTurretCount < MAP_SPIKES_TILES_MAX) {
+	if(s_ubTurretCount < MAP_TURRETS_MAX) {
 		tTurret *pTurret = &s_pTurrets[s_ubTurretCount];
 		pTurret->sTilePos.uwYX = sPos.uwYX;
 		pTurret->eDirection = eDirection;
@@ -712,6 +768,7 @@ void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY, tDirection eDirection) {
 			TILE_TURRET_ACTIVE_LEFT :
 			TILE_TURRET_ACTIVE_RIGHT
 		);
+		mapRecalculateVisTilesNearTileAt(ubX, ubY);
 
 		++s_ubTurretCount;
 		mapInitTurret(pTurret);
@@ -820,6 +877,26 @@ UBYTE mapTileIsButton(tTile eTile) {
 
 UBYTE mapTileIsActiveTurret(tTile eTile) {
 	return (eTile & TILE_LAYER_ACTIVE_TURRET) != 0;
+}
+
+UBYTE mapTileIsOnWall(tTile eTile) {
+	return (
+		eTile == TILE_SLIPGATE_A ||
+		eTile == TILE_SLIPGATE_B ||
+		eTile == TILE_WALL_NO_SLIPGATE ||
+		eTile == TILE_WALL ||
+		eTile == TILE_SPIKES_OFF_FLOOR ||
+		eTile == TILE_SPIKES_ON_FLOOR ||
+		eTile == TILE_BUTTON_A ||
+		eTile == TILE_BUTTON_B ||
+		eTile == TILE_BUTTON_C ||
+		eTile == TILE_BUTTON_D ||
+		eTile == TILE_BUTTON_E ||
+		eTile == TILE_BUTTON_F ||
+		eTile == TILE_BUTTON_G ||
+		eTile == TILE_BUTTON_H ||
+		0
+	);
 }
 
 //-------------------------------------------------------------------- SLIPGATES

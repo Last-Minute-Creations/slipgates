@@ -117,6 +117,9 @@ UBYTE mapTileIsButton(tTile eTile);
 
 UBYTE mapTileIsActiveTurret(tTile eTile);
 
+// SLOW!
+UBYTE mapTileIsOnWall(tTile eTile);
+
 //-------------------------------------------------------------------- SLIPGATES
 
 UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY);
