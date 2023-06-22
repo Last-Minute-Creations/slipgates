@@ -732,7 +732,7 @@ UBYTE mapIsSlipgatableAt(UBYTE ubTileX, UBYTE ubTileY) {
 //---------------------------------------------------------------- TILE CHECKERS
 
 UBYTE mapTileIsCollidingWithBoxes(tTile eTile) {
-	return (eTile & (TILE_LAYER_WALLS | TILE_LAYER_FORCE_FIELDS)) != 0;
+	return (eTile & (TILE_LAYER_WALLS | TILE_LAYER_GRATES)) != 0;
 }
 
 UBYTE mapTileIsCollidingWithPortalProjectiles(tTile eTile) {
@@ -744,7 +744,7 @@ UBYTE mapTileIsCollidingWithBouncers(tTile eTile) {
 }
 
 UBYTE mapTileIsCollidingWithPlayers(tTile eTile) {
-	return (eTile & (TILE_LAYER_WALLS | TILE_LAYER_LETHALS | TILE_LAYER_FORCE_FIELDS)) != 0;
+	return (eTile & (TILE_LAYER_WALLS | TILE_LAYER_LETHALS | TILE_LAYER_GRATES)) != 0;
 }
 
 UBYTE mapTileIsSlipgate(tTile eTile) {

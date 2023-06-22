@@ -333,8 +333,8 @@ static void gameGsLoop(void) {
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_V)) {
-		*pTileUnderCursor = TILE_FORCE_FIELD;
 		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		*pTileUnderCursor = TILE_GRATE;
 	}
 	else if(keyCheck(KEY_B)) {
 		*pTileUnderCursor = TILE_DEATH_FIELD;
@@ -363,8 +363,8 @@ static void gameGsLoop(void) {
 		}
 	}
 	else if(keyCheck(KEY_COMMA)) {
-		*pTileUnderCursor = TILE_GATE_CLOSED;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		*pTileUnderCursor = TILE_DOOR_CLOSED;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_PERIOD)) {
 		*pTileUnderCursor = TILE_RECEIVER;
@@ -415,17 +415,17 @@ static void gameGsLoop(void) {
 				if(pOldInteraction) {
 					interactionAddOrRemoveTile(
 						pOldInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
-						TILE_GATE_OPEN, TILE_GATE_CLOSED
+						TILE_DOOR_OPEN, TILE_DOOR_CLOSED
 					);
 				}
 
 				// Reassign to interaction group if other
 				tInteraction *pInteraction = mapGetInteractionByIndex(i);
 				if(pInteraction && pInteraction != pOldInteraction) {
-					if(*pTileUnderCursor == TILE_GATE_OPEN || *pTileUnderCursor == TILE_GATE_CLOSED) {
+					if(*pTileUnderCursor == TILE_DOOR_OPEN || *pTileUnderCursor == TILE_DOOR_CLOSED) {
 						interactionAddOrRemoveTile(
 							pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
-							TILE_GATE_OPEN, TILE_GATE_CLOSED
+							TILE_DOOR_OPEN, TILE_DOOR_CLOSED
 						);
 					}
 					else if(*pTileUnderCursor == TILE_SLIPGATABLE_OFF || *pTileUnderCursor == TILE_SLIPGATABLE_ON) {
