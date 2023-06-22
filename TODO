@@ -49,6 +49,17 @@ Editor:
 	☐ Editable story text
 	☐ Togglable edit mode
 	☐ Autotiles
+		✔ Walls @done(23-06-22 17:50)
+		✔ Buttons @done(23-06-22 19:43)
+		☐ Doors
+		☐ Grates
+		☐ Death fields
+		☐ Turrets
+		☐ Slipgates
+		☐ Exits
+		☐ Spikes
+		☐ Bouncers
+		☐ Slipgates
 
 Boxes:
 	✔ Generalize @done(23-05-26 20:26)

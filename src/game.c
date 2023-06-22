@@ -322,27 +322,27 @@ static void gameGsLoop(void) {
 	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[uwCursorTileX][uwCursorTileY];
 	if(keyCheck(KEY_Z)) {
 		*pTileUnderCursor = TILE_BG;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_X)) {
 		*pTileUnderCursor = TILE_WALL;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_C)) {
 		*pTileUnderCursor = TILE_WALL_NO_SLIPGATE;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_V)) {
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
 		*pTileUnderCursor = TILE_GRATE;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_B)) {
 		*pTileUnderCursor = TILE_DEATH_FIELD;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_N)) {
 		*pTileUnderCursor = TILE_EXIT;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_M)) {
 		if(mapTileIsButton(*pTileUnderCursor)) {
@@ -353,13 +353,13 @@ static void gameGsLoop(void) {
 				else {
 					++*pTileUnderCursor;
 				}
-				mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 			}
 		}
 		else {
 			keyUse(KEY_M); // prevent double-processing of same tile
 			*pTileUnderCursor = TILE_BUTTON_A;
-			mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+			mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 		}
 	}
 	else if(keyCheck(KEY_COMMA)) {
@@ -368,12 +368,12 @@ static void gameGsLoop(void) {
 	}
 	else if(keyUse(KEY_PERIOD)) {
 		*pTileUnderCursor = TILE_RECEIVER;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_SLASH)) {
 		if(g_sCurrentLevel.ubBouncerSpawnerTileX != BOUNCER_TILE_INVALID) {
 			g_sCurrentLevel.pTiles[g_sCurrentLevel.ubBouncerSpawnerTileX][g_sCurrentLevel.ubBouncerSpawnerTileY] = TILE_WALL;
-			mapRequestTileDraw(
+			mapRecalculateVisTilesNearTileAt(
 				g_sCurrentLevel.ubBouncerSpawnerTileX,
 				g_sCurrentLevel.ubBouncerSpawnerTileY
 			);
@@ -386,24 +386,24 @@ static void gameGsLoop(void) {
 			g_sCurrentLevel.ubBouncerSpawnerTileX,
 			g_sCurrentLevel.ubBouncerSpawnerTileY
 		);
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_L)) {
 		*pTileUnderCursor = TILE_SLIPGATABLE_OFF;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_K)) {
 		mapAddOrRemoveSpikeTile(uwCursorTileX, uwCursorTileY);
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY - 1);
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY - 1);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_H)) {
 		mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY, DIRECTION_LEFT);
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_J)) {
 		mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY, DIRECTION_RIGHT);
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 
 	for(UBYTE i = 0; i < MAP_USER_INTERACTIONS_MAX; ++i) {
@@ -449,7 +449,7 @@ static void gameGsLoop(void) {
 			}
 
 			// Could be no longer part of interaction
-			mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+			mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 			break;
 		}
 	}
@@ -599,7 +599,7 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 
 #if defined(GAME_EDITOR_ENABLED)
 	if(mapTileIsButton(eTile)) {
-		UBYTE ubButtonIndex = eTile - TILE_BUTTON_A;
+		UBYTE ubButtonIndex = (eTile & MAP_TILE_INDEX_MASK) - (TILE_BUTTON_A & MAP_TILE_INDEX_MASK);
 		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(ubButtonIndex));
 	}
 	else if(eTile == TILE_RECEIVER) {

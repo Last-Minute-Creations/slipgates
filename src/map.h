@@ -67,7 +67,9 @@ UWORD mapGetButtonPresses(void);
 
 void mapDisableTurretAt(UBYTE ubX, UBYTE ubY);
 
-void mapRequestTileDraw(UBYTE ubX, UBYTE ubY);
+void mapRequestTileDraw(UBYTE ubTileX, UBYTE ubTileY);
+
+void mapRecalculateVisTilesNearTileAt(UBYTE ubTileX, UBYTE ubTileY);
 
 //----------------------------------------------------------------------- EDITOR
 
