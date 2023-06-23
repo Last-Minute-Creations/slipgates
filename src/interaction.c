@@ -5,32 +5,41 @@
 #include "interaction.h"
 #include <ace/managers/log.h>
 
-void interactionAddOrRemoveTile(
-	tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTileY,
-	tInteractionKind eKind, tTile eTileActive, tTile eTileInactive
+void interactionChangeOrRemoveTile(
+	tInteraction *pOldInteraction, tInteraction *pInteraction,
+	UBYTE ubTileX, UBYTE ubTileY,
+	tInteractionKind eKind, tTile eTileActive, tTile eTileInactive,
+	tVisTile eVisTileActive, tVisTile eVisTileInactive
 ) {
-	tUbCoordYX sTileCoord = {.ubX = ubTileX, .ubY = ubTileY};
-	UBYTE ubTileIndex = interactionGetTileIndex(pInteraction, ubTileX, ubTileY);
-	if(ubTileIndex == INTERACTION_TILE_INDEX_INVALID) {
-		// Tile not on list - add
-		if(pInteraction->ubTargetCount < INTERACTION_TARGET_MAX) {
-			pInteraction->pTargetTiles[pInteraction->ubTargetCount].sPos.uwYX = sTileCoord.uwYX;
-			pInteraction->pTargetTiles[pInteraction->ubTargetCount].eKind = eKind;
-			pInteraction->pTargetTiles[pInteraction->ubTargetCount].eTileActive = eTileActive;
-			pInteraction->pTargetTiles[pInteraction->ubTargetCount].eTileInactive = eTileInactive;
-			++pInteraction->ubTargetCount;
+	// Remove tile from its current interaction if it has one
+	if(pOldInteraction) {
+		// Remove from list, move back all later tiles
+		UBYTE ubTileIndex = interactionGetTileIndex(pOldInteraction, ubTileX, ubTileY);
+		for(UBYTE ubNext = ubTileIndex + 1; ubNext < pOldInteraction->ubTargetCount; ++ubNext) {
+			pOldInteraction->pTargetTiles[ubNext - 1] = pOldInteraction->pTargetTiles[ubNext];
 		}
-		else {
-			logWrite("ERR: No more space for tile in interaction %p\n", pInteraction);
-		}
+		--pOldInteraction->ubTargetCount;
+	}
+
+	// Prevent re-adding tile to same interaction if it was removed
+	if(pOldInteraction == pInteraction) {
 		return;
 	}
 
-	// Remove from list, move back all later tiles
-	for(UBYTE ubNext = ubTileIndex + 1; ubNext < pInteraction->ubTargetCount; ++ubNext) {
-		pInteraction->pTargetTiles[ubNext - 1] = pInteraction->pTargetTiles[ubNext];
+	// Add tile to new interaction
+	if(pInteraction->ubTargetCount < INTERACTION_TARGET_MAX) {
+		tUbCoordYX sTileCoord = {.ubX = ubTileX, .ubY = ubTileY};
+		pInteraction->pTargetTiles[pInteraction->ubTargetCount].sPos.uwYX = sTileCoord.uwYX;
+		pInteraction->pTargetTiles[pInteraction->ubTargetCount].eKind = eKind;
+		pInteraction->pTargetTiles[pInteraction->ubTargetCount].eTileActive = eTileActive;
+		pInteraction->pTargetTiles[pInteraction->ubTargetCount].eTileInactive = eTileInactive;
+		pInteraction->pTargetTiles[pInteraction->ubTargetCount].eVisTileActive = eVisTileActive;
+		pInteraction->pTargetTiles[pInteraction->ubTargetCount].eVisTileInactive = eVisTileInactive;
+		++pInteraction->ubTargetCount;
 	}
-	--pInteraction->ubTargetCount;
+	else {
+		logWrite("ERR: No more space for tile in interaction %p\n", pInteraction);
+	}
 }
 
 UBYTE interactionGetTileIndex(tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTileY) {

@@ -83,6 +83,10 @@ tInteraction *mapGetInteractionByIndex(UBYTE ubInteractionIndex);
 
 tInteraction *mapGetInteractionByTile(UBYTE ubTileX, UBYTE ubTileY);
 
+void mapSetOrRemoveDoorInteractionAt(
+	UBYTE ubInteractionIndex, UBYTE ubTileX, UBYTE ubTileY
+);
+
 //----------------------------------------------------------------- MAP CHECKERS
 
 tVisTile mapGetVisTileAt(UBYTE ubTileX, UBYTE ubTileY);

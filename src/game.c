@@ -80,7 +80,7 @@ static void drawMap(void) {
 	);
 }
 
-static void gameDrawInteractionTiles(const tInteraction *pInteraction) {
+static void gameRequestInteractionTilesDraw(const tInteraction *pInteraction) {
 	for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
 		mapRequestTileDraw(
 			pInteraction->pTargetTiles[i].sPos.ubX,
@@ -407,35 +407,31 @@ static void gameGsLoop(void) {
 	}
 
 	for(UBYTE i = 0; i < MAP_USER_INTERACTIONS_MAX; ++i) {
-		static const UBYTE pInteractionKeys[] = {KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_EQUALS, KEY_BACKSPACE, KEY_RETURN};
+		static const UBYTE pInteractionKeys[] = {
+			KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0,
+			KEY_MINUS, KEY_EQUALS, KEY_BACKSPACE, KEY_RETURN
+		};
 		if(keyUse(pInteractionKeys[i])) {
 			if(keyCheck(KEY_CONTROL)) {
-				// Remove tile from current interaction if it's already assigned
 				tInteraction *pOldInteraction = mapGetInteractionByTile(uwCursorTileX, uwCursorTileY);
+				tInteraction *pInteraction = mapGetInteractionByIndex(i);
+
 				if(pOldInteraction) {
-					interactionAddOrRemoveTile(
-						pOldInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
-						TILE_DOOR_OPEN, TILE_DOOR_CLOSED
-					);
+					gameRequestInteractionTilesDraw(pOldInteraction);
 				}
 
-				// Reassign to interaction group if other
-				tInteraction *pInteraction = mapGetInteractionByIndex(i);
-				if(pInteraction && pInteraction != pOldInteraction) {
-					if(*pTileUnderCursor == TILE_DOOR_OPEN || *pTileUnderCursor == TILE_DOOR_CLOSED) {
-						interactionAddOrRemoveTile(
-							pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
-							TILE_DOOR_OPEN, TILE_DOOR_CLOSED
-						);
-					}
-					else if(*pTileUnderCursor == TILE_SLIPGATABLE_OFF || *pTileUnderCursor == TILE_SLIPGATABLE_ON) {
-						interactionAddOrRemoveTile(
-							pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_SLIPGATABLE,
-							TILE_SLIPGATABLE_ON, TILE_SLIPGATABLE_OFF
-						);
-					}
-					gameDrawInteractionTiles(pInteraction);
+				if(*pTileUnderCursor == TILE_DOOR_CLOSED) {
+					mapSetOrRemoveDoorInteractionAt(i, uwCursorTileX, uwCursorTileY);
 				}
+				else if(*pTileUnderCursor == TILE_SLIPGATABLE_OFF || *pTileUnderCursor == TILE_SLIPGATABLE_ON) {
+					interactionChangeOrRemoveTile(
+						pOldInteraction, pInteraction,
+						uwCursorTileX, uwCursorTileY, INTERACTION_KIND_SLIPGATABLE,
+						TILE_SLIPGATABLE_ON, TILE_SLIPGATABLE_OFF,
+						VIS_TILE_SLIPGATABLE_ON_1, VIS_TILE_SLIPGATABLE_OFF_1
+					);
+				}
+				gameRequestInteractionTilesDraw(pInteraction);
 			}
 			else {
 				// change interaction group's activation mask
@@ -444,7 +440,7 @@ static void gameGsLoop(void) {
 				);
 				if(pInteraction) {
 					pInteraction->uwButtonMask ^= BV(i);
-					gameDrawInteractionTiles(pInteraction);
+					gameRequestInteractionTilesDraw(pInteraction);
 				}
 			}
 

@@ -107,6 +107,7 @@ static void mapProcessNextInteraction(void) {
 					mapTryCloseSlipgateAt(1, pTile->sPos);
 				}
 				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileActive;
+				g_sCurrentLevel.pVisTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eVisTileActive;
 				mapRequestTileDraw(pTile->sPos.ubX, pTile->sPos.ubY);
 			}
 			pInteraction->wasActive = 1;
@@ -121,6 +122,7 @@ static void mapProcessNextInteraction(void) {
 					mapTryCloseSlipgateAt(1, pTile->sPos);
 				}
 				g_sCurrentLevel.pTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eTileInactive;
+				g_sCurrentLevel.pVisTiles[pTile->sPos.ubX][pTile->sPos.ubY] = pTile->eVisTileInactive;
 				mapRequestTileDraw(pTile->sPos.ubX, pTile->sPos.ubY);
 			}
 			pInteraction->wasActive = 0;
@@ -954,6 +956,102 @@ tInteraction *mapGetInteractionByTile(UBYTE ubTileX, UBYTE ubTileY) {
 		}
 	}
 	return 0;
+}
+
+void mapSetOrRemoveDoorInteractionAt(
+	UBYTE ubInteractionIndex, UBYTE ubTileX, UBYTE ubTileY
+) {
+	static const BYTE bClosedToOpen = (
+		VIS_TILE_DOOR_LEFT_OPEN_WALL_TOP - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP
+	);
+
+	tInteraction *pInteraction = mapGetInteractionByIndex(ubInteractionIndex);
+	if(
+		g_sCurrentLevel.pTiles[ubTileX - 1][ubTileY] == TILE_DOOR_CLOSED ||
+		g_sCurrentLevel.pTiles[ubTileX + 1][ubTileY] == TILE_DOOR_CLOSED
+	) {
+		// Horizontal door
+		// Move to leftmost tile
+		UBYTE ubX = ubTileX;
+		while(g_sCurrentLevel.pTiles[ubX][ubTileY] == TILE_DOOR_CLOSED) {
+			--ubX;
+		}
+		// Left wall tile
+		interactionChangeOrRemoveTile(
+			mapGetInteractionByTile(ubX, ubTileY),
+			pInteraction, ubX, ubTileY, INTERACTION_KIND_GATE,
+			TILE_WALL, TILE_WALL,
+			g_sCurrentLevel.pVisTiles[ubX][ubTileY] + bClosedToOpen,
+			g_sCurrentLevel.pVisTiles[ubX][ubTileY]
+		);
+		++ubX;
+
+		// Middle door/bg tiles
+		while(g_sCurrentLevel.pTiles[ubX][ubTileY] == TILE_DOOR_CLOSED) {
+			interactionChangeOrRemoveTile(
+				mapGetInteractionByTile(ubX, ubTileY),
+				pInteraction, ubX, ubTileY - 1, INTERACTION_KIND_GATE,
+				TILE_DOOR_OPEN, TILE_DOOR_CLOSED,
+				g_sCurrentLevel.pVisTiles[ubX][ubTileY - 1] + bClosedToOpen,
+				g_sCurrentLevel.pVisTiles[ubX][ubTileY - 1]
+			);
+			interactionChangeOrRemoveTile(
+				mapGetInteractionByTile(ubX, ubTileY),
+				pInteraction, ubX, ubTileY, INTERACTION_KIND_GATE,
+				TILE_DOOR_OPEN, TILE_DOOR_CLOSED,
+				g_sCurrentLevel.pVisTiles[ubX][ubTileY] + bClosedToOpen,
+				g_sCurrentLevel.pVisTiles[ubX][ubTileY]
+			);
+			++ubX;
+		}
+
+		// Right wall tile
+		interactionChangeOrRemoveTile(
+			mapGetInteractionByTile(ubX, ubTileY),
+			pInteraction, ubX, ubTileY, INTERACTION_KIND_GATE,
+			TILE_WALL, TILE_WALL,
+			g_sCurrentLevel.pVisTiles[ubX][ubTileY] + bClosedToOpen,
+			g_sCurrentLevel.pVisTiles[ubX][ubTileY]
+		);
+	}
+	else {
+		// Vertical door
+		// Move to topmost tile
+		UBYTE ubY = ubTileY;
+		while(g_sCurrentLevel.pTiles[ubTileX][ubY] == TILE_DOOR_CLOSED) {
+			--ubY;
+		}
+		// Top wall tile
+		interactionChangeOrRemoveTile(
+			mapGetInteractionByTile(ubTileX, ubY),
+			pInteraction, ubTileX, ubY, INTERACTION_KIND_GATE,
+			TILE_WALL, TILE_WALL,
+			g_sCurrentLevel.pVisTiles[ubTileX][ubY] + bClosedToOpen,
+			g_sCurrentLevel.pVisTiles[ubTileX][ubY]
+		);
+		++ubY;
+
+		// Middle door tiles
+		while(g_sCurrentLevel.pTiles[ubTileX][ubY] == TILE_DOOR_CLOSED) {
+			interactionChangeOrRemoveTile(
+				mapGetInteractionByTile(ubTileX, ubY),
+				pInteraction, ubTileX, ubY, INTERACTION_KIND_GATE,
+				TILE_DOOR_OPEN, TILE_DOOR_CLOSED,
+				g_sCurrentLevel.pVisTiles[ubTileX][ubY] + bClosedToOpen,
+				g_sCurrentLevel.pVisTiles[ubTileX][ubY]
+			);
+			++ubY;
+		}
+
+		// Bottom wall tile
+		interactionChangeOrRemoveTile(
+			mapGetInteractionByTile(ubTileX, ubY),
+			pInteraction, ubTileX, ubY, INTERACTION_KIND_GATE,
+			TILE_WALL, TILE_WALL,
+			g_sCurrentLevel.pVisTiles[ubTileX][ubY] + bClosedToOpen,
+			g_sCurrentLevel.pVisTiles[ubTileX][ubY]
+		);
+	}
 }
 
 //----------------------------------------------------------------- MAP CHECKERS
