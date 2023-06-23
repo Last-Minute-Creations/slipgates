@@ -53,10 +53,10 @@ Editor:
 		✔ Buttons @done(23-06-22 19:43)
 		✔ Exits @done(23-06-22 21:16)
 		✔ Turrets @done(23-06-22 22:00)
-		☐ Doors
-		☐ Grates
-		☐ Death fields
-		☐ Slipgates
+		✔ Doors @done(23-06-23 14:41)
+		✔ Grates @done(23-06-23 14:41)
+		✔ Death fields @done(23-06-23 14:41)
+		☐ Opened doors
 		☐ Spikes
 		☐ Bouncers
 		☐ Slipgates

@@ -34,6 +34,11 @@ typedef enum tNeighborFlag {
 	NEIGHBOR_FLAG_NW = BV(7),
 } tNeighborFlag;
 
+typedef struct tGatewayKind {
+	tTile eTileFront;
+	tVisTile eVisTileFirst;
+} tGatewayKind;
+
 //----------------------------------------------------------------- PRIVATE VARS
 
 static tInteraction s_pInteractions[MAP_INTERACTIONS_MAX];
@@ -49,6 +54,14 @@ static tTurret s_pTurrets[MAP_TURRETS_MAX];
 static UBYTE s_ubTurretCount;
 static UBYTE s_ubCurrentTurret;
 static tLevel s_sLoadedLevel;
+
+static const tGatewayKind s_pGatewayKinds[] = {
+	{.eTileFront = TILE_DOOR_CLOSED, .eVisTileFirst = VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP},
+	{.eTileFront = TILE_DOOR_OPEN, .eVisTileFirst = VIS_TILE_DOOR_LEFT_OPEN_WALL_TOP},
+	{.eTileFront = TILE_GRATE, .eVisTileFirst = VIS_TILE_GRATE_LEFT_WALL_TOP},
+	{.eTileFront = TILE_DEATH_FIELD, .eVisTileFirst = VIS_TILE_DEATH_FIELD_LEFT_WALL_TOP},
+};
+#define MAP_GATEWAY_KIND_COUNT (sizeof(s_pGatewayKinds) / sizeof(s_pGatewayKinds[0]))
 
 //------------------------------------------------------------ PRIVATE FUNCTIONS
 
@@ -258,6 +271,102 @@ static tNeighborFlag mapGetWallNeighborsOnLevel(
 	return eNeighbors;
 }
 
+
+static tVisTile mapCalculateVisTileForGatewayWallTiles(
+	tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY,
+	tTile eTile, tVisTile eVisTileFirst
+) {
+	tTile eTileLeft = pLevel->pTiles[ubTileX - 1][ubTileY];
+	tTile eTileRight = pLevel->pTiles[ubTileX + 1][ubTileY];
+	tTile eTileAbove = pLevel->pTiles[ubTileX][ubTileY - 1];
+	tTile eTileBelow = pLevel->pTiles[ubTileX][ubTileY + 1];
+
+	if(eTileAbove == eTile) {
+		return (eVisTileFirst + (
+			(ubTileX < MAP_TILE_WIDTH / 2) ?
+			VIS_TILE_DOOR_LEFT_CLOSED_WALL_BOTTOM :
+			VIS_TILE_DOOR_RIGHT_CLOSED_WALL_BOTTOM
+		) - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP);
+	}
+	if(eTileBelow == eTile) {
+		return (eVisTileFirst + (
+			(ubTileX < MAP_TILE_WIDTH / 2) ?
+			VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP :
+			VIS_TILE_DOOR_RIGHT_CLOSED_WALL_TOP
+		) - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP);
+	}
+	if(eTileLeft == eTile) {
+		return eVisTileFirst + VIS_TILE_DOOR_DOWN_CLOSED_WALL_RIGHT - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+	}
+	if(eTileRight == eTile) {
+		return eVisTileFirst + VIS_TILE_DOOR_DOWN_CLOSED_WALL_LEFT - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+	}
+
+	return VIS_TILE_BG_1;
+}
+
+static tVisTile mapCalculateVisTileForGatewayBgTiles(
+	tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY,
+	tTile eTile, tVisTile eVisTileFirst
+) {
+	tTile eTileBelow = pLevel->pTiles[ubTileX][ubTileY + 1];
+
+	if(eTileBelow == eTile) {
+		if(pLevel->pTiles[ubTileX - 1][ubTileY + 1] != eTile) {
+			return eVisTileFirst + VIS_TILE_DOOR_DOWN_CLOSED_TOP_LEFT - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+		}
+		if(pLevel->pTiles[ubTileX + 1][ubTileY + 1] != eTile) {
+			return eVisTileFirst + VIS_TILE_DOOR_DOWN_CLOSED_TOP_RIGHT - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+		}
+		return eVisTileFirst + VIS_TILE_DOOR_DOWN_CLOSED_TOP_MID - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+	}
+	return VIS_TILE_BG_1;
+}
+
+static tVisTile mapCalculateVisTileForGatewayFrontTiles(
+	tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY,
+	tTile eTile, tVisTile eVisTileFirst
+) {
+	tTile eTileLeft = pLevel->pTiles[ubTileX - 1][ubTileY];
+	tTile eTileRight = pLevel->pTiles[ubTileX + 1][ubTileY];
+	tTile eTileAbove = pLevel->pTiles[ubTileX][ubTileY - 1];
+	tTile eTileBelow = pLevel->pTiles[ubTileX][ubTileY + 1];
+
+	if(eTileLeft == eTile || eTileRight == eTile) {
+		// Horizontal gateway
+		if(eTileLeft != eTile) {
+			return eVisTileFirst + VIS_TILE_DOOR_DOWN_CLOSED_BOTTOM_LEFT - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+		}
+		if(eTileRight != eTile) {
+			return eVisTileFirst + VIS_TILE_DOOR_DOWN_CLOSED_BOTTOM_RIGHT - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+		}
+		return eVisTileFirst + VIS_TILE_DOOR_DOWN_CLOSED_BOTTOM_MID - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+	}
+	else {
+		// Vertical gateway
+		if(ubTileX < MAP_TILE_WIDTH / 2) {
+			if(eTileAbove != eTile) {
+				return eVisTileFirst + VIS_TILE_DOOR_LEFT_CLOSED_TOP - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+			}
+			if(eTileBelow != eTile) {
+				return eVisTileFirst + VIS_TILE_DOOR_LEFT_CLOSED_BOTTOM - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+			}
+			return eVisTileFirst + VIS_TILE_DOOR_LEFT_CLOSED_MID - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+		}
+		else {
+			if(eTileAbove != eTile) {
+				return eVisTileFirst + VIS_TILE_DOOR_RIGHT_CLOSED_TOP - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+			}
+			if(eTileBelow != eTile) {
+				return eVisTileFirst + VIS_TILE_DOOR_RIGHT_CLOSED_BOTTOM - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+			}
+			return eVisTileFirst + VIS_TILE_DOOR_RIGHT_CLOSED_MID - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP;
+		}
+	}
+
+	return VIS_TILE_BG_1;
+}
+
 static tVisTile mapCalculateVisTileOnLevel(
 	tLevel *pLevel, UBYTE ubTileX, UBYTE ubTileY
 ) {
@@ -270,7 +379,23 @@ static tVisTile mapCalculateVisTileOnLevel(
 
 	tNeighborFlag eNeighbors = mapGetWallNeighborsOnLevel(pLevel, ubTileX, ubTileY);
 	tTile eTile = pLevel->pTiles[ubTileX][ubTileY];
+	tTile eTileLeft = pLevel->pTiles[ubTileX - 1][ubTileY];
+	tTile eTileRight = pLevel->pTiles[ubTileX + 1][ubTileY];
+	// tTile eTileAbove = pLevel->pTiles[ubTileX][ubTileY - 1];
+	tTile eTileBelow = pLevel->pTiles[ubTileX][ubTileY + 1];
 	switch(eTile) {
+		case TILE_DOOR_CLOSED:
+		case TILE_DOOR_OPEN:
+		case TILE_GRATE:
+		case TILE_DEATH_FIELD:
+			for(UBYTE i = 0; i < MAP_GATEWAY_KIND_COUNT; ++i) {
+				if(s_pGatewayKinds[i].eTileFront == eTile) {
+					return mapCalculateVisTileForGatewayFrontTiles(
+						pLevel, ubTileX, ubTileY, eTile, s_pGatewayKinds[i].eVisTileFirst
+					);
+				}
+			}
+			break;
 		case TILE_BUTTON_A:
 		case TILE_BUTTON_B:
 		case TILE_BUTTON_C:
@@ -315,6 +440,16 @@ static tVisTile mapCalculateVisTileOnLevel(
 			}
 		} break;
 		case TILE_WALL: {
+			for(UBYTE i = 0; i < MAP_GATEWAY_KIND_COUNT; ++i) {
+				tVisTile eVisTile = mapCalculateVisTileForGatewayWallTiles(
+					pLevel, ubTileX, ubTileY,
+					s_pGatewayKinds[i].eTileFront, s_pGatewayKinds[i].eVisTileFirst
+				);
+				if(eVisTile != VIS_TILE_BG_1) {
+					return eVisTile;
+				}
+			}
+
 			static const UBYTE pWallLookup[256] = {
 				0,
 				[NEIGHBOR_FLAG_E | NEIGHBOR_FLAG_SE | NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W] = VIS_TILE_WALL_CONVEX_N,
@@ -353,11 +488,6 @@ static tVisTile mapCalculateVisTileOnLevel(
 			logWrite("Unhandled tile at %hhu,%hhu", ubTileX, ubTileY);
 		} break;
 		case TILE_BG: {
-			tTile eTileLeft = pLevel->pTiles[ubTileX - 1][ubTileY];
-			tTile eTileRight = pLevel->pTiles[ubTileX + 1][ubTileY];
-			// tTile eTileAbove = pLevel->pTiles[ubTileX][ubTileY - 1];
-			tTile eTileBelow = pLevel->pTiles[ubTileX][ubTileY + 1];
-
 			if(eTileLeft == TILE_EXIT) {
 				if(pLevel->pTiles[ubTileX - 1][ubTileY - 1] != TILE_EXIT) {
 					return VIS_TILE_EXIT_BG_LEFT_TOP;
@@ -376,6 +506,17 @@ static tVisTile mapCalculateVisTileOnLevel(
 				}
 				return VIS_TILE_EXIT_BG_RIGHT_MID;
 			}
+
+			for(UBYTE i = 0; i < MAP_GATEWAY_KIND_COUNT; ++i) {
+				tVisTile eVisTile = mapCalculateVisTileForGatewayBgTiles(
+					pLevel, ubTileX, ubTileY,
+					s_pGatewayKinds[i].eTileFront, s_pGatewayKinds[i].eVisTileFirst
+				);
+				if(eVisTile != VIS_TILE_BG_1) {
+					return eVisTile;
+				}
+			}
+
 			if(mapTileIsButton(eTileBelow)) {
 				if(ubTileX < MAP_TILE_WIDTH / 2) {
 					if(pLevel->pTiles[ubTileX + 1][ubTileY + 1] == eTileBelow) {
