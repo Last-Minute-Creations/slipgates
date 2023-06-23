@@ -169,8 +169,10 @@ static UBYTE mapProcessSpikes(void) {
 			for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
 				tUbCoordYX sSpikeCoord = g_sCurrentLevel.pSpikeTiles[i];
 				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = TILE_SPIKES_ON_FLOOR;
+				g_sCurrentLevel.pVisTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = VIS_TILE_SPIKES_ON_FLOOR_1;
 				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY);
 				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = TILE_SPIKES_ON_BG;
+				g_sCurrentLevel.pVisTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = VIS_TILE_SPIKES_ON_BG_1;
 				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY - 1);
 			}
 		}
@@ -178,8 +180,10 @@ static UBYTE mapProcessSpikes(void) {
 			for(UBYTE i = 0; i < g_sCurrentLevel.ubSpikeTilesCount; ++i) {
 				tUbCoordYX sSpikeCoord = g_sCurrentLevel.pSpikeTiles[i];
 				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = TILE_SPIKES_OFF_FLOOR;
+				g_sCurrentLevel.pVisTiles[sSpikeCoord.ubX][sSpikeCoord.ubY] = VIS_TILE_SPIKES_OFF_FLOOR_1;
 				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY);
 				g_sCurrentLevel.pTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = TILE_SPIKES_OFF_BG;
+				g_sCurrentLevel.pVisTiles[sSpikeCoord.ubX][sSpikeCoord.ubY - 1] = VIS_TILE_SPIKES_OFF_BG_1;
 				mapRequestTileDraw(sSpikeCoord.ubX, sSpikeCoord.ubY - 1);
 			}
 		}
@@ -597,6 +601,14 @@ static tVisTile mapCalculateVisTileOnLevel(
 			return VIS_TILE_TURRET_INACTIVE_LEFT;
 		case TILE_TURRET_INACTIVE_RIGHT:
 			return VIS_TILE_TURRET_INACTIVE_RIGHT;
+		case TILE_SPIKES_OFF_BG:
+			return VIS_TILE_SPIKES_OFF_BG_1;
+		case TILE_SPIKES_OFF_FLOOR:
+			return VIS_TILE_SPIKES_OFF_FLOOR_1;
+		case TILE_SPIKES_ON_BG:
+			return VIS_TILE_SPIKES_ON_BG_1;
+		case TILE_SPIKES_ON_FLOOR:
+			return VIS_TILE_SPIKES_ON_FLOOR_1;
 		default:
 			return VIS_TILE_BG_1;
 			break;
@@ -882,8 +894,18 @@ void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY) {
 
 	if(g_sCurrentLevel.ubSpikeTilesCount < MAP_SPIKES_TILES_MAX) {
 		g_sCurrentLevel.pSpikeTiles[g_sCurrentLevel.ubSpikeTilesCount++].uwYX = sPos.uwYX;
-		g_sCurrentLevel.pTiles[ubX][ubY] = s_isSpikeActive ? TILE_SPIKES_ON_FLOOR : TILE_SPIKES_OFF_FLOOR;
-		g_sCurrentLevel.pTiles[ubX][ubY - 1] = s_isSpikeActive ? TILE_SPIKES_ON_BG : TILE_SPIKES_OFF_BG;
+		if(s_isSpikeActive) {
+			g_sCurrentLevel.pTiles[ubX][ubY] = TILE_SPIKES_ON_FLOOR;
+			g_sCurrentLevel.pVisTiles[ubX][ubY] = VIS_TILE_SPIKES_OFF_FLOOR_1;
+			g_sCurrentLevel.pTiles[ubX][ubY - 1] = TILE_SPIKES_ON_BG;
+			g_sCurrentLevel.pVisTiles[ubX][ubY - 1] = VIS_TILE_SPIKES_OFF_BG_1;
+		}
+		else {
+			g_sCurrentLevel.pTiles[ubX][ubY] = TILE_SPIKES_OFF_FLOOR;
+			g_sCurrentLevel.pVisTiles[ubX][ubY] = VIS_TILE_SPIKES_ON_FLOOR_1;
+			g_sCurrentLevel.pTiles[ubX][ubY - 1] = TILE_SPIKES_OFF_BG;
+			g_sCurrentLevel.pVisTiles[ubX][ubY - 1] = VIS_TILE_SPIKES_ON_BG_1;
+		}
 	}
 }
 
