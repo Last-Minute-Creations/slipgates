@@ -33,6 +33,7 @@ General:
 	☐ Multi-bob character body
 	☐ Entrance tiles - exit to hub
 	☐ Bigger max velocity
+	☐ Turret shot frame
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Game flow:
@@ -58,8 +59,8 @@ Editor:
 		✔ Death fields @done(23-06-23 14:41)
 		✔ Opened doors @done(23-06-23 17:00)
 		✔ Spikes @done(23-06-23 17:26)
-		☐ Bouncers
-		☐ Slipgates
+		☐ Bouncer source and receiver
+		☐ Non-slipgatables
 
 Boxes:
 	✔ Generalize @done(23-05-26 20:26)
