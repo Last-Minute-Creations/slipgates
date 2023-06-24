@@ -430,6 +430,44 @@ static tVisTile mapCalculateVisTileOnLevel(
 				return VIS_TILE_RECEIVER_WALL_LEFT;
 			}
 			break;
+		case TILE_PIPE:
+			if(
+				eTileAbove == TILE_PIPE && eTileBelow == TILE_PIPE &&
+				eTileLeft == TILE_PIPE && eTileRight == TILE_PIPE
+			) {
+				return VIS_TILE_PIPE_NESW;
+			}
+			if(eTileAbove == TILE_PIPE && eTileBelow == TILE_PIPE) {
+				return VIS_TILE_PIPE_NS;
+			}
+			if(eTileLeft == TILE_PIPE && eTileRight == TILE_PIPE) {
+				return VIS_TILE_PIPE_EW;
+			}
+			if(eTileAbove == TILE_PIPE) {
+				if(eTileLeft == TILE_WALL_BLOCKED) {
+					return VIS_TILE_BLOCKED_WALL_PIPE_S;
+				}
+				return VIS_TILE_WALL_PIPE_S;
+			}
+			if(eTileBelow == TILE_PIPE) {
+				if(eTileLeft == TILE_WALL_BLOCKED) {
+					return VIS_TILE_BLOCKED_WALL_PIPE_N;
+				}
+				return VIS_TILE_WALL_PIPE_N;
+			}
+			if(eTileLeft == TILE_PIPE) {
+				if(eTileBelow == TILE_WALL_BLOCKED) {
+					return VIS_TILE_BLOCKED_WALL_PIPE_E;
+				}
+				return VIS_TILE_WALL_PIPE_E;
+			}
+			if(eTileRight == TILE_PIPE) {
+				if(eTileBelow == TILE_WALL_BLOCKED) {
+					return VIS_TILE_BLOCKED_WALL_PIPE_W;
+				}
+				return VIS_TILE_WALL_PIPE_W;
+			}
+			break;
 		case TILE_BUTTON_A:
 		case TILE_BUTTON_B:
 		case TILE_BUTTON_C:
@@ -549,6 +587,30 @@ static tVisTile mapCalculateVisTileOnLevel(
 			}
 			if(eTileRight == TILE_RECEIVER) {
 				return VIS_TILE_RECEIVER_BG_LEFT;
+			}
+			if(eTileAbove == TILE_PIPE) {
+				if(pLevel->pTiles[ubTileX - 1][ubTileY - 1] == TILE_WALL_BLOCKED) {
+					return VIS_TILE_BLOCKED_BG_PIPE_S;
+				}
+				return VIS_TILE_BG_PIPE_S;
+			}
+			if(eTileBelow == TILE_PIPE) {
+				if(pLevel->pTiles[ubTileX - 1][ubTileY + 1] == TILE_WALL_BLOCKED) {
+					return VIS_TILE_BLOCKED_BG_PIPE_N;
+				}
+				return VIS_TILE_BG_PIPE_N;
+			}
+			if(eTileLeft == TILE_PIPE) {
+				if(pLevel->pTiles[ubTileX - 1][ubTileY + 1] == TILE_WALL_BLOCKED) {
+					return VIS_TILE_BLOCKED_BG_PIPE_E;
+				}
+				return VIS_TILE_BG_PIPE_E;
+			}
+			if(eTileRight == TILE_PIPE) {
+				if(pLevel->pTiles[ubTileX + 1][ubTileY + 1] == TILE_WALL_BLOCKED) {
+					return VIS_TILE_BLOCKED_BG_PIPE_W;
+				}
+				return VIS_TILE_BG_PIPE_W;
 			}
 			if(eTileLeft == TILE_EXIT) {
 				if(pLevel->pTiles[ubTileX - 1][ubTileY - 1] != TILE_EXIT) {
@@ -1231,6 +1293,7 @@ UBYTE mapTileIsOnWall(tTile eTile) {
 		eTile == TILE_BUTTON_H ||
 		eTile == TILE_RECEIVER ||
 		eTile == TILE_BOUNCER_SPAWNER ||
+		eTile == TILE_PIPE ||
 		0
 	);
 }

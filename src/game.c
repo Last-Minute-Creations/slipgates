@@ -405,6 +405,10 @@ static void gameGsLoop(void) {
 		mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY, DIRECTION_RIGHT);
 		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
+	else if(keyUse(KEY_SEMICOLON)) {
+		*pTileUnderCursor = TILE_PIPE;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
+	}
 
 	for(UBYTE i = 0; i < MAP_USER_INTERACTIONS_MAX; ++i) {
 		static const UBYTE pInteractionKeys[] = {
