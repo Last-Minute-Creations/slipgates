@@ -329,7 +329,7 @@ static void gameGsLoop(void) {
 		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_C)) {
-		*pTileUnderCursor = TILE_WALL_NO_SLIPGATE;
+		*pTileUnderCursor = TILE_WALL_BLOCKED;
 		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_V)) {
@@ -389,7 +389,7 @@ static void gameGsLoop(void) {
 		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_L)) {
-		*pTileUnderCursor = TILE_SLIPGATABLE_OFF;
+		*pTileUnderCursor = TILE_WALL_TOGGLABLE_OFF;
 		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_K)) {
@@ -423,11 +423,11 @@ static void gameGsLoop(void) {
 				if(*pTileUnderCursor == TILE_DOOR_CLOSED) {
 					mapSetOrRemoveDoorInteractionAt(i, uwCursorTileX, uwCursorTileY);
 				}
-				else if(*pTileUnderCursor == TILE_SLIPGATABLE_OFF || *pTileUnderCursor == TILE_SLIPGATABLE_ON) {
+				else if(*pTileUnderCursor == TILE_WALL_TOGGLABLE_OFF || *pTileUnderCursor == TILE_WALL_TOGGLABLE_ON) {
 					interactionChangeOrRemoveTile(
 						pOldInteraction, pInteraction,
 						uwCursorTileX, uwCursorTileY, INTERACTION_KIND_SLIPGATABLE,
-						TILE_SLIPGATABLE_ON, TILE_SLIPGATABLE_OFF,
+						TILE_WALL_TOGGLABLE_ON, TILE_WALL_TOGGLABLE_OFF,
 						VIS_TILE_SLIPGATABLE_ON_1, VIS_TILE_SLIPGATABLE_OFF_1
 					);
 				}

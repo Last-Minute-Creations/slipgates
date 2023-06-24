@@ -473,7 +473,8 @@ static tVisTile mapCalculateVisTileOnLevel(
 				return VIS_TILE_EXIT_WALL_RIGHT_MID;
 			}
 		} break;
-		case TILE_WALL: {
+		case TILE_WALL:
+		case TILE_WALL_BLOCKED: {
 			for(UBYTE i = 0; i < MAP_GATEWAY_KIND_COUNT; ++i) {
 				tVisTile eVisTile = mapCalculateVisTileForGatewayWallTiles(
 					pLevel, ubTileX, ubTileY,
@@ -516,6 +517,9 @@ static tVisTile mapCalculateVisTileOnLevel(
 				[NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_SW | NEIGHBOR_FLAG_W | NEIGHBOR_FLAG_NW | NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_NE | NEIGHBOR_FLAG_E] = VIS_TILE_WALL_CONCAVE_NW,
 			};
 			if(pWallLookup[eNeighbors] != 0) {
+				if(eTile == TILE_WALL_BLOCKED) {
+					return pWallLookup[eNeighbors] + VIS_TILE_BLOCKED_WALL_CONVEX_N - VIS_TILE_WALL_CONVEX_N;
+				}
 				return pWallLookup[eNeighbors];
 			}
 
@@ -588,7 +592,6 @@ static tVisTile mapCalculateVisTileOnLevel(
 					}
 					return VIS_TILE_BUTTON_BG_RIGHT_2;
 				}
-
 			}
 
 			static const UBYTE pBgLookup[256] = {
@@ -642,6 +645,24 @@ static tVisTile mapCalculateVisTileOnLevel(
 			};
 
 			if(pBgLookup[eNeighbors] != 0) {
+				if(
+					eTileAbove == TILE_WALL_BLOCKED || eTileBelow == TILE_WALL_BLOCKED ||
+					eTileLeft == TILE_WALL_BLOCKED || eTileRight == TILE_WALL_BLOCKED || (
+						(
+							eNeighbors & (
+								NEIGHBOR_FLAG_N | NEIGHBOR_FLAG_E |
+								NEIGHBOR_FLAG_S | NEIGHBOR_FLAG_W
+							)
+						) == 0 && (
+							pLevel->pTiles[ubTileX - 1][ubTileY - 1] == TILE_WALL_BLOCKED ||
+							pLevel->pTiles[ubTileX - 1][ubTileY + 1] == TILE_WALL_BLOCKED ||
+							pLevel->pTiles[ubTileX + 1][ubTileY - 1] == TILE_WALL_BLOCKED ||
+							pLevel->pTiles[ubTileX + 1][ubTileY + 1] == TILE_WALL_BLOCKED
+						)
+					)
+				) {
+					return pBgLookup[eNeighbors] + VIS_TILE_BLOCKED_BG_CONVEX_N - VIS_TILE_BG_CONVEX_N;
+				}
 				return pBgLookup[eNeighbors];
 			}
 		} break;
@@ -1196,7 +1217,7 @@ UBYTE mapTileIsOnWall(tTile eTile) {
 	return (
 		eTile == TILE_SLIPGATE_A ||
 		eTile == TILE_SLIPGATE_B ||
-		eTile == TILE_WALL_NO_SLIPGATE ||
+		eTile == TILE_WALL_BLOCKED ||
 		eTile == TILE_WALL ||
 		eTile == TILE_SPIKES_OFF_FLOOR ||
 		eTile == TILE_SPIKES_ON_FLOOR ||
