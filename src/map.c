@@ -387,7 +387,7 @@ static tVisTile mapCalculateVisTileOnLevel(
 	tTile eTile = pLevel->pTiles[ubTileX][ubTileY];
 	tTile eTileLeft = pLevel->pTiles[ubTileX - 1][ubTileY];
 	tTile eTileRight = pLevel->pTiles[ubTileX + 1][ubTileY];
-	// tTile eTileAbove = pLevel->pTiles[ubTileX][ubTileY - 1];
+	tTile eTileAbove = pLevel->pTiles[ubTileX][ubTileY - 1];
 	tTile eTileBelow = pLevel->pTiles[ubTileX][ubTileY + 1];
 	switch(eTile) {
 		case TILE_DOOR_CLOSED:
@@ -400,6 +400,34 @@ static tVisTile mapCalculateVisTileOnLevel(
 						pLevel, ubTileX, ubTileY, eTile, s_pGatewayKinds[i].eVisTileFirst
 					);
 				}
+			}
+			break;
+		case TILE_BOUNCER_SPAWNER:
+			if((eNeighbors & NEIGHBOR_FLAG_S) == 0) {
+				return VIS_TILE_BOUNCER_SPAWNER_WALL_DOWN;
+			}
+			if((eNeighbors & NEIGHBOR_FLAG_N) == 0) {
+				return VIS_TILE_BOUNCER_SPAWNER_WALL_UP;
+			}
+			if((eNeighbors & NEIGHBOR_FLAG_E) == 0) {
+				return VIS_TILE_BOUNCER_SPAWNER_WALL_RIGHT;
+			}
+			if((eNeighbors & NEIGHBOR_FLAG_W) == 0) {
+				return VIS_TILE_BOUNCER_SPAWNER_WALL_LEFT;
+			}
+			break;
+		case TILE_RECEIVER:
+			if((eNeighbors & NEIGHBOR_FLAG_S) == 0) {
+				return VIS_TILE_RECEIVER_WALL_DOWN;
+			}
+			if((eNeighbors & NEIGHBOR_FLAG_N) == 0) {
+				return VIS_TILE_RECEIVER_WALL_UP;
+			}
+			if((eNeighbors & NEIGHBOR_FLAG_E) == 0) {
+				return VIS_TILE_RECEIVER_WALL_RIGHT;
+			}
+			if((eNeighbors & NEIGHBOR_FLAG_W) == 0) {
+				return VIS_TILE_RECEIVER_WALL_LEFT;
 			}
 			break;
 		case TILE_BUTTON_A:
@@ -494,6 +522,30 @@ static tVisTile mapCalculateVisTileOnLevel(
 			logWrite("Unhandled tile at %hhu,%hhu", ubTileX, ubTileY);
 		} break;
 		case TILE_BG: {
+			if(eTileAbove == TILE_BOUNCER_SPAWNER) {
+				return VIS_TILE_BOUNCER_SPAWNER_BG_DOWN;
+			}
+			if(eTileBelow == TILE_BOUNCER_SPAWNER) {
+				return VIS_TILE_BOUNCER_SPAWNER_BG_UP;
+			}
+			if(eTileLeft == TILE_BOUNCER_SPAWNER) {
+				return VIS_TILE_BOUNCER_SPAWNER_BG_RIGHT;
+			}
+			if(eTileRight == TILE_BOUNCER_SPAWNER) {
+				return VIS_TILE_BOUNCER_SPAWNER_BG_LEFT;
+			}
+			if(eTileAbove == TILE_RECEIVER) {
+				return VIS_TILE_RECEIVER_BG_DOWN;
+			}
+			if(eTileBelow == TILE_RECEIVER) {
+				return VIS_TILE_RECEIVER_BG_UP;
+			}
+			if(eTileLeft == TILE_RECEIVER) {
+				return VIS_TILE_RECEIVER_BG_RIGHT;
+			}
+			if(eTileRight == TILE_RECEIVER) {
+				return VIS_TILE_RECEIVER_BG_LEFT;
+			}
 			if(eTileLeft == TILE_EXIT) {
 				if(pLevel->pTiles[ubTileX - 1][ubTileY - 1] != TILE_EXIT) {
 					return VIS_TILE_EXIT_BG_LEFT_TOP;
@@ -1156,6 +1208,8 @@ UBYTE mapTileIsOnWall(tTile eTile) {
 		eTile == TILE_BUTTON_F ||
 		eTile == TILE_BUTTON_G ||
 		eTile == TILE_BUTTON_H ||
+		eTile == TILE_RECEIVER ||
+		eTile == TILE_BOUNCER_SPAWNER ||
 		0
 	);
 }
