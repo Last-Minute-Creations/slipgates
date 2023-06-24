@@ -30,7 +30,6 @@
 #define BUFFER_BYTE_WIDTH (MAP_TILE_WIDTH * MAP_TILE_SIZE / 8)
 
 // DEBUG SWITCHES
-// #define GAME_DRAW_GRID
 #define GAME_EDITOR_ENABLED
 
 typedef enum tExitState {
@@ -55,6 +54,7 @@ static BYTE s_bHubActiveDoors;
 static UBYTE s_ubHubLevelTens;
 static UBYTE s_ubUnlockedLevels;
 static UWORD s_uwPrevButtonPresses;
+static UBYTE s_isDrawGrid;
 
 // static char s_szPosX[13];
 // static char s_szPosY[13];
@@ -208,6 +208,15 @@ static void hubProcess(void) {
 	}
 }
 
+static void gameToggleGrid(void) {
+	s_isDrawGrid = !s_isDrawGrid;
+	for(UBYTE ubTileX = 0; ubTileX < MAP_TILE_WIDTH; ++ubTileX) {
+		for(UBYTE ubTileY = 0; ubTileY < MAP_TILE_HEIGHT; ++ubTileY) {
+			mapRequestTileDraw(ubTileX, ubTileY);
+		}
+	}
+}
+
 static void gameGsCreate(void) {
 	gameMathInit();
 
@@ -260,6 +269,7 @@ static void gameGsCreate(void) {
 	spriteProcessChannel(0);
 	mouseSetBounds(MOUSE_PORT_1, 0, 0, SCREEN_PAL_WIDTH - 16, SCREEN_PAL_HEIGHT - 27);
 
+	s_isDrawGrid = 0;
 	s_ubCurrentLevelIndex = 255;
 	s_ubUnlockedLevels = 1;
 	tFile *pFile = fileOpen("save.dat", "rb");
@@ -302,6 +312,9 @@ static void gameGsLoop(void) {
 				break;
 			}
 		}
+	}
+	if(keyUse(KEY_RBRACKET)) {
+		gameToggleGrid();
 	}
 
  	bobBegin(s_pBufferMain->pBack);
@@ -613,16 +626,16 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	}
 #endif
 
-#if defined(GAME_DRAW_GRID)
-	blitLine(
-		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
-	);
-	blitLine(
-		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
-	);
-#endif
+	if(s_isDrawGrid) {
+		blitLine(
+			s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+			(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
+		);
+		blitLine(
+			s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+			ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
+		);
+	}
 }
 
 tUwCoordYX gameGetCrossPosition(void) {
