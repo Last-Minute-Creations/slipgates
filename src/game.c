@@ -28,9 +28,21 @@
 // Hardcoded bitmap widths to prevent runtime multiplications
 #define TILESET_BYTE_WIDTH (16 / 8)
 #define BUFFER_BYTE_WIDTH (MAP_TILE_WIDTH * MAP_TILE_SIZE / 8)
+#define SLIPGATE_FRAME_VERTICAL 0
+#define SLIPGATE_FRAME_HORIZONTAL 1
+#define SLIPGATE_FRAME_COUNT 2
+#define SLIPGATE_A 0
+#define SLIPGATE_B 1
+#define SLIPGATE_COUNT 2
 
 // DEBUG SWITCHES
 #define GAME_EDITOR_ENABLED
+
+typedef struct tSlipgateDirectionFrameData {
+	UBYTE *pFrames[SLIPGATE_COUNT];
+	UBYTE *pMask;
+	UWORD uwHeight;
+} tSlipgateDirectionFrameData;
 
 typedef enum tExitState {
 	EXIT_NONE,
@@ -46,6 +58,7 @@ static tPlayer s_sPlayer;
 static tBodyBox s_pBoxBodies[MAP_BOXES_MAX];
 static tSprite *s_pSpriteCrosshair;
 static tTextBitMap *s_pTextBuffer;
+static tBob s_sBobSlipgate;
 
 static UWORD s_uwGameFrame;
 static UBYTE s_ubCurrentLevelIndex;
@@ -55,6 +68,14 @@ static UBYTE s_ubHubLevelTens;
 static UBYTE s_ubUnlockedLevels;
 static UWORD s_uwPrevButtonPresses;
 static UBYTE s_isDrawGrid;
+static tSlipgateDirectionFrameData s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_COUNT];
+
+static const tBCoordYX s_pSlipgateOffsets[DIRECTION_COUNT] = {
+	[DIRECTION_LEFT] = {.bX = -2, .bY = 0},
+	[DIRECTION_RIGHT] = {.bX = 5, .bY = 0},
+	[DIRECTION_UP] = {.bX = 0, .bY = -2},
+	[DIRECTION_DOWN] = {.bX = 0, .bY = 6},
+};
 
 // static char s_szPosX[13];
 // static char s_szPosY[13];
@@ -250,6 +271,19 @@ static void gameGsCreate(void) {
 		&s_sPlayer.sBody.sBob, 16, 16, 1,
 		g_pPlayerFrames->Planes[0], g_pPlayerMasks->Planes[0], 0, 0
 	);
+
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_VERTICAL].pFrames[SLIPGATE_A] = bobCalcFrameAddress(g_pSlipgateFramesA, 0);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_VERTICAL].pFrames[SLIPGATE_B] = bobCalcFrameAddress(g_pSlipgateFramesB, 0);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_VERTICAL].pMask = bobCalcFrameAddress(g_pSlipgateMasks, 0);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_VERTICAL].uwHeight = 16;
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_HORIZONTAL].pFrames[SLIPGATE_A] = bobCalcFrameAddress(g_pSlipgateFramesA, 16);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_HORIZONTAL].pFrames[SLIPGATE_B] = bobCalcFrameAddress(g_pSlipgateFramesB, 16);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_HORIZONTAL].pMask = bobCalcFrameAddress(g_pSlipgateMasks, 16);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_HORIZONTAL].uwHeight = 4;
+	bobInit(
+		&s_sBobSlipgate, 16, 16, 0, 0, 0, 0, 0
+	);
+
 	for(UBYTE i = 0; i < MAP_BOXES_MAX; ++i) {
 		bobInit(
 			&s_pBoxBodies[i].sBob, 16, 8, 1,
@@ -687,6 +721,16 @@ void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY) {
 		s_ubCurrentLevelIndex = s_ubHubLevelTens + ubHubLevelOnes - 1;
 	}
 	s_eExitState = EXIT_NEXT;
+}
+
+void gameDrawSlipgate(UBYTE ubIndex) {
+	UBYTE ubFrame = (g_pSlipgates[ubIndex].eNormal < DIRECTION_LEFT);
+	s_sBobSlipgate.pFrameData = s_pSlipgateDirectionFrameData[ubFrame].pFrames[ubIndex];
+	s_sBobSlipgate.pMaskData = s_pSlipgateDirectionFrameData[ubFrame].pMask;
+	s_sBobSlipgate.sPos.uwX = g_pSlipgates[ubIndex].sTilePositions[0].ubX * MAP_TILE_SIZE + s_pSlipgateOffsets[g_pSlipgates[ubIndex].eNormal].bX;
+	s_sBobSlipgate.sPos.uwY = g_pSlipgates[ubIndex].sTilePositions[0].ubY * MAP_TILE_SIZE + s_pSlipgateOffsets[g_pSlipgates[ubIndex].eNormal].bY;
+	bobSetHeight(&s_sBobSlipgate, s_pSlipgateDirectionFrameData[ubFrame].uwHeight);
+	bobPush(&s_sBobSlipgate);
 }
 
 tPlayer *gameGetPlayer(void) {

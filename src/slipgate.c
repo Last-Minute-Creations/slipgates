@@ -6,7 +6,7 @@
 
 UBYTE slipgateIsOccupyingTile(const tSlipgate *pSlipgate, tUbCoordYX sPos) {
 	return (
-		pSlipgate->sTilePos.uwYX == sPos.uwYX ||
-		pSlipgate->sTilePosOther.uwYX == sPos.uwYX
+		pSlipgate->sTilePositions[0].uwYX == sPos.uwYX ||
+		pSlipgate->sTilePositions[1].uwYX == sPos.uwYX
 	);
 }

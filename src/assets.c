@@ -13,6 +13,9 @@ void assetsGameCreate(void) {
 	g_pBoxMasks = bitmapCreateFromFile("data/box_mask.bm", 0);
 	g_pBouncerFrames = bitmapCreateFromFile("data/bouncer.bm", 0);
 	g_pBouncerMasks = bitmapCreateFromFile("data/bouncer_mask.bm", 0);
+	g_pSlipgateFramesA = bitmapCreateFromFile("data/slipgate_a.bm", 0);
+	g_pSlipgateFramesB = bitmapCreateFromFile("data/slipgate_b.bm", 0);
+	g_pSlipgateMasks = bitmapCreateFromFile("data/slipgates_mask.bm", 0);
 	g_pBmCursor = bitmapCreateFromFile("data/cursor.bm", 0);
 	g_pBmTiles = bitmapCreateFromFile("data/tiles.bm", 0);
 
@@ -28,6 +31,9 @@ void assetsGameDestroy(void) {
 	bitmapDestroy(g_pBoxMasks);
 	bitmapDestroy(g_pBouncerFrames);
 	bitmapDestroy(g_pBouncerMasks);
+	bitmapDestroy(g_pSlipgateFramesA);
+	bitmapDestroy(g_pSlipgateFramesB);
+	bitmapDestroy(g_pSlipgateMasks);
 	bitmapDestroy(g_pBmCursor);
 	bitmapDestroy(g_pBmTiles);
 
@@ -43,6 +49,9 @@ tBitMap *g_pBoxFrames;
 tBitMap *g_pBoxMasks;
 tBitMap *g_pBouncerFrames;
 tBitMap *g_pBouncerMasks;
+tBitMap *g_pSlipgateFramesA;
+tBitMap *g_pSlipgateFramesB;
+tBitMap *g_pSlipgateMasks;
 tBitMap *g_pBmCursor;
 tBitMap *g_pBmTiles;
 tFont *g_pFont;

@@ -28,8 +28,9 @@ General:
 	✔ Bitmap-based tiles @done(23-06-08 14:24)
 	✔ Increase precision of trig tables for better aiming accuracy @done(23-06-09 21:50)
 	✔ Increase tracer precision around 0/90/180/270 angles @done(23-06-10 08:26)
-	☐ Increase tracer precision in steep angles, e.g. shooting floor on the ground
-	☐ Show where portal will be opened? Realtime tracing
+	✔ Bob-based slipgates @done(23-06-25 10:54)
+	☐ Increase tracer precision in steep angles, e.g. shooting floor on the ground (high-precision sin() for generating tables?)
+	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
 	☐ Entrance tiles - exit to hub
 	☐ Bigger max velocity
@@ -38,8 +39,8 @@ General:
 
 Game flow:
 	✔ Faster map restarts without file reload @done(23-06-13 18:39)
-	☐ Menu
 	✔ Level selection hub @done(23-06-16 22:24)
+	☐ Menu
 	☐ Fade during loadings
 	☐ Attract mode?
 	☐ Intro/outro screen

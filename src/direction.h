@@ -7,6 +7,7 @@ typedef enum tDirection {
 	DIRECTION_DOWN,
 	DIRECTION_LEFT,
 	DIRECTION_RIGHT,
+	DIRECTION_COUNT
 } tDirection;
 
 #endif // SLIPGATES_DIRECTION_H
