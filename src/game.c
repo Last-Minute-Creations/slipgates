@@ -335,7 +335,7 @@ static void gameGsLoop(void) {
 		return;
 	}
 	else {
-		for(UBYTE i = 0; i < 4; ++i) {
+		for(UBYTE i = 0; i < 10; ++i) {
 			if(keyUse(KEY_F1 + i)) {
 				if(keyCheck(KEY_CONTROL)) {
 					saveLevel(1 + i);

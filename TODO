@@ -35,6 +35,7 @@ General:
 	☐ Entrance tiles - exit to hub
 	☐ Bigger max velocity
 	☐ Turret shot frame
+	☐ Prevent spawning slipgates around the edges
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Game flow:
