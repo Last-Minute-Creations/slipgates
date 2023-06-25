@@ -6,6 +6,7 @@
 #define SLIPGATES_MAP_H
 
 #include <fixmath/fix16.h>
+#include "vis_tile.h"
 #include "slipgate.h"
 #include "interaction.h"
 
@@ -20,6 +21,7 @@
 #define MAP_SPIKES_TILES_MAX 10
 #define MAP_STORY_TEXT_MAX 200
 #define MAP_INDEX_HUB 100
+#define MAP_BOUNCER_BUTTON_INDEX 6
 
 typedef struct tFix16Coord {
 	fix16_t fX;
@@ -34,6 +36,7 @@ typedef struct tTurretSpawn {
 typedef struct tLevel {
 	tFix16Coord sSpawnPos;
 	tTile pTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
+	tVisTile pVisTiles[MAP_TILE_WIDTH][MAP_TILE_HEIGHT]; // x,y
 	tFix16Coord pBoxSpawns[MAP_BOXES_MAX];
 	tUbCoordYX pSpikeTiles[MAP_SPIKES_TILES_MAX];
 	tTurretSpawn pTurretSpawns[MAP_TURRETS_MAX];
@@ -64,7 +67,9 @@ UWORD mapGetButtonPresses(void);
 
 void mapDisableTurretAt(UBYTE ubX, UBYTE ubY);
 
-void mapRequestTileDraw(UBYTE ubX, UBYTE ubY);
+void mapRequestTileDraw(UBYTE ubTileX, UBYTE ubTileY);
+
+void mapRecalculateVisTilesNearTileAt(UBYTE ubTileX, UBYTE ubTileY);
 
 //----------------------------------------------------------------------- EDITOR
 
@@ -78,7 +83,13 @@ tInteraction *mapGetInteractionByIndex(UBYTE ubInteractionIndex);
 
 tInteraction *mapGetInteractionByTile(UBYTE ubTileX, UBYTE ubTileY);
 
+void mapSetOrRemoveDoorInteractionAt(
+	UBYTE ubInteractionIndex, UBYTE ubTileX, UBYTE ubTileY
+);
+
 //----------------------------------------------------------------- MAP CHECKERS
+
+tVisTile mapGetVisTileAt(UBYTE ubTileX, UBYTE ubTileY);
 
 tTile mapGetTileAt(UBYTE ubTileX, UBYTE ubTileY);
 
@@ -109,6 +120,9 @@ UBYTE mapTileIsExit(tTile eTile);
 UBYTE mapTileIsButton(tTile eTile);
 
 UBYTE mapTileIsActiveTurret(tTile eTile);
+
+// SLOW!
+UBYTE mapTileIsOnWall(tTile eTile);
 
 //-------------------------------------------------------------------- SLIPGATES
 

@@ -22,6 +22,8 @@ tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY);
 
 void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY);
 
+void gameDrawSlipgate(UBYTE ubIndex);
+
 tPlayer *gameGetPlayer(void);
 
 tSimpleBufferManager *gameGetBuffer(void);

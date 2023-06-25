@@ -28,10 +28,21 @@
 // Hardcoded bitmap widths to prevent runtime multiplications
 #define TILESET_BYTE_WIDTH (16 / 8)
 #define BUFFER_BYTE_WIDTH (MAP_TILE_WIDTH * MAP_TILE_SIZE / 8)
+#define SLIPGATE_FRAME_VERTICAL 0
+#define SLIPGATE_FRAME_HORIZONTAL 1
+#define SLIPGATE_FRAME_COUNT 2
+#define SLIPGATE_A 0
+#define SLIPGATE_B 1
+#define SLIPGATE_COUNT 2
 
 // DEBUG SWITCHES
-// #define GAME_DRAW_GRID
 #define GAME_EDITOR_ENABLED
+
+typedef struct tSlipgateDirectionFrameData {
+	UBYTE *pFrames[SLIPGATE_COUNT];
+	UBYTE *pMask;
+	UWORD uwHeight;
+} tSlipgateDirectionFrameData;
 
 typedef enum tExitState {
 	EXIT_NONE,
@@ -47,6 +58,7 @@ static tPlayer s_sPlayer;
 static tBodyBox s_pBoxBodies[MAP_BOXES_MAX];
 static tSprite *s_pSpriteCrosshair;
 static tTextBitMap *s_pTextBuffer;
+static tBob s_sBobSlipgate;
 
 static UWORD s_uwGameFrame;
 static UBYTE s_ubCurrentLevelIndex;
@@ -55,6 +67,15 @@ static BYTE s_bHubActiveDoors;
 static UBYTE s_ubHubLevelTens;
 static UBYTE s_ubUnlockedLevels;
 static UWORD s_uwPrevButtonPresses;
+static UBYTE s_isDrawGrid;
+static tSlipgateDirectionFrameData s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_COUNT];
+
+static const tBCoordYX s_pSlipgateOffsets[DIRECTION_COUNT] = {
+	[DIRECTION_LEFT] = {.bX = -2, .bY = 0},
+	[DIRECTION_RIGHT] = {.bX = 5, .bY = 0},
+	[DIRECTION_UP] = {.bX = 0, .bY = -2},
+	[DIRECTION_DOWN] = {.bX = 0, .bY = 6},
+};
 
 // static char s_szPosX[13];
 // static char s_szPosY[13];
@@ -80,7 +101,7 @@ static void drawMap(void) {
 	);
 }
 
-static void gameDrawInteractionTiles(const tInteraction *pInteraction) {
+static void gameRequestInteractionTilesDraw(const tInteraction *pInteraction) {
 	for(UBYTE i = 0; i < pInteraction->ubTargetCount; ++i) {
 		mapRequestTileDraw(
 			pInteraction->pTargetTiles[i].sPos.ubX,
@@ -208,6 +229,15 @@ static void hubProcess(void) {
 	}
 }
 
+static void gameToggleGrid(void) {
+	s_isDrawGrid = !s_isDrawGrid;
+	for(UBYTE ubTileX = 0; ubTileX < MAP_TILE_WIDTH; ++ubTileX) {
+		for(UBYTE ubTileY = 0; ubTileY < MAP_TILE_HEIGHT; ++ubTileY) {
+			mapRequestTileDraw(ubTileX, ubTileY);
+		}
+	}
+}
+
 static void gameGsCreate(void) {
 	gameMathInit();
 
@@ -241,6 +271,19 @@ static void gameGsCreate(void) {
 		&s_sPlayer.sBody.sBob, 16, 16, 1,
 		g_pPlayerFrames->Planes[0], g_pPlayerMasks->Planes[0], 0, 0
 	);
+
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_VERTICAL].pFrames[SLIPGATE_A] = bobCalcFrameAddress(g_pSlipgateFramesA, 0);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_VERTICAL].pFrames[SLIPGATE_B] = bobCalcFrameAddress(g_pSlipgateFramesB, 0);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_VERTICAL].pMask = bobCalcFrameAddress(g_pSlipgateMasks, 0);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_VERTICAL].uwHeight = 16;
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_HORIZONTAL].pFrames[SLIPGATE_A] = bobCalcFrameAddress(g_pSlipgateFramesA, 16);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_HORIZONTAL].pFrames[SLIPGATE_B] = bobCalcFrameAddress(g_pSlipgateFramesB, 16);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_HORIZONTAL].pMask = bobCalcFrameAddress(g_pSlipgateMasks, 16);
+	s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_HORIZONTAL].uwHeight = 4;
+	bobInit(
+		&s_sBobSlipgate, 16, 16, 0, 0, 0, 0, 0
+	);
+
 	for(UBYTE i = 0; i < MAP_BOXES_MAX; ++i) {
 		bobInit(
 			&s_pBoxBodies[i].sBob, 16, 8, 1,
@@ -260,6 +303,7 @@ static void gameGsCreate(void) {
 	spriteProcessChannel(0);
 	mouseSetBounds(MOUSE_PORT_1, 0, 0, SCREEN_PAL_WIDTH - 16, SCREEN_PAL_HEIGHT - 27);
 
+	s_isDrawGrid = 0;
 	s_ubCurrentLevelIndex = 255;
 	s_ubUnlockedLevels = 1;
 	tFile *pFile = fileOpen("save.dat", "rb");
@@ -303,6 +347,9 @@ static void gameGsLoop(void) {
 			}
 		}
 	}
+	if(keyUse(KEY_RBRACKET)) {
+		gameToggleGrid();
+	}
 
  	bobBegin(s_pBufferMain->pBack);
 
@@ -321,59 +368,59 @@ static void gameGsLoop(void) {
 	UWORD uwCursorTileY = sPosCross.uwY / MAP_TILE_SIZE;
 	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[uwCursorTileX][uwCursorTileY];
 	if(keyCheck(KEY_Z)) {
-		*pTileUnderCursor = TILE_BG_1;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		*pTileUnderCursor = TILE_BG;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_X)) {
-		*pTileUnderCursor = TILE_WALL_1;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		*pTileUnderCursor = TILE_WALL;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_C)) {
-		*pTileUnderCursor = TILE_WALL_NO_SLIPGATE_1;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		*pTileUnderCursor = TILE_WALL_BLOCKED;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_V)) {
-		*pTileUnderCursor = TILE_FORCE_FIELD_1;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		*pTileUnderCursor = TILE_GRATE;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_B)) {
-		*pTileUnderCursor = TILE_DEATH_FIELD_1;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		*pTileUnderCursor = TILE_DEATH_FIELD;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_N)) {
-		*pTileUnderCursor = TILE_EXIT_1;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		*pTileUnderCursor = TILE_EXIT;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_M)) {
 		if(mapTileIsButton(*pTileUnderCursor)) {
 			if(keyUse(KEY_M)) {
-				if(*pTileUnderCursor == TILE_BUTTON_8) {
-					*pTileUnderCursor = TILE_BUTTON_1;
+				if(*pTileUnderCursor == TILE_BUTTON_H) {
+					*pTileUnderCursor = TILE_BUTTON_A;
 				}
 				else {
 					++*pTileUnderCursor;
 				}
-				mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 			}
 		}
 		else {
 			keyUse(KEY_M); // prevent double-processing of same tile
-			*pTileUnderCursor = TILE_BUTTON_1;
-			mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+			*pTileUnderCursor = TILE_BUTTON_A;
+			mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 		}
 	}
 	else if(keyCheck(KEY_COMMA)) {
-		*pTileUnderCursor = TILE_GATE_CLOSED_1;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		*pTileUnderCursor = TILE_DOOR_CLOSED;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_PERIOD)) {
 		*pTileUnderCursor = TILE_RECEIVER;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_SLASH)) {
 		if(g_sCurrentLevel.ubBouncerSpawnerTileX != BOUNCER_TILE_INVALID) {
-			g_sCurrentLevel.pTiles[g_sCurrentLevel.ubBouncerSpawnerTileX][g_sCurrentLevel.ubBouncerSpawnerTileY] = TILE_WALL_1;
-			mapRequestTileDraw(
+			g_sCurrentLevel.pTiles[g_sCurrentLevel.ubBouncerSpawnerTileX][g_sCurrentLevel.ubBouncerSpawnerTileY] = TILE_WALL;
+			mapRecalculateVisTilesNearTileAt(
 				g_sCurrentLevel.ubBouncerSpawnerTileX,
 				g_sCurrentLevel.ubBouncerSpawnerTileY
 			);
@@ -386,56 +433,56 @@ static void gameGsLoop(void) {
 			g_sCurrentLevel.ubBouncerSpawnerTileX,
 			g_sCurrentLevel.ubBouncerSpawnerTileY
 		);
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyCheck(KEY_L)) {
-		*pTileUnderCursor = TILE_SLIPGATABLE_OFF_1;
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		*pTileUnderCursor = TILE_WALL_TOGGLABLE_OFF;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_K)) {
 		mapAddOrRemoveSpikeTile(uwCursorTileX, uwCursorTileY);
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY - 1);
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY - 1);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_H)) {
 		mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY, DIRECTION_LEFT);
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 	else if(keyUse(KEY_J)) {
 		mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY, DIRECTION_RIGHT);
-		mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
+	}
+	else if(keyUse(KEY_SEMICOLON)) {
+		*pTileUnderCursor = TILE_PIPE;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 
 	for(UBYTE i = 0; i < MAP_USER_INTERACTIONS_MAX; ++i) {
-		static const UBYTE pInteractionKeys[] = {KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_EQUALS, KEY_BACKSPACE, KEY_RETURN};
+		static const UBYTE pInteractionKeys[] = {
+			KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0,
+			KEY_MINUS, KEY_EQUALS, KEY_BACKSPACE, KEY_RETURN
+		};
 		if(keyUse(pInteractionKeys[i])) {
 			if(keyCheck(KEY_CONTROL)) {
-				// Remove tile from current interaction if it's already assigned
 				tInteraction *pOldInteraction = mapGetInteractionByTile(uwCursorTileX, uwCursorTileY);
+				tInteraction *pInteraction = mapGetInteractionByIndex(i);
+
 				if(pOldInteraction) {
-					interactionAddOrRemoveTile(
-						pOldInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
-						TILE_GATE_OPEN_1, TILE_GATE_CLOSED_1
-					);
+					gameRequestInteractionTilesDraw(pOldInteraction);
 				}
 
-				// Reassign to interaction group if other
-				tInteraction *pInteraction = mapGetInteractionByIndex(i);
-				if(pInteraction && pInteraction != pOldInteraction) {
-					if(*pTileUnderCursor == TILE_GATE_OPEN_1 || *pTileUnderCursor == TILE_GATE_CLOSED_1) {
-						interactionAddOrRemoveTile(
-							pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_GATE,
-							TILE_GATE_OPEN_1, TILE_GATE_CLOSED_1
-						);
-					}
-					else if(*pTileUnderCursor == TILE_SLIPGATABLE_OFF_1 || *pTileUnderCursor == TILE_SLIPGATABLE_ON_1) {
-						interactionAddOrRemoveTile(
-							pInteraction, uwCursorTileX, uwCursorTileY, INTERACTION_KIND_SLIPGATABLE,
-							TILE_SLIPGATABLE_ON_1, TILE_SLIPGATABLE_OFF_1
-						);
-					}
-					gameDrawInteractionTiles(pInteraction);
+				if(*pTileUnderCursor == TILE_DOOR_CLOSED) {
+					mapSetOrRemoveDoorInteractionAt(i, uwCursorTileX, uwCursorTileY);
 				}
+				else if(*pTileUnderCursor == TILE_WALL_TOGGLABLE_OFF || *pTileUnderCursor == TILE_WALL_TOGGLABLE_ON) {
+					interactionChangeOrRemoveTile(
+						pOldInteraction, pInteraction,
+						uwCursorTileX, uwCursorTileY, INTERACTION_KIND_SLIPGATABLE,
+						TILE_WALL_TOGGLABLE_ON, TILE_WALL_TOGGLABLE_OFF,
+						VIS_TILE_SLIPGATABLE_ON_1, VIS_TILE_SLIPGATABLE_OFF_1
+					);
+				}
+				gameRequestInteractionTilesDraw(pInteraction);
 			}
 			else {
 				// change interaction group's activation mask
@@ -444,12 +491,12 @@ static void gameGsLoop(void) {
 				);
 				if(pInteraction) {
 					pInteraction->uwButtonMask ^= BV(i);
-					gameDrawInteractionTiles(pInteraction);
+					gameRequestInteractionTilesDraw(pInteraction);
 				}
 			}
 
 			// Could be no longer part of interaction
-			mapRequestTileDraw(uwCursorTileX, uwCursorTileY);
+			mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 			break;
 		}
 	}
@@ -567,7 +614,7 @@ tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY) {
 // TODO: move to map.c?
 void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	tTile eTile = mapGetTileAt(ubTileX, ubTileY);
-	UWORD uwTileIndex = eTile & MAP_TILE_INDEX_MASK;
+	UWORD uwTileIndex = mapGetVisTileAt(ubTileX, ubTileY);
 
 	// A: tile mask, B: tile source, C/D: bg
 	UWORD uwHeight = MAP_TILE_SIZE * g_pBmTiles->Depth;
@@ -599,11 +646,11 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 
 #if defined(GAME_EDITOR_ENABLED)
 	if(mapTileIsButton(eTile)) {
-		UBYTE ubButtonIndex = eTile - TILE_BUTTON_1;
+		UBYTE ubButtonIndex = (eTile & MAP_TILE_INDEX_MASK) - (TILE_BUTTON_A & MAP_TILE_INDEX_MASK);
 		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(ubButtonIndex));
 	}
 	else if(eTile == TILE_RECEIVER) {
-		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(3));
+		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(MAP_BOUNCER_BUTTON_INDEX));
 	}
 	else {
 		tInteraction *pInteraction = mapGetInteractionByTile(ubTileX, ubTileY);
@@ -613,16 +660,16 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	}
 #endif
 
-#if defined(GAME_DRAW_GRID)
-	blitLine(
-		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
-	);
-	blitLine(
-		s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
-		ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
-	);
-#endif
+	if(s_isDrawGrid) {
+		blitLine(
+			s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+			(ubTileX + 1) * MAP_TILE_SIZE - 1, ubTileY * MAP_TILE_SIZE, 11, 0xAAAA, 0
+		);
+		blitLine(
+			s_pBufferMain->pBack, ubTileX * MAP_TILE_SIZE, ubTileY * MAP_TILE_SIZE,
+			ubTileX * MAP_TILE_SIZE, (ubTileY + 1) * MAP_TILE_SIZE - 1, 11, 0xAAAA, 0
+		);
+	}
 }
 
 tUwCoordYX gameGetCrossPosition(void) {
@@ -674,6 +721,16 @@ void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY) {
 		s_ubCurrentLevelIndex = s_ubHubLevelTens + ubHubLevelOnes - 1;
 	}
 	s_eExitState = EXIT_NEXT;
+}
+
+void gameDrawSlipgate(UBYTE ubIndex) {
+	UBYTE ubFrame = (g_pSlipgates[ubIndex].eNormal < DIRECTION_LEFT);
+	s_sBobSlipgate.pFrameData = s_pSlipgateDirectionFrameData[ubFrame].pFrames[ubIndex];
+	s_sBobSlipgate.pMaskData = s_pSlipgateDirectionFrameData[ubFrame].pMask;
+	s_sBobSlipgate.sPos.uwX = g_pSlipgates[ubIndex].sTilePositions[0].ubX * MAP_TILE_SIZE + s_pSlipgateOffsets[g_pSlipgates[ubIndex].eNormal].bX;
+	s_sBobSlipgate.sPos.uwY = g_pSlipgates[ubIndex].sTilePositions[0].ubY * MAP_TILE_SIZE + s_pSlipgateOffsets[g_pSlipgates[ubIndex].eNormal].bY;
+	bobSetHeight(&s_sBobSlipgate, s_pSlipgateDirectionFrameData[ubFrame].uwHeight);
+	bobPush(&s_sBobSlipgate);
 }
 
 tPlayer *gameGetPlayer(void) {

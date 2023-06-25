@@ -7,8 +7,9 @@
 
 #include <ace/types.h>
 #include "tile.h"
+#include "vis_tile.h"
 
-#define INTERACTION_TARGET_MAX 4
+#define INTERACTION_TARGET_MAX 10
 #define INTERACTION_TILE_INDEX_INVALID 255
 
 typedef enum tInteractionKind {
@@ -21,6 +22,8 @@ typedef struct tTogglableTile {
 	tInteractionKind eKind;
 	tTile eTileActive;
 	tTile eTileInactive;
+	tVisTile eVisTileActive;
+	tVisTile eVisTileInactive;
 } tTogglableTile;
 
 typedef struct tInteraction {
@@ -30,9 +33,11 @@ typedef struct tInteraction {
 	UBYTE wasActive;
 } tInteraction;
 
-void interactionAddOrRemoveTile(
-	tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTileY,
-	tInteractionKind eKind, tTile eTileActive, tTile eTileInactive
+void interactionChangeOrRemoveTile(
+	tInteraction *pOldInteraction, tInteraction *pInteraction,
+	UBYTE ubTileX, UBYTE ubTileY,
+	tInteractionKind eKind, tTile eTileActive, tTile eTileInactive,
+	tVisTile eVisTileActive, tVisTile eVisTileInactive
 );
 
 UBYTE interactionGetTileIndex(tInteraction *pInteraction, UBYTE ubTileX, UBYTE ubTileY);
