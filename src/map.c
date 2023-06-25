@@ -1313,6 +1313,7 @@ UBYTE mapTileIsOnWall(tTile eTile) {
 		eTile == TILE_RECEIVER ||
 		eTile == TILE_BOUNCER_SPAWNER ||
 		eTile == TILE_PIPE ||
+		eTile == TILE_EXIT ||
 		0
 	);
 }
