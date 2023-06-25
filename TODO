@@ -33,6 +33,7 @@ General:
 	☐ Multi-bob character body
 	☐ Entrance tiles - exit to hub
 	☐ Bigger max velocity
+	☐ Prevent spawning slipgates around the edges
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Game flow:
