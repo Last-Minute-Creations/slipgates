@@ -334,8 +334,11 @@ static void gameGsLoop(void) {
 		statePop(g_pGameStateManager);
 		return;
 	}
+	else if(keyUse(KEY_F10)) {
+		loadLevel(0, 1);
+	}
 	else {
-		for(UBYTE i = 0; i < 10; ++i) {
+		for(UBYTE i = 0; i < 9; ++i) {
 			if(keyUse(KEY_F1 + i)) {
 				if(keyCheck(KEY_CONTROL)) {
 					saveLevel(1 + i);

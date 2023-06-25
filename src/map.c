@@ -714,7 +714,6 @@ static tVisTile mapCalculateVisTileOnLevel(
 				[NEIGHBOR_FLAG_NW] = VIS_TILE_BG_CONVEX_SE,
 				[NEIGHBOR_FLAG_NE] = VIS_TILE_BG_CONVEX_SW,
 				[NEIGHBOR_FLAG_SE] = VIS_TILE_BG_CONVEX_NW,
-
 			};
 
 			if(pBgLookup[eNeighbors] != 0) {
