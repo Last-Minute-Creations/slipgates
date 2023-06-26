@@ -48,6 +48,7 @@ typedef enum tExitState {
 	EXIT_NONE,
 	EXIT_RESTART,
 	EXIT_NEXT,
+	EXIT_HUB,
 } tExitState;
 
 static tView *s_pView;
@@ -322,7 +323,10 @@ static void gameGsLoop(void) {
 
 	if(s_eExitState != EXIT_NONE) {
 		if(s_eExitState == EXIT_NEXT) {
-			loadLevel(++s_ubCurrentLevelIndex, 1);
+			loadLevel(s_ubCurrentLevelIndex + 1, 1);
+		}
+		else if(s_eExitState == EXIT_HUB) {
+			loadLevel(MAP_INDEX_HUB, 1);
 		}
 		else if(s_eExitState == EXIT_RESTART) {
 			loadLevel(s_ubCurrentLevelIndex, 0);
@@ -457,6 +461,10 @@ static void gameGsLoop(void) {
 	}
 	else if(keyUse(KEY_SEMICOLON)) {
 		*pTileUnderCursor = TILE_PIPE;
+		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
+	}
+	else if(keyUse(KEY_APOSTROPHE)) {
+		*pTileUnderCursor = TILE_EXIT_HUB;
 		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 	}
 
@@ -682,7 +690,7 @@ tUwCoordYX gameGetCrossPosition(void) {
 	return sPos;
 }
 
-void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY) {
+void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY, UBYTE isHub) {
 	if(s_ubCurrentLevelIndex == MAP_INDEX_HUB) {
 		UBYTE ubHubLevelOnes = 0;
 		if(ubTileX == 2) { // leftmost: 0, 2, 4, 6
@@ -723,7 +731,7 @@ void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY) {
 		// Subtract level index so that exit transition will increment to to proper one
 		s_ubCurrentLevelIndex = s_ubHubLevelTens + ubHubLevelOnes - 1;
 	}
-	s_eExitState = EXIT_NEXT;
+	s_eExitState = isHub ? EXIT_HUB : EXIT_NEXT;
 }
 
 void gameDrawSlipgate(UBYTE ubIndex) {

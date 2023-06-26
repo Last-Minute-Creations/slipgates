@@ -20,7 +20,7 @@ tUwCoordYX gameGetCrossPosition(void);
 
 tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY);
 
-void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY);
+void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY, UBYTE isHub);
 
 void gameDrawSlipgate(UBYTE ubIndex);
 

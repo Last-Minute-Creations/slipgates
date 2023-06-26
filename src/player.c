@@ -47,7 +47,8 @@ static UBYTE playerCollisionHandler(
 			playerDamage(pPlayer, 100);
 		}
 		else if(mapTileIsExit(eTile)) {
-			gameMarkExitReached(ubTileX, ubTileY);
+			UBYTE isHub = (eTile == TILE_EXIT_HUB);
+			gameMarkExitReached(ubTileX, ubTileY, isHub);
 		}
 		else if(mapTileIsButton(eTile)) {
 			mapPressButtonAt(ubTileX, ubTileY);

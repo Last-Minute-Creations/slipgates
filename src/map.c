@@ -500,7 +500,8 @@ static tVisTile mapCalculateVisTileOnLevel(
 				return VIS_TILE_BUTTON_WALL_RIGHT_2;
 			}
 			break;
-		case TILE_EXIT: {
+		case TILE_EXIT:
+		case TILE_EXIT_HUB: {
 			tTile eTileAbove = pLevel->pTiles[ubTileX][ubTileY - 1];
 			tTile eTileBelow = pLevel->pTiles[ubTileX][ubTileY + 1];
 			if(ubTileX < MAP_TILE_WIDTH / 2) {
@@ -623,20 +624,20 @@ static tVisTile mapCalculateVisTileOnLevel(
 				}
 				return VIS_TILE_BG_PIPE_W;
 			}
-			if(eTileLeft == TILE_EXIT) {
-				if(pLevel->pTiles[ubTileX - 1][ubTileY - 1] != TILE_EXIT) {
+			if(mapTileIsExit(eTileLeft)) {
+				if(!mapTileIsExit(pLevel->pTiles[ubTileX - 1][ubTileY - 1])) {
 					return VIS_TILE_EXIT_BG_LEFT_TOP;
 				}
-				if(pLevel->pTiles[ubTileX - 1][ubTileY + 1] != TILE_EXIT) {
+				if(!mapTileIsExit(pLevel->pTiles[ubTileX - 1][ubTileY + 1])) {
 					return VIS_TILE_EXIT_BG_LEFT_BOTTOM;
 				}
 				return VIS_TILE_EXIT_BG_LEFT_MID;
 			}
-			if(eTileRight == TILE_EXIT) {
-				if(pLevel->pTiles[ubTileX + 1][ubTileY - 1] != TILE_EXIT) {
+			if(mapTileIsExit(eTileRight)) {
+				if(!mapTileIsExit(pLevel->pTiles[ubTileX + 1][ubTileY - 1])) {
 					return VIS_TILE_EXIT_BG_RIGHT_TOP;
 				}
-				if(pLevel->pTiles[ubTileX + 1][ubTileY + 1] != TILE_EXIT) {
+				if(!mapTileIsExit(pLevel->pTiles[ubTileX + 1][ubTileY + 1])) {
 					return VIS_TILE_EXIT_BG_RIGHT_BOTTOM;
 				}
 				return VIS_TILE_EXIT_BG_RIGHT_MID;
@@ -1295,24 +1296,16 @@ UBYTE mapTileIsActiveTurret(tTile eTile) {
 
 UBYTE mapTileIsOnWall(tTile eTile) {
 	return (
-		eTile == TILE_SLIPGATE_A ||
-		eTile == TILE_SLIPGATE_B ||
+		mapTileIsSlipgate(eTile) ||
+		mapTileIsButton(eTile) ||
+		mapTileIsExit(eTile) ||
 		eTile == TILE_WALL_BLOCKED ||
 		eTile == TILE_WALL ||
 		eTile == TILE_SPIKES_OFF_FLOOR ||
 		eTile == TILE_SPIKES_ON_FLOOR ||
-		eTile == TILE_BUTTON_A ||
-		eTile == TILE_BUTTON_B ||
-		eTile == TILE_BUTTON_C ||
-		eTile == TILE_BUTTON_D ||
-		eTile == TILE_BUTTON_E ||
-		eTile == TILE_BUTTON_F ||
-		eTile == TILE_BUTTON_G ||
-		eTile == TILE_BUTTON_H ||
 		eTile == TILE_RECEIVER ||
 		eTile == TILE_BOUNCER_SPAWNER ||
 		eTile == TILE_PIPE ||
-		eTile == TILE_EXIT ||
 		0
 	);
 }
