@@ -31,6 +31,7 @@ typedef struct tBodyBox {
 	UBYTE ubHeight;
 	UBYTE isOnGround;
 	UBYTE isAlive;
+	BYTE bBobOffsX;
 } tBodyBox;
 
 void bodyInit(tBodyBox *pBody, fix16_t fPosX, fix16_t fPosY, UBYTE ubWidth, UBYTE ubHeight);

@@ -103,6 +103,7 @@ UBYTE playerTryShootSlipgateAt(
 
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	bodyInit(&pPlayer->sBody, fPosX, fPosY, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT);
+	pPlayer->sBody.bBobOffsX = -4;
 	pPlayer->sBody.cbTileCollisionHandler = playerCollisionHandler;
 	pPlayer->sBody.cbSlipgateHandler = playerSlipgateHandler;
 	pPlayer->sBody.pHandlerData = pPlayer;

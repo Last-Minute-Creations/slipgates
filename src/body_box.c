@@ -25,6 +25,7 @@ void bodyInit(
 	pBody->fAccelerationY = fix16_one / 4; // gravity
 	pBody->cbTileCollisionHandler = 0;
 	pBody->cbSlipgateHandler = 0;
+	pBody->bBobOffsX = 0;
 }
 
 static UBYTE moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
@@ -392,7 +393,7 @@ void bodySimulate(tBodyBox *pBody) {
 
 	pBody->fPosY = fNewPosY;
 
-	pBody->sBob.sPos.uwX = fix16_to_int(pBody->fPosX);
+	pBody->sBob.sPos.uwX = fix16_to_int(pBody->fPosX) + pBody->bBobOffsX;
 	pBody->sBob.sPos.uwY = fix16_to_int(pBody->fPosY);
 }
 
