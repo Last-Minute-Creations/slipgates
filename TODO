@@ -32,7 +32,8 @@ General:
 	✔ Prevent spawning slipgates around the edges @done(23-06-26 16:29)
 	✔ Entrance tiles - exit to hub @done(23-06-26 16:42)
 	✔ Add X offset between body hitbox and player bob @done(23-06-26 16:50)
-	☐ Increase tracer precision in steep angles, e.g. shooting floor on the ground (high-precision sin() for generating tables?)
+	✔ Upgrade steep angle shooting precision with high-precision sin() precalc @done(23-06-26 16:58)
+	☐ Increase tracer precision in steep angles, e.g. shooting floor on the ground
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
 	☐ Bigger max velocity
