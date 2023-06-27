@@ -12,6 +12,7 @@
 #define MAP_SPIKES_COOLDOWN 50
 #define MAP_DIRTY_TILES_MAX (MAP_TILE_WIDTH * MAP_TILE_HEIGHT)
 #define MAP_TURRET_ATTACK_COOLDOWN 10
+#define MAP_TURRET_ATTACK_FRAME_COOLDOWN 5
 #define MAP_TURRET_TILE_RANGE 5
 #define MAP_PENDING_SLIPGATE_OPEN_INVALID 0xFF
 
@@ -21,6 +22,7 @@ typedef struct tTurret {
 	tUwCoordYX sScanBottomRight;
 	tDirection eDirection;
 	UBYTE isActive;
+	UBYTE isInAttackFrame;
 	UBYTE ubLastAttackFrame;
 } tTurret;
 
@@ -154,11 +156,20 @@ static void mapProcessNextTurret(void) {
 	if(pTurret->isActive) {
 		UBYTE ubCurrentGameFrame = gameGetFrameIndex();
 		UBYTE ubDeltaAttack = (
-			ubCurrentGameFrame > pTurret->ubLastAttackFrame ?
+			(ubCurrentGameFrame > pTurret->ubLastAttackFrame) ?
 			ubCurrentGameFrame - pTurret->ubLastAttackFrame :
 			256 + ubCurrentGameFrame - pTurret->ubLastAttackFrame
 		);
-		if(ubDeltaAttack >= MAP_TURRET_ATTACK_COOLDOWN) {
+		if(pTurret->isInAttackFrame && ubDeltaAttack >= MAP_TURRET_ATTACK_FRAME_COOLDOWN) {
+			g_sCurrentLevel.pVisTiles[pTurret->sTilePos.ubX][pTurret->sTilePos.ubY] = (
+				(pTurret->eDirection == DIRECTION_LEFT) ?
+				VIS_TILE_TURRET_ACTIVE_LEFT :
+				VIS_TILE_TURRET_ACTIVE_RIGHT
+			);
+			mapRequestTileDraw(pTurret->sTilePos.ubX, pTurret->sTilePos.ubY);
+			pTurret->isInAttackFrame = 0;
+		}
+		else if(ubDeltaAttack >= MAP_TURRET_ATTACK_COOLDOWN) {
 			tPlayer *pPlayer = gameGetPlayer();
 			UWORD uwPlayerX = fix16_to_int(pPlayer->sBody.fPosX);
 			UWORD uwPlayerY = fix16_to_int(pPlayer->sBody.fPosY);
@@ -169,7 +180,14 @@ static void mapProcessNextTurret(void) {
 				pTurret->sScanBottomRight.uwY > uwPlayerY
 			) {
 				playerDamage(pPlayer, 1);
+				pTurret->isInAttackFrame = 1;
 				pTurret->ubLastAttackFrame = ubCurrentGameFrame;
+				g_sCurrentLevel.pVisTiles[pTurret->sTilePos.ubX][pTurret->sTilePos.ubY] = (
+					(pTurret->eDirection == DIRECTION_LEFT) ?
+					VIS_TILE_TURRET_SHOOTING_LEFT :
+					VIS_TILE_TURRET_SHOOTING_RIGHT
+				);
+				mapRequestTileDraw(pTurret->sTilePos.ubX, pTurret->sTilePos.ubY);
 			}
 		}
 	}
@@ -218,6 +236,7 @@ static void mapDrawPendingTiles(void) {
 
 static void mapInitTurret(tTurret *pTurret) {
 		pTurret->isActive = 1;
+		pTurret->isInAttackFrame = 1;
 		pTurret->ubLastAttackFrame = 0;
 
 		if(pTurret->eDirection == DIRECTION_LEFT) {
