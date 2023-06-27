@@ -21,7 +21,7 @@ typedef struct tTurret {
 	tUwCoordYX sScanBottomRight;
 	tDirection eDirection;
 	UBYTE isActive;
-	UBYTE ubAttackCooldown;
+	UBYTE ubLastAttackFrame;
 } tTurret;
 
 typedef enum tNeighborFlag {
@@ -152,11 +152,13 @@ static void mapProcessNextTurret(void) {
 
 	tTurret *pTurret = &s_pTurrets[s_ubCurrentTurret];
 	if(pTurret->isActive) {
-		if(pTurret->ubAttackCooldown > 0) {
-			BYTE bNewCooldown = (BYTE)pTurret->ubAttackCooldown - (BYTE)s_ubTurretCount;
-			pTurret->ubAttackCooldown = MAX(0, bNewCooldown);
-		}
-		else {
+		UBYTE ubCurrentGameFrame = gameGetFrameIndex();
+		UBYTE ubDeltaAttack = (
+			ubCurrentGameFrame > pTurret->ubLastAttackFrame ?
+			ubCurrentGameFrame - pTurret->ubLastAttackFrame :
+			256 + ubCurrentGameFrame - pTurret->ubLastAttackFrame
+		);
+		if(ubDeltaAttack >= MAP_TURRET_ATTACK_COOLDOWN) {
 			tPlayer *pPlayer = gameGetPlayer();
 			UWORD uwPlayerX = fix16_to_int(pPlayer->sBody.fPosX);
 			UWORD uwPlayerY = fix16_to_int(pPlayer->sBody.fPosY);
@@ -167,7 +169,7 @@ static void mapProcessNextTurret(void) {
 				pTurret->sScanBottomRight.uwY > uwPlayerY
 			) {
 				playerDamage(pPlayer, 1);
-				pTurret->ubAttackCooldown = MAP_TURRET_ATTACK_COOLDOWN;
+				pTurret->ubLastAttackFrame = ubCurrentGameFrame;
 			}
 		}
 	}
@@ -216,7 +218,7 @@ static void mapDrawPendingTiles(void) {
 
 static void mapInitTurret(tTurret *pTurret) {
 		pTurret->isActive = 1;
-		pTurret->ubAttackCooldown = 0;
+		pTurret->ubLastAttackFrame = 0;
 
 		if(pTurret->eDirection == DIRECTION_LEFT) {
 			UBYTE ubLeftTileX = pTurret->sTilePos.ubX;

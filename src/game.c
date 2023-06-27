@@ -752,6 +752,10 @@ tSimpleBufferManager *gameGetBuffer(void) {
 	return s_pBufferMain;
 }
 
+UWORD gameGetFrameIndex(void) {
+	return s_uwGameFrame;
+}
+
 //-------------------------------------------------------------------- GAMESTATE
 
 tState g_sStateGame = { .cbCreate = gameGsCreate, .cbLoop = gameGsLoop, .cbDestroy = gameGsDestroy };

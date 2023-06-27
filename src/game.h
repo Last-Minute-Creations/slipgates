@@ -28,4 +28,6 @@ tPlayer *gameGetPlayer(void);
 
 tSimpleBufferManager *gameGetBuffer(void);
 
+UWORD gameGetFrameIndex(void);
+
 #endif // SLIPGATES_GAME_H
