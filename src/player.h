@@ -12,6 +12,7 @@ typedef struct tPlayer {
 	tBodyBox *pGrabbedBox;
 	BYTE bHealth;
 	UBYTE isSlipgated;
+	UBYTE ubDamageCooldown;
 } tPlayer;
 
 void playerManagerInit(void);

@@ -24,6 +24,7 @@ extern tBitMap *g_pSlipgateFramesB;
 extern tBitMap *g_pSlipgateMasks;
 extern tBitMap *g_pBmCursor;
 extern tBitMap *g_pBmTiles;
+extern tBitMap *g_pPlayerWhiteFrame;
 extern tFont *g_pFont;
 
 #endif // SLIPGATES_ASSETS_H

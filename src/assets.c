@@ -5,6 +5,8 @@
 #include "assets.h"
 #include <ace/managers/system.h>
 
+#define COLOR_WHITE 15
+
 void assetsGameCreate(void) {
 	systemUse();
 	g_pPlayerFrames = bitmapCreateFromFile("data/player.bm", 0);
@@ -18,6 +20,9 @@ void assetsGameCreate(void) {
 	g_pSlipgateMasks = bitmapCreateFromFile("data/slipgates_mask.bm", 0);
 	g_pBmCursor = bitmapCreateFromFile("data/cursor.bm", 0);
 	g_pBmTiles = bitmapCreateFromFile("data/tiles.bm", 0);
+
+	g_pPlayerWhiteFrame = bitmapCreate(16, 16, 5, BMF_INTERLEAVED);
+	blitRect(g_pPlayerWhiteFrame, 0, 0, 16, 16, COLOR_WHITE);
 
 	g_pFont = fontCreate("data/uni54.fnt");
 	systemUnuse();
@@ -36,6 +41,7 @@ void assetsGameDestroy(void) {
 	bitmapDestroy(g_pSlipgateMasks);
 	bitmapDestroy(g_pBmCursor);
 	bitmapDestroy(g_pBmTiles);
+	bitmapDestroy(g_pPlayerWhiteFrame);
 
 	fontDestroy(g_pFont);
 	systemUnuse();
@@ -54,4 +60,5 @@ tBitMap *g_pSlipgateFramesB;
 tBitMap *g_pSlipgateMasks;
 tBitMap *g_pBmCursor;
 tBitMap *g_pBmTiles;
+tBitMap *g_pPlayerWhiteFrame;
 tFont *g_pFont;

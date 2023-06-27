@@ -20,6 +20,8 @@
 #define PLAYER_GRAB_RANGE 40
 #define PLAYER_GRAB_VELO_MAX F16(4)
 
+#define PLAYER_DAMAGE_COOLDOWN 5
+
 typedef struct tAnimFrameDef {
 	UBYTE *pFrame;
 	UBYTE *pMask;
@@ -109,6 +111,7 @@ void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	pPlayer->sBody.pHandlerData = pPlayer;
 	pPlayer->pGrabbedBox = 0;
 	pPlayer->bHealth = 10;
+	pPlayer->ubDamageCooldown = 0;
 	s_ubAnimFrame = 0;
 	s_ubFrameCooldown = 10;
 }
@@ -233,15 +236,31 @@ void playerProcess(tPlayer *pPlayer) {
 		}
 	}
 
+	UBYTE isUpdateFrame = 0;
+	if(pPlayer->ubDamageCooldown) {
+		--pPlayer->ubDamageCooldown;
+		isUpdateFrame = 1;
+	}
+
 	if(--s_ubFrameCooldown == 0) {
 		s_ubFrameCooldown = 10;
 		if(++s_ubAnimFrame == PLAYER_FRAME_COUNT) {
 			s_ubAnimFrame = 0;
 		}
+		isUpdateFrame = 1;
+	}
 
+	if(isUpdateFrame) {
+		UBYTE *pFrameData;
+		if(pPlayer->ubDamageCooldown) {
+			pFrameData = g_pPlayerWhiteFrame->Planes[0];
+		}
+		else {
+			pFrameData = pFrameAddresses[ubAnimDirection][s_ubAnimFrame].pFrame;
+		}
 		bobSetFrame(
 			&pPlayer->sBody.sBob,
-			pFrameAddresses[ubAnimDirection][s_ubAnimFrame].pFrame,
+			pFrameData,
 			pFrameAddresses[ubAnimDirection][s_ubAnimFrame].pMask
 		);
 	}
@@ -249,6 +268,10 @@ void playerProcess(tPlayer *pPlayer) {
 
 void playerDamage(tPlayer *pPlayer, UBYTE ubAmount) {
 	pPlayer->bHealth = MAX(0, pPlayer->bHealth - ubAmount);
+	pPlayer->ubDamageCooldown = PLAYER_DAMAGE_COOLDOWN;
+
+	UBYTE *pFrameData = g_pPlayerWhiteFrame->Planes[0];
+	pPlayer->sBody.sBob.pFrameData = pFrameData;
 
 	if(pPlayer->bHealth == 0) {
 		// ded
