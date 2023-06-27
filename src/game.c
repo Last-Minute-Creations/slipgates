@@ -246,19 +246,6 @@ static void gameToggleGrid(void) {
 	}
 }
 
-static void paletteToGrayscale(
-	const UWORD *pPaletteIn, UWORD *pPaletteGrayscale, UBYTE ubColorCount
-) {
-	for(UBYTE i = 0; i < ubColorCount; ++i) {
-		UBYTE ubR = (pPaletteIn[i] >> 8);
-		UBYTE ubG = (pPaletteIn[i] >> 4) & 0xF;
-		UBYTE ubB = (pPaletteIn[i] >> 0) & 0xF;
-		UBYTE ubMax = MAX(MAX(ubR, ubG), ubB);
-		UWORD uwGrayscale = (ubMax << 8) | (ubMax << 4) | ubMax;
-		pPaletteGrayscale[i] = uwGrayscale;
-	}
-}
-
 static void paletteToRed(
 	const UWORD *pPaletteIn, UWORD *pPaletteRed, UBYTE ubColorCount
 ) {
@@ -308,21 +295,13 @@ static void gameGsCreate(void) {
 	s_pPalettes[PLAYER_MAX_HEALTH - 1][17] = 0xA86;
 	s_pPalettes[PLAYER_MAX_HEALTH - 1][18] = 0x27D;
 	s_pPalettes[PLAYER_MAX_HEALTH - 1][19] = 0xE96;
-	UBYTE ubPaletteIndexFullGray = PLAYER_MAX_HEALTH / 2;
 	UBYTE ubPaletteIndexLast = PLAYER_MAX_HEALTH;
-	paletteToGrayscale(s_pPalettes[ubPaletteIndexLast], s_pPalettes[ubPaletteIndexFullGray], 32);
 	paletteToRed(s_pPalettes[ubPaletteIndexLast], s_pPalettes[0], 32);
-	for(UBYTE i = 1; i < ubPaletteIndexFullGray; ++i) {
+	for(UBYTE i = 0; i < ubPaletteIndexLast; ++i) {
 		paletteInterpolate(
-			s_pPalettes[0], s_pPalettes[ubPaletteIndexFullGray], s_pPalettes[i],
-			32, i, ubPaletteIndexFullGray
-		);
-	}
-	for(UBYTE i = ubPaletteIndexFullGray + 1; i < ubPaletteIndexLast; ++i) {
-		paletteInterpolate(
-			s_pPalettes[ubPaletteIndexFullGray], s_pPalettes[ubPaletteIndexLast],
+			s_pPalettes[0], s_pPalettes[ubPaletteIndexLast],
 			s_pPalettes[i], 32,
-			i - ubPaletteIndexFullGray, ubPaletteIndexLast - ubPaletteIndexFullGray
+			i, ubPaletteIndexLast
 		);
 	}
 
