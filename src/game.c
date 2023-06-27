@@ -22,6 +22,7 @@
 #include "player.h"
 #include "bouncer.h"
 #include "assets.h"
+#include "debug.h"
 
 #define GAME_BPP 5
 
@@ -70,6 +71,8 @@ static UBYTE s_ubUnlockedLevels;
 static UWORD s_uwPrevButtonPresses;
 static UBYTE s_isDrawGrid;
 static tSlipgateDirectionFrameData s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_COUNT];
+static UWORD s_pPalettes[PLAYER_MAX_HEALTH + 1][1 << GAME_BPP];
+static UBYTE s_ubCurrentPaletteIndex;
 
 static const tBCoordYX s_pSlipgateOffsets[DIRECTION_COUNT] = {
 	[DIRECTION_LEFT] = {.bX = -2, .bY = 0},
@@ -181,6 +184,10 @@ static void loadLevel(UBYTE ubIndex, UBYTE isForce) {
 		s_pBufferMain->pFront, 0, SCREEN_PAL_HEIGHT / 2,
 		SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT / 2
 	);
+
+	s_ubCurrentPaletteIndex = PLAYER_MAX_HEALTH;
+	memcpy(s_pVpMain->pPalette, s_pPalettes[s_ubCurrentPaletteIndex], sizeof(s_pPalettes[0]));
+
 	viewLoad(s_pView);
 }
 
@@ -239,6 +246,45 @@ static void gameToggleGrid(void) {
 	}
 }
 
+static void paletteToGrayscale(
+	const UWORD *pPaletteIn, UWORD *pPaletteGrayscale, UBYTE ubColorCount
+) {
+	for(UBYTE i = 0; i < ubColorCount; ++i) {
+		UBYTE ubR = (pPaletteIn[i] >> 8);
+		UBYTE ubG = (pPaletteIn[i] >> 4) & 0xF;
+		UBYTE ubB = (pPaletteIn[i] >> 0) & 0xF;
+		UBYTE ubMax = MAX(MAX(ubR, ubG), ubB);
+		UWORD uwGrayscale = (ubMax << 8) | (ubMax << 4) | ubMax;
+		pPaletteGrayscale[i] = uwGrayscale;
+	}
+}
+
+static void paletteToRed(
+	const UWORD *pPaletteIn, UWORD *pPaletteRed, UBYTE ubColorCount
+) {
+	for(UBYTE i = 0; i < ubColorCount; ++i) {
+		pPaletteRed[i] = pPaletteIn[i] & 0xF00;
+	}
+}
+
+static void paletteInterpolate(
+	const UWORD *pPaletteA, const UWORD *pPaletteB, UWORD *pPaletteOut,
+	UBYTE ubColorCount, UBYTE ubRatioNum, UBYTE ubRatioDen
+) {
+	for(UBYTE i = 0; i < ubColorCount; ++i) {
+		BYTE bRA = (pPaletteA[i] >> 8);
+		BYTE bGA = (pPaletteA[i] >> 4) & 0xF;
+		BYTE bBA = (pPaletteA[i] >> 0) & 0xF;
+		BYTE bRB = (pPaletteB[i] >> 8);
+		BYTE bGB = (pPaletteB[i] >> 4) & 0xF;
+		BYTE bBB = (pPaletteB[i] >> 0) & 0xF;
+		UBYTE ubR = bRA + ((bRB - bRA) * ubRatioNum) / ubRatioDen;
+		UBYTE ubG = bGA + ((bGB - bGA) * ubRatioNum) / ubRatioDen;
+		UBYTE ubB = bBA + ((bBB - bBA) * ubRatioNum) / ubRatioDen;
+		pPaletteOut[i] = (ubR << 8) | (ubG << 4) | ubB;
+	}
+}
+
 static void gameGsCreate(void) {
 	gameMathInit();
 
@@ -258,10 +304,29 @@ static void gameGsCreate(void) {
 		TAG_SIMPLEBUFFER_VPORT, s_pVpMain,
 	TAG_END);
 
-	paletteLoad("data/slipgates.plt", s_pVpMain->pPalette, 32);
-	s_pVpMain->pPalette[17] = 0xA86;
-	s_pVpMain->pPalette[18] = 0x27D;
-	s_pVpMain->pPalette[19] = 0xE96;
+	paletteLoad("data/slipgates.plt", s_pPalettes[PLAYER_MAX_HEALTH], 32);
+	s_pPalettes[PLAYER_MAX_HEALTH - 1][17] = 0xA86;
+	s_pPalettes[PLAYER_MAX_HEALTH - 1][18] = 0x27D;
+	s_pPalettes[PLAYER_MAX_HEALTH - 1][19] = 0xE96;
+	UBYTE ubPaletteIndexFullGray = PLAYER_MAX_HEALTH / 2;
+	UBYTE ubPaletteIndexLast = PLAYER_MAX_HEALTH;
+	paletteToGrayscale(s_pPalettes[ubPaletteIndexLast], s_pPalettes[ubPaletteIndexFullGray], 32);
+	paletteToRed(s_pPalettes[ubPaletteIndexLast], s_pPalettes[0], 32);
+	for(UBYTE i = 1; i < ubPaletteIndexFullGray; ++i) {
+		paletteInterpolate(
+			s_pPalettes[0], s_pPalettes[ubPaletteIndexFullGray], s_pPalettes[i],
+			32, i, ubPaletteIndexFullGray
+		);
+	}
+	for(UBYTE i = ubPaletteIndexFullGray + 1; i < ubPaletteIndexLast; ++i) {
+		paletteInterpolate(
+			s_pPalettes[ubPaletteIndexFullGray], s_pPalettes[ubPaletteIndexLast],
+			s_pPalettes[i], 32,
+			i - ubPaletteIndexFullGray, ubPaletteIndexLast - ubPaletteIndexFullGray
+		);
+	}
+
+	memcpy(s_pVpMain->pPalette, s_pPalettes[PLAYER_MAX_HEALTH - 1], sizeof(s_pPalettes[0]));
 
 	assetsGameCreate();
 	s_pTextBuffer = fontCreateTextBitMap(336, g_pFont->uwHeight * 2);
@@ -319,7 +384,7 @@ static void gameGsCreate(void) {
 }
 
 static void gameGsLoop(void) {
-	g_pCustom->color[0] = 0xF89;
+	debugSetColor(0xF89);
 
 	if(s_eExitState != EXIT_NONE) {
 		if(s_eExitState == EXIT_NEXT) {
@@ -356,6 +421,9 @@ static void gameGsLoop(void) {
 	}
 	if(keyUse(KEY_RBRACKET)) {
 		gameToggleGrid();
+	}
+	if(keyUse(KEY_LBRACKET)) {
+		debugToggle();
 	}
 
  	bobBegin(s_pBufferMain->pBack);
@@ -565,10 +633,17 @@ static void gameGsLoop(void) {
 	++s_uwGameFrame;
 	viewProcessManagers(s_pView);
 	copProcessBlocks();
-	g_pCustom->color[0] = 0x9F8;
+	debugSetColor(0x9F8);
 	systemIdleBegin();
 	vPortWaitForEnd(s_pVpMain);
 	systemIdleEnd();
+
+	if(s_ubCurrentPaletteIndex != s_sPlayer.bHealth) {
+		s_ubCurrentPaletteIndex = s_sPlayer.bHealth;
+		for(UBYTE i = 0; i < (1 << GAME_BPP); ++i) {
+			g_pCustom->color[i] = s_pPalettes[s_ubCurrentPaletteIndex][i];
+		}
+	}
 }
 
 static void gameGsDestroy(void) {

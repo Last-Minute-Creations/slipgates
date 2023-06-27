@@ -23,7 +23,6 @@
 
 #define PLAYER_DAMAGE_COOLDOWN 5
 #define PLAYER_REGEN_COOLDOWN 20
-#define PLAYER_MAX_HEALTH 10
 
 typedef struct tAnimFrameDef {
 	UBYTE *pFrame;

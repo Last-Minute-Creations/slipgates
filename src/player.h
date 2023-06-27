@@ -7,6 +7,8 @@
 
 #include "body_box.h"
 
+#define PLAYER_MAX_HEALTH 10
+
 typedef struct tPlayer {
 	tBodyBox sBody;
 	tBodyBox *pGrabbedBox;
