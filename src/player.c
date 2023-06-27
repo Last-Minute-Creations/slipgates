@@ -15,12 +15,15 @@
 #define PLAYER_VELO_DELTA_X_AIR (fix16_one / 4)
 
 #define PLAYER_FRAME_COUNT 4
+#define PLAYER_FRAME_COOLDOWN 10
 #define PLAYER_FRAME_DIR_LEFT 0
 #define PLAYER_FRAME_DIR_RIGHT 1
 #define PLAYER_GRAB_RANGE 40
 #define PLAYER_GRAB_VELO_MAX F16(4)
 
 #define PLAYER_DAMAGE_COOLDOWN 5
+#define PLAYER_REGEN_COOLDOWN 20
+#define PLAYER_MAX_HEALTH 10
 
 typedef struct tAnimFrameDef {
 	UBYTE *pFrame;
@@ -46,7 +49,7 @@ static UBYTE playerCollisionHandler(
 	if(isColliding) {
 		if(mapTileIsLethal(eTile)) {
 			tPlayer *pPlayer = pData;
-			playerDamage(pPlayer, 100);
+			playerDamage(pPlayer, PLAYER_MAX_HEALTH);
 		}
 		else if(mapTileIsExit(eTile)) {
 			UBYTE isHub = (eTile == TILE_EXIT_HUB);
@@ -110,15 +113,21 @@ void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	pPlayer->sBody.cbSlipgateHandler = playerSlipgateHandler;
 	pPlayer->sBody.pHandlerData = pPlayer;
 	pPlayer->pGrabbedBox = 0;
-	pPlayer->bHealth = 10;
-	pPlayer->ubDamageCooldown = 0;
+	pPlayer->bHealth = PLAYER_MAX_HEALTH;
+	pPlayer->ubDamageFrameCooldown = 0;
+	pPlayer->ubRegenCooldown = PLAYER_REGEN_COOLDOWN;
 	s_ubAnimFrame = 0;
-	s_ubFrameCooldown = 10;
+	s_ubFrameCooldown = PLAYER_FRAME_COOLDOWN;
 }
 
 void playerProcess(tPlayer *pPlayer) {
 	if(!pPlayer->bHealth) {
 		return;
+	}
+
+	if(--pPlayer->ubRegenCooldown == 0) {
+		pPlayer->ubRegenCooldown = PLAYER_REGEN_COOLDOWN;
+		pPlayer->bHealth = MIN(pPlayer->bHealth + 1, PLAYER_MAX_HEALTH);
 	}
 
 	tUwCoordYX sPosCross = gameGetCrossPosition();
@@ -237,13 +246,13 @@ void playerProcess(tPlayer *pPlayer) {
 	}
 
 	UBYTE isUpdateFrame = 0;
-	if(pPlayer->ubDamageCooldown) {
-		--pPlayer->ubDamageCooldown;
+	if(pPlayer->ubDamageFrameCooldown) {
+		--pPlayer->ubDamageFrameCooldown;
 		isUpdateFrame = 1;
 	}
 
 	if(--s_ubFrameCooldown == 0) {
-		s_ubFrameCooldown = 10;
+		s_ubFrameCooldown = PLAYER_FRAME_COOLDOWN;
 		if(++s_ubAnimFrame == PLAYER_FRAME_COUNT) {
 			s_ubAnimFrame = 0;
 		}
@@ -252,7 +261,7 @@ void playerProcess(tPlayer *pPlayer) {
 
 	if(isUpdateFrame) {
 		UBYTE *pFrameData;
-		if(pPlayer->ubDamageCooldown) {
+		if(pPlayer->ubDamageFrameCooldown) {
 			pFrameData = g_pPlayerWhiteFrame->Planes[0];
 		}
 		else {
@@ -268,7 +277,8 @@ void playerProcess(tPlayer *pPlayer) {
 
 void playerDamage(tPlayer *pPlayer, UBYTE ubAmount) {
 	pPlayer->bHealth = MAX(0, pPlayer->bHealth - ubAmount);
-	pPlayer->ubDamageCooldown = PLAYER_DAMAGE_COOLDOWN;
+	pPlayer->ubDamageFrameCooldown = PLAYER_DAMAGE_COOLDOWN;
+	pPlayer->ubRegenCooldown = PLAYER_REGEN_COOLDOWN;
 
 	UBYTE *pFrameData = g_pPlayerWhiteFrame->Planes[0];
 	pPlayer->sBody.sBob.pFrameData = pFrameData;

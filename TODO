@@ -35,12 +35,12 @@ General:
 	✔ Upgrade steep angle tracer precision with high-precision sin() precalc @done(23-06-26 16:58)
 	✔ White frames when damaged @done(23-06-27 17:21)
 	✔ Turret shot frame @done(23-06-27 17:48)
+	✔ Regenerate life over time @done(23-06-27 17:55)
 	☐ Upgrade steep angle tracer precision, e.g. shooting floor on the ground
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
 	☐ Bigger max velocity
 	☐ Damage feedback with palette effects
-	☐ Regenerate life over time
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Game flow:
