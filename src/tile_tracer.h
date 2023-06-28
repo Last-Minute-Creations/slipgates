@@ -27,7 +27,7 @@ void tracerInit(tTileTracer *pTracer);
 // angle passed separately to prevent duplicating atan2 calc
 void tracerStart(
 	tTileTracer *pTracer, UWORD uwSourceX, UWORD uwSourceY,
-	UWORD uwTargetX, UWORD uwTargetY, UBYTE ubAngle, UBYTE ubIndex
+	UWORD uwTargetX, UWORD uwTargetY, UBYTE ubIndex
 );
 
 void tracerProcess(tTileTracer *pTracer);

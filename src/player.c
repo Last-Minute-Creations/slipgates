@@ -76,20 +76,7 @@ static void playerDropBox(tPlayer *pPlayer) {
 	pPlayer->pGrabbedBox = 0;
 }
 
-//------------------------------------------------------------------- PUBLIC FNS
-
-void playerManagerInit(void) {
-	for(UBYTE i = 0; i < PLAYER_FRAME_COUNT; ++i) {
-		pFrameAddresses[PLAYER_FRAME_DIR_RIGHT][i].pFrame = bobCalcFrameAddress(g_pPlayerFrames, i * 16);
-		pFrameAddresses[PLAYER_FRAME_DIR_RIGHT][i].pMask = bobCalcFrameAddress(g_pPlayerMasks, i * 16);
-		pFrameAddresses[PLAYER_FRAME_DIR_LEFT][i].pFrame = bobCalcFrameAddress(g_pPlayerFrames, (PLAYER_FRAME_COUNT + i) * 16);
-		pFrameAddresses[PLAYER_FRAME_DIR_LEFT][i].pMask = bobCalcFrameAddress(g_pPlayerMasks, (PLAYER_FRAME_COUNT + i) * 16);
-	}
-}
-
-UBYTE playerTryShootSlipgateAt(
-	tPlayer *pPlayer, UBYTE ubIndex, UBYTE ubAngle
-) {
+static UBYTE playerTryShootSlipgate(tPlayer *pPlayer, UBYTE ubIndex) {
 	if(g_sTracerSlipgate.isActive) {
 		return 0;
 	}
@@ -99,10 +86,21 @@ UBYTE playerTryShootSlipgateAt(
 	UWORD uwSourceY = fix16_to_int(pPlayer->sBody.fPosY) + pPlayer->sBody.ubHeight / 2;
 	tracerStart(
 		&g_sTracerSlipgate, uwSourceX, uwSourceY,
-		sDestinationPos.uwX, sDestinationPos.uwY, ubAngle, ubIndex
+		sDestinationPos.uwX, sDestinationPos.uwY, ubIndex
 	);
 
 	return 1;
+}
+
+//------------------------------------------------------------------- PUBLIC FNS
+
+void playerManagerInit(void) {
+	for(UBYTE i = 0; i < PLAYER_FRAME_COUNT; ++i) {
+		pFrameAddresses[PLAYER_FRAME_DIR_RIGHT][i].pFrame = bobCalcFrameAddress(g_pPlayerFrames, i * 16);
+		pFrameAddresses[PLAYER_FRAME_DIR_RIGHT][i].pMask = bobCalcFrameAddress(g_pPlayerMasks, i * 16);
+		pFrameAddresses[PLAYER_FRAME_DIR_LEFT][i].pFrame = bobCalcFrameAddress(g_pPlayerFrames, (PLAYER_FRAME_COUNT + i) * 16);
+		pFrameAddresses[PLAYER_FRAME_DIR_LEFT][i].pMask = bobCalcFrameAddress(g_pPlayerMasks, (PLAYER_FRAME_COUNT + i) * 16);
+	}
 }
 
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
@@ -171,7 +169,7 @@ void playerProcess(tPlayer *pPlayer) {
 			playerDropBox(pPlayer);
 		}
 		else {
-			playerTryShootSlipgateAt(pPlayer, 0, ubAimAngle);
+			playerTryShootSlipgate(pPlayer, 0);
 		}
 	}
 	else if(mouseUse(MOUSE_PORT_1, MOUSE_RMB) || keyUse(KEY_E)) {
@@ -179,7 +177,7 @@ void playerProcess(tPlayer *pPlayer) {
 			playerDropBox(pPlayer);
 		}
 		else {
-			playerTryShootSlipgateAt(pPlayer, 1, ubAimAngle);
+			playerTryShootSlipgate(pPlayer, 1);
 		}
 	}
 
