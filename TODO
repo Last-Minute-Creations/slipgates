@@ -37,10 +37,11 @@ General:
 	✔ Turret shot frame @done(23-06-27 17:48)
 	✔ Regenerate life over time @done(23-06-27 17:55)
 	✔ Damage feedback with palette effects @done(23-06-27 20:43)
+	✔ Soft velocity cap @done(23-06-28 15:57)
 	☐ Upgrade steep angle tracer precision, e.g. shooting floor on the ground
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
-	☐ Bigger max velocity
+	☐ Bigger max velocity?
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Game flow:

@@ -5,6 +5,11 @@
 #include "body_box.h"
 #include "game.h"
 
+static const fix16_t s_fVeloLimitPositive = F16(100);
+static const fix16_t s_fVeloLimitNegative = F16(-100);
+static const fix16_t s_fVeloClampPositive = F16(7);
+static const fix16_t s_fVeloClampNegative = F16(-7);
+
 static UBYTE bodyCheckCollision(
 	tBodyBox *pBody, UBYTE ubTileX, UBYTE ubTileY,
 	tDirection eBodyMovementDirection
@@ -166,10 +171,15 @@ void bodySimulate(tBodyBox *pBody) {
 
 	pBody->fVelocityY = fix16_clamp(
 		fix16_add(pBody->fVelocityY, pBody->fAccelerationY),
-		fix16_from_int(-7), fix16_from_int(7)
+		s_fVeloLimitNegative, s_fVeloLimitPositive
 	);
 
-	fix16_t fNewPosX = fix16_add(pBody->fPosX, pBody->fVelocityX);
+	// Prevents skipping tiles
+	fix16_t fVeloClampedX = fix16_clamp(
+		pBody->fVelocityX, s_fVeloClampNegative, s_fVeloClampPositive
+	);
+
+	fix16_t fNewPosX = fix16_add(pBody->fPosX, fVeloClampedX);
 	fix16_t fNewPosY = pBody->fPosY;
 	UWORD uwTop = fix16_to_int(fNewPosY);
 	UWORD uwMid = uwTop + pBody->ubHeight / 2 - 1;
@@ -178,7 +188,7 @@ void bodySimulate(tBodyBox *pBody) {
 	UWORD uwRight = uwLeft + pBody->ubWidth - 1;
 
 	pBody->isOnGround = 0;
-	if(pBody->fVelocityX > 0) {
+	if(fVeloClampedX > 0) {
 		// moving right
 		UWORD uwTileRight = (uwRight + 1) / MAP_TILE_SIZE;
 
@@ -228,7 +238,7 @@ void bodySimulate(tBodyBox *pBody) {
 			}
 		}
 	}
-	else if(pBody->fVelocityX < 0) {
+	else if(fVeloClampedX < 0) {
 		// moving left
 		UWORD uwTileLeft = (uwLeft - 1) / MAP_TILE_SIZE;
 		if(
@@ -280,7 +290,13 @@ void bodySimulate(tBodyBox *pBody) {
 
 	pBody->fPosX = fNewPosX;
 	pBody->fPosY = fNewPosY;
-	fNewPosY = fix16_add(fNewPosY, pBody->fVelocityY);
+
+	// Prevents skipping tiles
+	fix16_t fVeloClampedY = fix16_clamp(
+		pBody->fVelocityY, s_fVeloClampNegative, s_fVeloClampPositive
+	);
+
+	fNewPosY = fix16_add(fNewPosY, fVeloClampedY);
 
 	// Helper vars could be invalid at this point and manual fine-grained
 	// management of their updates is painful, so update all of them.
@@ -290,7 +306,7 @@ void bodySimulate(tBodyBox *pBody) {
 	uwLeft = fix16_to_int(fNewPosX);
 	uwRight = uwLeft + pBody->ubWidth - 1;
 
-	if(pBody->fVelocityY > 0) {
+	if(fVeloClampedY > 0) {
 		// falling down
 		UWORD uwTileBottom = (uwBottom + 1) / MAP_TILE_SIZE;
 		if(
@@ -302,13 +318,13 @@ void bodySimulate(tBodyBox *pBody) {
 			fNewPosY = fix16_from_int(uwTop);
 			pBody->fVelocityY = 0;
 			pBody->isOnGround = 1;
-			if(pBody->fVelocityX) {
+			if(fVeloClampedY) {
 				static fix16_t fFriction = fix16_one/2;
-				if(pBody->fVelocityX > 0) {
-					pBody->fVelocityX = fix16_max(fix16_sub(pBody->fVelocityX, fFriction), 0);
+				if(fVeloClampedY > 0) {
+					fVeloClampedY = fix16_max(fix16_sub(fVeloClampedY, fFriction), 0);
 				}
 				else {
-					pBody->fVelocityX = fix16_min(fix16_add(pBody->fVelocityX, fFriction), 0);
+					fVeloClampedY = fix16_min(fix16_add(fVeloClampedY, fFriction), 0);
 				}
 			}
 		}
@@ -351,7 +367,7 @@ void bodySimulate(tBodyBox *pBody) {
 			}
 		}
 	}
-	else if(pBody->fVelocityY < 0) {
+	else if(fVeloClampedY < 0) {
 		// flying up
 		if(
 			bodyCheckCollision(pBody, uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE, DIRECTION_UP) ||
