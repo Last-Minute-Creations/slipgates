@@ -292,9 +292,9 @@ static void gameGsCreate(void) {
 	TAG_END);
 
 	paletteLoad("data/slipgates.plt", s_pPalettes[PLAYER_MAX_HEALTH], 32);
-	s_pPalettes[PLAYER_MAX_HEALTH - 1][17] = 0xA86;
-	s_pPalettes[PLAYER_MAX_HEALTH - 1][18] = 0x27D;
-	s_pPalettes[PLAYER_MAX_HEALTH - 1][19] = 0xE96;
+	s_pPalettes[PLAYER_MAX_HEALTH][17] = 0xA86;
+	s_pPalettes[PLAYER_MAX_HEALTH][18] = 0x27D;
+	s_pPalettes[PLAYER_MAX_HEALTH][19] = 0xE96;
 	UBYTE ubPaletteIndexLast = PLAYER_MAX_HEALTH;
 	paletteToRed(s_pPalettes[ubPaletteIndexLast], s_pPalettes[0], 32);
 	for(UBYTE i = 0; i < ubPaletteIndexLast; ++i) {

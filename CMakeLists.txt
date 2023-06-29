@@ -295,9 +295,9 @@ convertTileset(
 convertBitmaps(
 	TARGET ${GAME_EXECUTABLE} PALETTE ${palette_slipgates_gpl}
 	INTERLEAVED SOURCES
-		${GEN_DIR}/tiles.png
+		${GEN_DIR}/tiles.png ${RES_DIR}/menu_bg.png
 	DESTINATIONS
-		${DATA_DIR}/tiles.bm
+		${DATA_DIR}/tiles.bm ${DATA_DIR}/menu_bg.bm
 )
 
 convertBitmaps(

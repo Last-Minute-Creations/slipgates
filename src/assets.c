@@ -7,6 +7,20 @@
 
 #define COLOR_WHITE 15
 
+void assetsGlobalCreate(void) {
+	systemUse();
+	g_pFont = fontCreate("data/uni54.fnt");
+	g_pBmCursor = bitmapCreateFromFile("data/cursor.bm", 0);
+	systemUnuse();
+}
+
+void assetsGlobalDestroy(void) {
+	systemUse();
+	bitmapDestroy(g_pBmCursor);
+	fontDestroy(g_pFont);
+	systemUnuse();
+}
+
 void assetsGameCreate(void) {
 	systemUse();
 	g_pPlayerFrames = bitmapCreateFromFile("data/player.bm", 0);
@@ -18,13 +32,11 @@ void assetsGameCreate(void) {
 	g_pSlipgateFramesA = bitmapCreateFromFile("data/slipgate_a.bm", 0);
 	g_pSlipgateFramesB = bitmapCreateFromFile("data/slipgate_b.bm", 0);
 	g_pSlipgateMasks = bitmapCreateFromFile("data/slipgates_mask.bm", 0);
-	g_pBmCursor = bitmapCreateFromFile("data/cursor.bm", 0);
 	g_pBmTiles = bitmapCreateFromFile("data/tiles.bm", 0);
 
 	g_pPlayerWhiteFrame = bitmapCreate(16, 16, 5, BMF_INTERLEAVED);
 	blitRect(g_pPlayerWhiteFrame, 0, 0, 16, 16, COLOR_WHITE);
 
-	g_pFont = fontCreate("data/uni54.fnt");
 	systemUnuse();
 }
 
@@ -39,11 +51,8 @@ void assetsGameDestroy(void) {
 	bitmapDestroy(g_pSlipgateFramesA);
 	bitmapDestroy(g_pSlipgateFramesB);
 	bitmapDestroy(g_pSlipgateMasks);
-	bitmapDestroy(g_pBmCursor);
 	bitmapDestroy(g_pBmTiles);
 	bitmapDestroy(g_pPlayerWhiteFrame);
-
-	fontDestroy(g_pFont);
 	systemUnuse();
 }
 

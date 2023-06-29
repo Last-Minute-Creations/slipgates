@@ -7,6 +7,10 @@
 
 #include <ace/utils/font.h>
 
+void assetsGlobalCreate(void);
+
+void assetsGlobalDestroy(void);
+
 void assetsGameCreate(void);
 
 void assetsGameDestroy(void);

@@ -42,12 +42,15 @@ General:
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
 	☐ Bigger max velocity?
+	☐ Save/load vistiles
+	☐ Add music
+	☐ Add audio mixer
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Game flow:
 	✔ Faster map restarts without file reload @done(23-06-13 18:39)
 	✔ Level selection hub @done(23-06-16 22:24)
-	☐ Menu
+	✔ Menu @done(23-06-29 16:08)
 	☐ Fade during loadings
 	☐ Attract mode?
 	☐ Intro/outro screen
