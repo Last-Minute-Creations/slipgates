@@ -69,10 +69,13 @@ tFadeState fadeProcess(tFade *pFade) {
 
 	if(pFade->ubCnt >= pFade->ubCntEnd) {
 		pFade->eState = FADE_STATE_EVENT_FIRED;
-		// Save state for return incase fade object gets destroyed in fade cb
 		if(pFade->cbOnDone) {
 			pFade->cbOnDone();
 		}
+
+		// Explicitly return in case fade object gets destroyed in fade cb
+		// and pFade->eState contains invalid data
+		return FADE_STATE_EVENT_FIRED;
 	}
 	return pFade->eState;
 }

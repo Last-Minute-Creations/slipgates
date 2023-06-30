@@ -23,6 +23,7 @@
 #include "bouncer.h"
 #include "assets.h"
 #include "debug.h"
+#include "menu.h"
 
 #define GAME_BPP 5
 
@@ -379,7 +380,7 @@ static void gameGsLoop(void) {
 	}
 
 	if(keyUse(KEY_ESCAPE)) {
-		statePop(g_pGameStateManager);
+		stateChange(g_pGameStateManager, &g_sStateMenu);
 		return;
 	}
 	else if(keyUse(KEY_F10)) {
