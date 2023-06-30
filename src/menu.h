@@ -6,7 +6,15 @@
 #define SLIPGATES_MENU_H
 
 #include <ace/managers/state.h>
+#include <ace/managers/viewport/simplebuffer.h>
+#include <ace/utils/font.h>
 
 extern tState g_sStateMenu;
+
+void menuDrawBackground(void);
+
+tSimpleBufferManager *menuGetBuffer(void);
+
+tTextBitMap *menuGetTextBitmap(void);
 
 #endif // SLIPGATES_MENU_H

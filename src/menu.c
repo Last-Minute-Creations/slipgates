@@ -14,6 +14,7 @@
 #include "slipgates.h"
 #include "assets.h"
 #include "game.h"
+#include "credits.h"
 
 //------------------------------------------------------------------------ TYPES
 
@@ -40,6 +41,7 @@ typedef enum tMenuExit {
 static tView *s_pView;
 static tVPort *s_pVp;
 static tSimpleBufferManager *s_pBfr;
+static tBitMap *s_pBg;
 static tTextBitMap *s_pTextBuffer;
 static tMenuExit s_eMenuExit;
 static tSprite *s_pSpriteCrosshair;
@@ -150,7 +152,7 @@ static UBYTE menuProcessExit(void) {
 			stateChange(g_pGameStateManager, &g_sStateGame);
 			break;
 		case MENU_EXIT_CREDITS:
-			// stateChange(g_pGameStateManager, &g_sStateCredits);
+			statePush(g_pGameStateManager, &g_sStateCredits);
 			break;
 		case MENU_EXIT_WORKBENCH:
 			statePop(g_pGameStateManager);
@@ -159,10 +161,38 @@ static UBYTE menuProcessExit(void) {
 			return 0;
 	}
 
+	s_eMenuExit = MENU_EXIT_NONE;
 	return 1;
 }
 
+static void menuRedrawAll(void) {
+	menuDrawBackground();
+	menuDraw();
+
+	fontDrawStr(
+		g_pFont, s_pBfr->pBack, SCREEN_PAL_WIDTH / 2, SCREEN_PAL_HEIGHT,
+		"A game by Last Minute Creations",
+		15, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM, s_pTextBuffer
+	);
+}
+
 //------------------------------------------------------------------- PUBLIC FNS
+
+void menuDrawBackground(void) {
+	blitCopyAligned(s_pBg, 0, 0, s_pBfr->pBack, 0, 0, SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT  / 2);
+	blitCopyAligned(
+		s_pBg, 0, SCREEN_PAL_HEIGHT  / 2, s_pBfr->pBack, 0, SCREEN_PAL_HEIGHT  / 2,
+		SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT  / 2
+	);
+}
+
+tSimpleBufferManager *menuGetBuffer(void) {
+	return s_pBfr;
+}
+
+tTextBitMap *menuGetTextBitmap(void) {
+	return s_pTextBuffer;
+}
 
 //-------------------------------------------------------------------- GAMESTATE
 
@@ -188,7 +218,8 @@ static void menuGsCreate(void) {
 	s_pVp->pPalette[17] = 0xA86;
 	s_pVp->pPalette[18] = 0x27D;
 	s_pVp->pPalette[19] = 0xE96;
-	bitmapLoadFromFile(s_pBfr->pBack, "data/menu_bg.bm", 0, 0);
+
+	s_pBg = bitmapCreateFromFile("data/menu_bg.bm", 0);
 
 	s_pTextBuffer = fontCreateTextBitMap(336, g_pFont->uwHeight);
 
@@ -209,13 +240,7 @@ static void menuGsCreate(void) {
 	menuAddOption("CREDITS", 1, onCredits);
 	menuAddOption("EXIT", 1, onExit);
 
-	menuDraw();
-
-	fontDrawStr(
-		g_pFont, s_pBfr->pBack, SCREEN_PAL_WIDTH / 2, SCREEN_PAL_HEIGHT,
-		"A game by Last Minute Creations",
-		15, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM, s_pTextBuffer
-	);
+	menuRedrawAll();
 	viewLoad(s_pView);
 }
 
@@ -248,9 +273,20 @@ static void menuGsDestroy(void) {
 
 	spriteManagerDestroy();
 	fontDestroyTextBitMap(s_pTextBuffer);
+	bitmapDestroy(s_pBg);
 	viewDestroy(s_pView);
 }
 
+static void menuGsResume(void) {
+	menuRedrawAll();
+	systemSetDmaBit(DMAB_SPRITE, 1);
+}
+
+static void menuGsSuspend(void) {
+	systemSetDmaBit(DMAB_SPRITE, 0);
+}
+
 tState g_sStateMenu = {
-	.cbCreate = menuGsCreate, .cbLoop = menuGsLoop, .cbDestroy = menuGsDestroy
+	.cbCreate = menuGsCreate, .cbLoop = menuGsLoop, .cbDestroy = menuGsDestroy,
+	.cbResume = menuGsResume, .cbSuspend = menuGsSuspend
 };
