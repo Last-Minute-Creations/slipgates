@@ -51,11 +51,13 @@ typedef enum tExitState {
 	EXIT_RESTART,
 	EXIT_NEXT,
 	EXIT_HUB,
+	EXIT_MENU,
 } tExitState;
 
 static tView *s_pView;
 static tVPort *s_pVpMain;
 static tSimpleBufferManager *s_pBufferMain;
+static tFade *s_pFade;
 
 static tPlayer s_sPlayer;
 static tBodyBox s_pBoxBodies[MAP_BOXES_MAX];
@@ -187,9 +189,10 @@ static void loadLevel(UBYTE ubIndex, UBYTE isForce) {
 	);
 
 	s_ubCurrentPaletteIndex = PLAYER_MAX_HEALTH;
-	memcpy(s_pVpMain->pPalette, s_pPalettes[s_ubCurrentPaletteIndex], sizeof(s_pPalettes[0]));
 
 	viewLoad(s_pView);
+	fadeChangeRefPalette(s_pFade, s_pPalettes[s_ubCurrentPaletteIndex], 1 << GAME_BPP);
+	fadeStart(s_pFade, FADE_STATE_IN, 15, 0, 0);
 }
 
 static void saveLevel(UBYTE ubIndex) {
@@ -273,6 +276,40 @@ static void paletteInterpolate(
 	}
 }
 
+void gameProcessExit(void) {
+	if(s_eExitState != EXIT_NONE) {
+		if(s_eExitState == EXIT_NEXT) {
+			loadLevel(s_ubCurrentLevelIndex + 1, 1);
+		}
+		else if(s_eExitState == EXIT_HUB) {
+			loadLevel(MAP_INDEX_HUB, 1);
+		}
+		else if(s_eExitState == EXIT_RESTART) {
+			loadLevel(s_ubCurrentLevelIndex, 0);
+		}
+		else if(s_eExitState == EXIT_MENU) {
+			stateChange(g_pGameStateManager, &g_sStateMenu);
+		}
+		return;
+	}
+}
+
+static void onGameFadeOut(void) {
+	gameProcessExit();
+}
+
+static void gameTransitionToExit(tExitState eExitState) {
+	if(s_eExitState != EXIT_NONE) {
+		return;
+	}
+
+	s_eExitState = eExitState;
+	fadeChangeRefPalette(s_pFade, s_pPalettes[s_ubCurrentPaletteIndex], 1 << GAME_BPP);
+	fadeStart(s_pFade, FADE_STATE_OUT, 15, 0, onGameFadeOut);
+}
+
+//-------------------------------------------------------------------- GAMESTATE
+
 static void gameGsCreate(void) {
 	gameMathInit();
 
@@ -306,7 +343,7 @@ static void gameGsCreate(void) {
 		);
 	}
 
-	memcpy(s_pVpMain->pPalette, s_pPalettes[PLAYER_MAX_HEALTH - 1], sizeof(s_pPalettes[0]));
+	s_pFade = fadeCreate(s_pView, s_pPalettes[PLAYER_MAX_HEALTH], 1 << GAME_BPP);
 
 	assetsGameCreate();
 	s_pTextBuffer = fontCreateTextBitMap(336, g_pFont->uwHeight * 2);
@@ -364,25 +401,17 @@ static void gameGsCreate(void) {
 }
 
 static void gameGsLoop(void) {
+	tFadeState eFadeState = fadeProcess(s_pFade);
+	if(eFadeState == FADE_STATE_EVENT_FIRED) {
+		return;
+	}
+
 	debugSetColor(0xF89);
 
-	if(s_eExitState != EXIT_NONE) {
-		if(s_eExitState == EXIT_NEXT) {
-			loadLevel(s_ubCurrentLevelIndex + 1, 1);
-		}
-		else if(s_eExitState == EXIT_HUB) {
-			loadLevel(MAP_INDEX_HUB, 1);
-		}
-		else if(s_eExitState == EXIT_RESTART) {
-			loadLevel(s_ubCurrentLevelIndex, 0);
-		}
-		return;
-	}
-
 	if(keyUse(KEY_ESCAPE)) {
-		stateChange(g_pGameStateManager, &g_sStateMenu);
-		return;
+		gameTransitionToExit(EXIT_MENU);
 	}
+#if defined(GAME_EDITOR_ENABLED)
 	else if(keyUse(KEY_F10)) {
 		loadLevel(0, 1);
 	}
@@ -402,6 +431,7 @@ static void gameGsLoop(void) {
 	if(keyUse(KEY_RBRACKET)) {
 		gameToggleGrid();
 	}
+#endif
 	if(keyUse(KEY_LBRACKET)) {
 		debugToggle();
 	}
@@ -577,8 +607,8 @@ static void gameGsLoop(void) {
 	spriteProcess(s_pSpriteCrosshair);
 	playerProcess(&s_sPlayer);
 
-	if(keyUse(KEY_G)) {
-		s_eExitState = EXIT_RESTART;
+	if(keyUse(KEY_R)) {
+		gameTransitionToExit(EXIT_RESTART);
 	}
 
 	for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {
@@ -618,10 +648,12 @@ static void gameGsLoop(void) {
 	vPortWaitForEnd(s_pVpMain);
 	systemIdleEnd();
 
-	if(s_ubCurrentPaletteIndex != s_sPlayer.bHealth) {
-		s_ubCurrentPaletteIndex = s_sPlayer.bHealth;
-		for(UBYTE i = 0; i < (1 << GAME_BPP); ++i) {
-			g_pCustom->color[i] = s_pPalettes[s_ubCurrentPaletteIndex][i];
+	if(eFadeState == FADE_STATE_IDLE) {
+		if(s_ubCurrentPaletteIndex != s_sPlayer.bHealth) {
+			s_ubCurrentPaletteIndex = s_sPlayer.bHealth;
+			for(UBYTE i = 0; i < (1 << GAME_BPP); ++i) {
+				g_pCustom->color[i] = s_pPalettes[s_ubCurrentPaletteIndex][i];
+			}
 		}
 	}
 }
@@ -630,6 +662,7 @@ static void gameGsDestroy(void) {
 	viewLoad(0);
 	systemUse();
 
+	fadeDestroy(s_pFade);
 	systemSetDmaBit(DMAB_SPRITE, 0);
 	spriteManagerDestroy();
 	viewDestroy(s_pView);
@@ -786,7 +819,7 @@ void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY, UBYTE isHub) {
 		// Subtract level index so that exit transition will increment to to proper one
 		s_ubCurrentLevelIndex = s_ubHubLevelTens + ubHubLevelOnes - 1;
 	}
-	s_eExitState = isHub ? EXIT_HUB : EXIT_NEXT;
+	gameTransitionToExit(isHub ? EXIT_HUB : EXIT_NEXT);
 }
 
 void gameDrawSlipgate(UBYTE ubIndex) {

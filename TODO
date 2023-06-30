@@ -52,7 +52,7 @@ Game flow:
 	✔ Level selection hub @done(23-06-16 22:24)
 	✔ Menu @done(23-06-29 16:08)
 	✔ Credits @done(23-06-30 16:38)
-	☐ Fade during loadings
+	✔ Fade during loadings @done(23-06-30 21:47)
 	☐ Attract mode?
 	☐ Intro/outro screen
 	☐ LMC/ACE logos
