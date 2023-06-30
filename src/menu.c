@@ -45,26 +45,59 @@ static tBitMap *s_pBg;
 static tTextBitMap *s_pTextBuffer;
 static tMenuExit s_eMenuExit;
 static tSprite *s_pSpriteCrosshair;
+static UWORD s_pPalette[32];
+static tFade *s_pFade;
 
 static tMenuOption s_pOptions[5];
 static UBYTE s_ubOptionCount;
 
 //------------------------------------------------------------------ PRIVATE FNS
 
+static void menuProcessExit(void) {
+	switch(s_eMenuExit) {
+		case MENU_EXIT_NEW_GAME:
+			// gamePrepareNew();
+			stateChange(g_pGameStateManager, &g_sStateGame);
+			break;
+		case MENU_EXIT_CONTINUE:
+			// gamePrepareContinue();
+			stateChange(g_pGameStateManager, &g_sStateGame);
+			break;
+		case MENU_EXIT_CREDITS:
+			statePush(g_pGameStateManager, &g_sStateCredits);
+			break;
+		case MENU_EXIT_WORKBENCH:
+			statePop(g_pGameStateManager);
+			break;
+		default:
+			return;
+	}
+
+	s_eMenuExit = MENU_EXIT_NONE;
+}
+
+static void onFadeOut(void) {
+	menuProcessExit();
+}
+
 static void onNewGame(void) {
 	s_eMenuExit = MENU_EXIT_NEW_GAME;
+	fadeStart(s_pFade, FADE_STATE_OUT, 15, 0, onFadeOut);
 }
 
 static void onContinue(void) {
 	s_eMenuExit = MENU_EXIT_CONTINUE;
+	fadeStart(s_pFade, FADE_STATE_OUT, 15, 0, onFadeOut);
 }
 
 static void onCredits(void) {
 	s_eMenuExit = MENU_EXIT_CREDITS;
+	fadeStart(s_pFade, FADE_STATE_OUT, 15, 0, onFadeOut);
 }
 
 static void onExit(void) {
 	s_eMenuExit = MENU_EXIT_WORKBENCH;
+	fadeStart(s_pFade, FADE_STATE_OUT, 15, 0, onFadeOut);
 }
 
 static void menuClearOptions(void) {
@@ -141,30 +174,6 @@ static void menuProcess(UWORD uwMouseX, UWORD uwMouseY) {
 	}
 }
 
-static UBYTE menuProcessExit(void) {
-	switch(s_eMenuExit) {
-		case MENU_EXIT_NEW_GAME:
-			// gamePrepareNew();
-			stateChange(g_pGameStateManager, &g_sStateGame);
-			break;
-		case MENU_EXIT_CONTINUE:
-			// gamePrepareContinue();
-			stateChange(g_pGameStateManager, &g_sStateGame);
-			break;
-		case MENU_EXIT_CREDITS:
-			statePush(g_pGameStateManager, &g_sStateCredits);
-			break;
-		case MENU_EXIT_WORKBENCH:
-			statePop(g_pGameStateManager);
-			break;
-		default:
-			return 0;
-	}
-
-	s_eMenuExit = MENU_EXIT_NONE;
-	return 1;
-}
-
 static void menuRedrawAll(void) {
 	menuDrawBackground();
 	menuDraw();
@@ -194,6 +203,10 @@ tTextBitMap *menuGetTextBitmap(void) {
 	return s_pTextBuffer;
 }
 
+tFade *menuGetFade(void) {
+	return s_pFade;
+}
+
 //-------------------------------------------------------------------- GAMESTATE
 
 static void menuGsCreate(void) {
@@ -214,10 +227,11 @@ static void menuGsCreate(void) {
 		TAG_SIMPLEBUFFER_IS_DBLBUF, 0,
 	TAG_END);
 
-	paletteLoad("data/slipgates.plt", s_pVp->pPalette, 32);
-	s_pVp->pPalette[17] = 0xA86;
-	s_pVp->pPalette[18] = 0x27D;
-	s_pVp->pPalette[19] = 0xE96;
+	paletteLoad("data/slipgates.plt", s_pPalette, 32);
+	s_pPalette[17] = 0xA86;
+	s_pPalette[18] = 0x27D;
+	s_pPalette[19] = 0xE96;
+	s_pFade = fadeCreate(s_pView, s_pPalette, 32);
 
 	s_pBg = bitmapCreateFromFile("data/menu_bg.bm", 0);
 
@@ -241,6 +255,7 @@ static void menuGsCreate(void) {
 	menuAddOption("EXIT", 1, onExit);
 
 	menuRedrawAll();
+	fadeStart(s_pFade, FADE_STATE_IN, 15, 0, 0);
 	viewLoad(s_pView);
 }
 
@@ -250,15 +265,16 @@ static void menuGsLoop(void) {
 		return;
 	}
 
+	if(fadeProcess(s_pFade) == FADE_STATE_EVENT_FIRED) {
+		return;
+	}
+
 	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
 	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
 	s_pSpriteCrosshair->wX = uwMouseX - 8;
 	s_pSpriteCrosshair->wY = uwMouseY - 14;
 	spriteProcess(s_pSpriteCrosshair);
 
-	if(menuProcessExit()) {
-		return;
-	}
 	menuProcess(uwMouseX, uwMouseY);
 
 	vPortWaitForEnd(s_pVp);
@@ -271,6 +287,7 @@ static void menuGsDestroy(void) {
 
 	systemUse();
 
+	fadeDestroy(s_pFade);
 	spriteManagerDestroy();
 	fontDestroyTextBitMap(s_pTextBuffer);
 	bitmapDestroy(s_pBg);
@@ -280,6 +297,7 @@ static void menuGsDestroy(void) {
 static void menuGsResume(void) {
 	menuRedrawAll();
 	systemSetDmaBit(DMAB_SPRITE, 1);
+	fadeStart(s_pFade, FADE_STATE_IN, 15, 0, 0);
 }
 
 static void menuGsSuspend(void) {

@@ -5,6 +5,7 @@
 #include "credits.h"
 #include <ace/managers/key.h>
 #include <ace/managers/mouse.h>
+#include <ace/utils/string.h>
 #include "slipgates.h"
 #include "menu.h"
 #include "assets.h"
@@ -37,6 +38,10 @@ static const char *s_pCreditsLines[] = {
 
 //------------------------------------------------------------------ PRIVATE FNS
 
+static void onCreditsFadeOut(void) {
+	statePop(g_pGameStateManager);
+}
+
 //------------------------------------------------------------------- PUBLIC FNS
 
 //-------------------------------------------------------------------- GAMESTATE
@@ -48,17 +53,29 @@ static void creditsGsCreate(void) {
 	UWORD uwY = 65;
 	tTextBitMap *pTextBitmap = menuGetTextBitmap();
 	for(UBYTE i = 0; i < CREDITS_LINE_COUNT; ++i) {
-		fontDrawStr(
-			g_pFont, s_pBfr->pBack, 10, uwY, s_pCreditsLines[i], 12,
-			FONT_COOKIE | FONT_SHADOW, pTextBitmap
-		);
+		if(!stringIsEmpty(s_pCreditsLines[i])) {
+			fontDrawStr(
+				g_pFont, s_pBfr->pBack, 10, uwY, s_pCreditsLines[i], 12,
+				FONT_COOKIE | FONT_SHADOW, pTextBitmap
+			);
+		}
+
 		uwY += g_pFont->uwHeight + 1;
 	}
+
+	fadeStart(menuGetFade(), FADE_STATE_IN, 15, 0, 0);
 }
 
 static void creditsGsLoop(void) {
-	if(keyUse(KEY_ESCAPE) || keyUse(KEY_F) || mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
-		statePop(g_pGameStateManager);
+	tFade *pFade = menuGetFade();
+	tFadeState eFadeState = fadeProcess(pFade);
+	if(eFadeState == FADE_STATE_IDLE) {
+		if(keyUse(KEY_ESCAPE) || keyUse(KEY_F) || mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
+			fadeStart(pFade, FADE_STATE_OUT, 15, 0, onCreditsFadeOut);
+			return;
+		}
+	}
+	else if(eFadeState == FADE_STATE_EVENT_FIRED) {
 		return;
 	}
 

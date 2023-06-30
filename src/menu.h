@@ -8,6 +8,7 @@
 #include <ace/managers/state.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/font.h>
+#include "fade.h"
 
 extern tState g_sStateMenu;
 
@@ -16,5 +17,7 @@ void menuDrawBackground(void);
 tSimpleBufferManager *menuGetBuffer(void);
 
 tTextBitMap *menuGetTextBitmap(void);
+
+tFade *menuGetFade(void);
 
 #endif // SLIPGATES_MENU_H
