@@ -180,10 +180,16 @@ static void menuRedrawAll(void) {
 	menuDrawBackground();
 	menuDraw();
 
+	static const char szVersion[15] = "V." GAME_VERSION;
+	fontDrawStr(
+		g_pFont, s_pBfr->pBack, 320, 50, szVersion,
+		12, FONT_RIGHT | FONT_COOKIE, s_pTextBuffer
+	);
+
 	fontDrawStr(
 		g_pFont, s_pBfr->pBack, SCREEN_PAL_WIDTH / 2, SCREEN_PAL_HEIGHT,
 		"A game by Last Minute Creations",
-		15, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM, s_pTextBuffer
+		12, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM, s_pTextBuffer
 	);
 }
 
