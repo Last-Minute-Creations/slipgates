@@ -48,6 +48,7 @@ set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
 set(GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 file(MAKE_DIRECTORY ${DATA_DIR})
+file(MAKE_DIRECTORY ${DATA_DIR}/logo)
 file(MAKE_DIRECTORY ${GEN_DIR})
 file(MAKE_DIRECTORY ${GEN_DIR}/tiles)
 file(GLOB COPY_FILES ${RES_DIR}/copied/*)
@@ -311,6 +312,30 @@ convertBitmaps(
 convertFont(
 	TARGET ${GAME_EXECUTABLE} FIRST_CHAR 32
 	SOURCE ${RES_DIR}/uni54.png DESTINATION ${DATA_DIR}/uni54.fnt
+)
+
+# Logo assets
+set(LMC_PLT_PATH ${DATA_DIR}/logo/lmc.plt)
+convertPalette(${GAME_EXECUTABLE} ${RES_DIR}/logo/lmc.gpl ${LMC_PLT_PATH})
+
+
+convertBitmaps(
+	TARGET ${GAME_EXECUTABLE} PALETTE ${LMC_PLT_PATH}
+	INTERLEAVED SOURCES ${RES_DIR}/logo/lmc.png DESTINATIONS ${DATA_DIR}/logo/lmc.bm
+)
+
+convertBitmaps(
+	TARGET ${GAME_EXECUTABLE} PALETTE ${RES_DIR}/logo/ace.gpl
+	INTERLEAVED SOURCES ${RES_DIR}/logo/ace.png DESTINATIONS ${DATA_DIR}/logo/ace.bm
+)
+
+convertAudio(
+	TARGET ${GAME_EXECUTABLE} SOURCE ${RES_DIR}/logo/ace.wav
+	DESTINATION ${DATA_DIR}/logo/ace.sfx
+)
+convertAudio(
+	TARGET ${GAME_EXECUTABLE} SOURCE ${RES_DIR}/logo/lmc.wav
+	STRICT DESTINATION ${DATA_DIR}/logo/lmc.sfx
 )
 
 # Version stuff

@@ -6,27 +6,28 @@
 #define GENERIC_MAIN_LOOP_CONDITION g_pGameStateManager->pCurrent
 #include <ace/generic/main.h>
 #include <ace/managers/key.h>
-#include <ace/managers/joy.h>
 #include <ace/managers/mouse.h>
-#include "game.h"
+#include <ace/managers/ptplayer.h>
+#include "logo.h"
 #include "menu.h"
+#include "game.h"
 #include "assets.h"
 
 tStateManager *g_pGameStateManager;
 
 void genericCreate(void) {
+	ptplayerCreate(1);
 	keyCreate();
-	joyOpen();
 	mouseCreate(MOUSE_PORT_1);
 	g_pGameStateManager = stateManagerCreate();
 	assetsGlobalCreate();
+	// statePush(g_pGameStateManager, &g_sStateLogo);
 	statePush(g_pGameStateManager, &g_sStateMenu);
 	// statePush(g_pGameStateManager, &g_sStateGame);
 }
 
 void genericProcess(void) {
 	keyProcess();
-	joyProcess();
 	mouseProcess();
 	stateProcess(g_pGameStateManager);
 }
@@ -35,6 +36,6 @@ void genericDestroy(void) {
 	assetsGlobalDestroy();
 	stateManagerDestroy(g_pGameStateManager);
 	keyDestroy();
-	joyClose();
 	mouseDestroy();
+	ptplayerDestroy();
 }
