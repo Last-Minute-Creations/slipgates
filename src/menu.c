@@ -15,6 +15,7 @@
 #include "assets.h"
 #include "game.h"
 #include "credits.h"
+#include "cutscene.h"
 
 //------------------------------------------------------------------------ TYPES
 
@@ -57,7 +58,8 @@ static void menuProcessExit(void) {
 	switch(s_eMenuExit) {
 		case MENU_EXIT_NEW_GAME:
 			// gamePrepareNew();
-			stateChange(g_pGameStateManager, &g_sStateGame);
+			cutsceneSetup(0, &g_sStateGame);
+			stateChange(g_pGameStateManager, &g_sStateCutscene);
 			break;
 		case MENU_EXIT_CONTINUE:
 			// gamePrepareContinue();

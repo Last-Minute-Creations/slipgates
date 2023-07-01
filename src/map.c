@@ -799,7 +799,7 @@ void mapLoad(UBYTE ubIndex) {
 	s_sLoadedLevel.ubSpikeTilesCount = 0;
 	s_ubTurretCount = 0;
 
-	if(ubIndex == 0) {
+	if(ubIndex == MAP_INDEX_DEVELOP) {
 		// hadcoded level
 		memset(&s_sLoadedLevel, 0, sizeof(s_sLoadedLevel));
 		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {

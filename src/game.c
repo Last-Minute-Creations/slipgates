@@ -24,6 +24,7 @@
 #include "assets.h"
 #include "debug.h"
 #include "menu.h"
+#include "cutscene.h"
 
 #define GAME_BPP 5
 
@@ -279,7 +280,13 @@ static void paletteInterpolate(
 void gameProcessExit(void) {
 	if(s_eExitState != EXIT_NONE) {
 		if(s_eExitState == EXIT_NEXT) {
-			loadLevel(s_ubCurrentLevelIndex + 1, 1);
+			if(s_ubCurrentLevelIndex == MAP_INDEX_LAST) {
+				cutsceneSetup(1, &g_sStateMenu);
+				stateChange(g_pGameStateManager, &g_sStateCutscene);
+			}
+			else {
+				loadLevel(s_ubCurrentLevelIndex + 1, 1);
+			}
 		}
 		else if(s_eExitState == EXIT_HUB) {
 			loadLevel(MAP_INDEX_HUB, 1);
@@ -397,7 +404,7 @@ static void gameGsCreate(void) {
 	s_ubUnlockedLevels = 15;
 
 	systemUnuse();
-	loadLevel(0, 1);
+	loadLevel(MAP_INDEX_FIRST, 1);
 }
 
 static void gameGsLoop(void) {
@@ -413,7 +420,7 @@ static void gameGsLoop(void) {
 	}
 #if defined(GAME_EDITOR_ENABLED)
 	else if(keyUse(KEY_F10)) {
-		loadLevel(0, 1);
+		loadLevel(MAP_INDEX_DEVELOP, 1);
 	}
 	else {
 		for(UBYTE i = 0; i < 9; ++i) {
