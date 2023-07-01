@@ -38,12 +38,13 @@ General:
 	✔ Regenerate life over time @done(23-06-27 17:55)
 	✔ Damage feedback with palette effects @done(23-06-27 20:43)
 	✔ Soft velocity cap @done(23-06-28 15:57)
+	✔ Add ptplayer @done(23-07-01 14:37)
+	✔ Better air control @done(23-07-01 16:13)
 	☐ Upgrade steep angle tracer precision, e.g. shooting floor on the ground
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
 	☐ Bigger max velocity?
 	☐ Save/load vistiles
-	☐ Add music
 	☐ Add audio mixer
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
