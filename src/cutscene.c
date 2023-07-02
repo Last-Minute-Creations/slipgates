@@ -354,6 +354,7 @@ static void cutsceneGsDestroy(void) {
 	systemUse();
 	viewDestroy(s_pView);
 	fadeDestroy(s_pFade);
+	fontDestroyTextBitMap(s_pTextBitmap);
 
 	// Destroy slides
 	for(UBYTE i = 0; i < s_ubSlideCount; ++i) {
