@@ -25,6 +25,7 @@
 #include "debug.h"
 #include "menu.h"
 #include "cutscene.h"
+#include "config.h"
 
 #define GAME_BPP 5
 
@@ -67,11 +68,9 @@ static tTextBitMap *s_pTextBuffer;
 static tBob s_sBobSlipgate;
 
 static UWORD s_uwGameFrame;
-static UBYTE s_ubCurrentLevelIndex;
 static tExitState s_eExitState;
 static BYTE s_bHubActiveDoors;
 static UBYTE s_ubHubLevelTens;
-static UBYTE s_ubUnlockedLevels;
 static UWORD s_uwPrevButtonPresses;
 static UBYTE s_isDrawGrid;
 static tSlipgateDirectionFrameData s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_COUNT];
@@ -140,19 +139,15 @@ static void loadLevel(UBYTE ubIndex, UBYTE isForce) {
 	viewLoad(0);
 	s_uwGameFrame = 0;
 	s_eExitState = EXIT_NONE;
-	if(ubIndex == s_ubCurrentLevelIndex && !isForce) {
+	if(ubIndex == g_sConfig.ubCurrentLevel && !isForce) {
 		mapRestart();
 	}
 	else {
-		s_ubCurrentLevelIndex = ubIndex;
+		g_sConfig.ubCurrentLevel = ubIndex;
 
 		if(ubIndex != MAP_INDEX_HUB) {
-			s_ubUnlockedLevels = MAX(ubIndex, s_ubUnlockedLevels);
-			systemUse();
-			tFile *pFile = fileOpen("save.dat", "wb");
-			fileWrite(pFile, &s_ubUnlockedLevels, sizeof(s_ubUnlockedLevels));
-			fileClose(pFile);
-			systemUnuse();
+			g_sConfig.ubUnlockedLevels = MAX(ubIndex, g_sConfig.ubUnlockedLevels);
+			configSave();
 		}
 
 		mapLoad(ubIndex);
@@ -209,7 +204,7 @@ static void saveLevel(UBYTE ubIndex) {
 }
 
 static void hubProcess(void) {
-	if(s_ubCurrentLevelIndex != MAP_INDEX_HUB) {
+	if(g_sConfig.ubCurrentLevel != MAP_INDEX_HUB) {
 		return;
 	}
 
@@ -232,7 +227,7 @@ static void hubProcess(void) {
 			// Don't change anything
 			// s_bHubActiveDoors = 0;
 		}
-		s_bHubActiveDoors = s_ubUnlockedLevels - s_ubHubLevelTens;
+		s_bHubActiveDoors = g_sConfig.ubUnlockedLevels - s_ubHubLevelTens;
 		s_bHubActiveDoors = CLAMP(s_bHubActiveDoors, 0, 10);
 		s_uwPrevButtonPresses = uwButtonPresses;
 	}
@@ -280,19 +275,19 @@ static void paletteInterpolate(
 void gameProcessExit(void) {
 	if(s_eExitState != EXIT_NONE) {
 		if(s_eExitState == EXIT_NEXT) {
-			if(s_ubCurrentLevelIndex == MAP_INDEX_LAST) {
+			if(g_sConfig.ubCurrentLevel == MAP_INDEX_LAST) {
 				cutsceneSetup(1, &g_sStateMenu);
 				stateChange(g_pGameStateManager, &g_sStateCutscene);
 			}
 			else {
-				loadLevel(s_ubCurrentLevelIndex + 1, 1);
+				loadLevel(g_sConfig.ubCurrentLevel + 1, 1);
 			}
 		}
 		else if(s_eExitState == EXIT_HUB) {
 			loadLevel(MAP_INDEX_HUB, 1);
 		}
 		else if(s_eExitState == EXIT_RESTART) {
-			loadLevel(s_ubCurrentLevelIndex, 0);
+			loadLevel(g_sConfig.ubCurrentLevel, 0);
 		}
 		else if(s_eExitState == EXIT_MENU) {
 			stateChange(g_pGameStateManager, &g_sStateMenu);
@@ -394,17 +389,9 @@ static void gameGsCreate(void) {
 	mouseSetBounds(MOUSE_PORT_1, 0, 0, SCREEN_PAL_WIDTH - 16, SCREEN_PAL_HEIGHT - 27);
 
 	s_isDrawGrid = 0;
-	s_ubCurrentLevelIndex = 255;
-	s_ubUnlockedLevels = 1;
-	tFile *pFile = fileOpen("save.dat", "rb");
-	if(pFile) {
-		fileRead(pFile, &s_ubUnlockedLevels, sizeof(s_ubUnlockedLevels));
-		fileClose(pFile);
-	}
-	s_ubUnlockedLevels = 15;
 
 	systemUnuse();
-	loadLevel(MAP_INDEX_FIRST, 1);
+	loadLevel(g_sConfig.ubCurrentLevel, 1);
 }
 
 static void gameGsLoop(void) {
@@ -786,7 +773,7 @@ tUwCoordYX gameGetCrossPosition(void) {
 }
 
 void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY, UBYTE isHub) {
-	if(s_ubCurrentLevelIndex == MAP_INDEX_HUB) {
+	if(g_sConfig.ubCurrentLevel == MAP_INDEX_HUB) {
 		UBYTE ubHubLevelOnes = 0;
 		if(ubTileX == 2) { // leftmost: 0, 2, 4, 6
 			if(ubTileY <= 5) {
@@ -824,7 +811,7 @@ void gameMarkExitReached(UBYTE ubTileX, UBYTE ubTileY, UBYTE isHub) {
 		}
 
 		// Subtract level index so that exit transition will increment to to proper one
-		s_ubCurrentLevelIndex = s_ubHubLevelTens + ubHubLevelOnes - 1;
+		g_sConfig.ubCurrentLevel = s_ubHubLevelTens + ubHubLevelOnes - 1;
 	}
 	gameTransitionToExit(isHub ? EXIT_HUB : EXIT_NEXT);
 }

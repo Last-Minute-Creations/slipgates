@@ -16,6 +16,7 @@
 #include "game.h"
 #include "credits.h"
 #include "cutscene.h"
+#include "config.h"
 
 //------------------------------------------------------------------------ TYPES
 
@@ -84,6 +85,7 @@ static void onFadeOut(void) {
 
 static void onNewGame(void) {
 	s_eMenuExit = MENU_EXIT_NEW_GAME;
+	configResetProgress();
 	fadeStart(s_pFade, FADE_STATE_OUT, 15, 0, onFadeOut);
 }
 
@@ -256,7 +258,7 @@ static void menuGsCreate(void) {
 	s_eMenuExit = MENU_EXIT_NONE;
 
 	menuClearOptions();
-	UBYTE isContinueEnabled = 0;
+	UBYTE isContinueEnabled = g_sConfig.ubUnlockedLevels > 1;
 	menuAddOption("NEW GAME", 1, onNewGame);
 	menuAddOption("CONTINUE", isContinueEnabled, onContinue);
 	menuAddOption("CREDITS", 1, onCredits);

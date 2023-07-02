@@ -12,6 +12,7 @@
 #include "menu.h"
 #include "game.h"
 #include "assets.h"
+#include "config.h"
 
 tStateManager *g_pGameStateManager;
 
@@ -21,6 +22,7 @@ void genericCreate(void) {
 	mouseCreate(MOUSE_PORT_1);
 	g_pGameStateManager = stateManagerCreate();
 	assetsGlobalCreate();
+	configLoad();
 	// statePush(g_pGameStateManager, &g_sStateLogo);
 	statePush(g_pGameStateManager, &g_sStateMenu);
 	// statePush(g_pGameStateManager, &g_sStateGame);
