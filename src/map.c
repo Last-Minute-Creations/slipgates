@@ -1342,7 +1342,7 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 
 	// TODO: this should only check for empty tile on left/right/up/down direction
 	// and then do the same comparisons for x-1,x,x+1 for up/down and y for left-right
-	if(
+	if( // x,y is top tile of left-normal slipgate
 		!mapIsEmptyAt(ubTileX, ubTileY - 1) &&
 		mapIsEmptyAt(ubTileX - 1, ubTileY) &&
 		mapIsSlipgatableAt(ubTileX, ubTileY + 1) &&
@@ -1360,10 +1360,10 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		pSlipgate->sTilePositions[3].ubY = ubTileY + 1;
 		pSlipgate->eNormal = DIRECTION_LEFT;
 	}
-	else if(
+	else if( // x,y is bottom tile of left-normal slipgate
 		!mapIsEmptyAt(ubTileX, ubTileY - 2) &&
 		mapIsEmptyAt(ubTileX - 1, ubTileY - 1) &&
-		mapIsSlipgatableAt(ubTileX, ubTileY) &&
+		mapIsSlipgatableAt(ubTileX, ubTileY - 1) &&
 		mapIsEmptyAt(ubTileX - 1, ubTileY) &&
 		!mapIsEmptyAt(ubTileX - 1, ubTileY + 1)
 	) {
@@ -1378,7 +1378,7 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		pSlipgate->sTilePositions[3].ubY = ubTileY;
 		pSlipgate->eNormal = DIRECTION_LEFT;
 	}
-	else if(
+	else if( // x,y is top tile of right-normal slipgate
 		!mapIsEmptyAt(ubTileX, ubTileY - 1) &&
 		mapIsEmptyAt(ubTileX + 1, ubTileY) &&
 		mapIsSlipgatableAt(ubTileX, ubTileY + 1) &&
@@ -1396,10 +1396,10 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		pSlipgate->sTilePositions[3].ubY = ubTileY + 1;
 		pSlipgate->eNormal = DIRECTION_RIGHT;
 	}
-	else if(
+	else if( // x,y is bottom tile of right-normal slipgate
 		!mapIsEmptyAt(ubTileX, ubTileY - 2) &&
 		mapIsEmptyAt(ubTileX + 1, ubTileY - 1) &&
-		mapIsSlipgatableAt(ubTileX, ubTileY) &&
+		mapIsSlipgatableAt(ubTileX, ubTileY - 1) &&
 		mapIsEmptyAt(ubTileX + 1, ubTileY) &&
 		!mapIsEmptyAt(ubTileX + 1, ubTileY + 1)
 	) {
@@ -1414,7 +1414,7 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		pSlipgate->sTilePositions[3].ubY = ubTileY;
 		pSlipgate->eNormal = DIRECTION_RIGHT;
 	}
-	else if(
+	else if( // x,y is left tile of up-normal slipgate
 		!mapIsEmptyAt(ubTileX - 1, ubTileY) &&
 		mapIsEmptyAt(ubTileX, ubTileY - 1) &&
 		mapIsSlipgatableAt(ubTileX + 1, ubTileY) &&
@@ -1432,10 +1432,10 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		pSlipgate->sTilePositions[3].ubY = ubTileY - 1;
 		pSlipgate->eNormal = DIRECTION_UP;
 	}
-	else if(
+	else if( // x,y is right tile of up-normal slipgate
 		!mapIsEmptyAt(ubTileX - 2, ubTileY) &&
 		mapIsEmptyAt(ubTileX - 1, ubTileY - 1) &&
-		mapIsSlipgatableAt(ubTileX, ubTileY) &&
+		mapIsSlipgatableAt(ubTileX - 1, ubTileY) &&
 		mapIsEmptyAt(ubTileX, ubTileY - 1) &&
 		!mapIsEmptyAt(ubTileX + 1, ubTileY)
 	) {
@@ -1450,7 +1450,7 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		pSlipgate->sTilePositions[3].ubY = ubTileY - 1;
 		pSlipgate->eNormal = DIRECTION_UP;
 	}
-	else if(
+	else if( // x,y is left tile of down-normal slipgate
 		!mapIsEmptyAt(ubTileX - 1, ubTileY) &&
 		mapIsEmptyAt(ubTileX, ubTileY + 1) &&
 		mapIsSlipgatableAt(ubTileX + 1, ubTileY) &&
@@ -1468,10 +1468,10 @@ UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
 		pSlipgate->sTilePositions[3].ubY = ubTileY + 1;
 		pSlipgate->eNormal = DIRECTION_DOWN;
 	}
-	else if(
+	else if( // x,y is right tile of down-normal slipgate
 		!mapIsEmptyAt(ubTileX - 2, ubTileY) &&
 		mapIsEmptyAt(ubTileX - 1, ubTileY + 1) &&
-		mapIsSlipgatableAt(ubTileX, ubTileY) &&
+		mapIsSlipgatableAt(ubTileX - 1, ubTileY) &&
 		mapIsEmptyAt(ubTileX, ubTileY + 1) &&
 		!mapIsEmptyAt(ubTileX + 1, ubTileY)
 	) {
