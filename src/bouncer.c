@@ -5,7 +5,7 @@
 #include "bouncer.h"
 #include "game.h"
 
-#define BOUNCER_LIFE_COOLDOWN 100
+#define BOUNCER_LIFE_COOLDOWN 500
 #define BOUNCER_SPAWN_COOLDOWN 100
 #define BOUNCER_VELOCITY 2
 
