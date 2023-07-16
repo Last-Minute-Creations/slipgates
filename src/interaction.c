@@ -25,6 +25,9 @@ void interactionChangeOrRemoveTile(
 	if(pOldInteraction == pInteraction) {
 		return;
 	}
+	if(!pInteraction) {
+		return;
+	}
 
 	// Add tile to new interaction
 	if(pInteraction->ubTargetCount < INTERACTION_TARGET_MAX) {

@@ -1162,7 +1162,12 @@ void mapSetOrRemoveDoorInteractionAt(
 		VIS_TILE_DOOR_LEFT_OPEN_WALL_TOP - VIS_TILE_DOOR_LEFT_CLOSED_WALL_TOP
 	);
 
-	tInteraction *pInteraction = mapGetInteractionByIndex(ubInteractionIndex);
+	tInteraction *pInteractionUnderCursor = mapGetInteractionByTile(ubTileX, ubTileY);
+	tInteraction *pNewInteraction = mapGetInteractionByIndex(ubInteractionIndex);
+	if(pInteractionUnderCursor && pNewInteraction == pInteractionUnderCursor) {
+		pNewInteraction = 0;
+	}
+
 	if(
 		g_sCurrentLevel.pTiles[ubTileX - 1][ubTileY] == TILE_DOOR_CLOSED ||
 		g_sCurrentLevel.pTiles[ubTileX + 1][ubTileY] == TILE_DOOR_CLOSED
@@ -1176,7 +1181,7 @@ void mapSetOrRemoveDoorInteractionAt(
 		// Left wall tile
 		interactionChangeOrRemoveTile(
 			mapGetInteractionByTile(ubX, ubTileY),
-			pInteraction, ubX, ubTileY, INTERACTION_KIND_GATE,
+			pNewInteraction, ubX, ubTileY, INTERACTION_KIND_GATE,
 			TILE_WALL, TILE_WALL,
 			g_sCurrentLevel.pVisTiles[ubX][ubTileY] + bClosedToOpen,
 			g_sCurrentLevel.pVisTiles[ubX][ubTileY]
@@ -1187,14 +1192,14 @@ void mapSetOrRemoveDoorInteractionAt(
 		while(g_sCurrentLevel.pTiles[ubX][ubTileY] == TILE_DOOR_CLOSED) {
 			interactionChangeOrRemoveTile(
 				mapGetInteractionByTile(ubX, ubTileY),
-				pInteraction, ubX, ubTileY - 1, INTERACTION_KIND_GATE,
+				pNewInteraction, ubX, ubTileY - 1, INTERACTION_KIND_GATE,
 				TILE_DOOR_OPEN, TILE_DOOR_CLOSED,
 				g_sCurrentLevel.pVisTiles[ubX][ubTileY - 1] + bClosedToOpen,
 				g_sCurrentLevel.pVisTiles[ubX][ubTileY - 1]
 			);
 			interactionChangeOrRemoveTile(
 				mapGetInteractionByTile(ubX, ubTileY),
-				pInteraction, ubX, ubTileY, INTERACTION_KIND_GATE,
+				pNewInteraction, ubX, ubTileY, INTERACTION_KIND_GATE,
 				TILE_DOOR_OPEN, TILE_DOOR_CLOSED,
 				g_sCurrentLevel.pVisTiles[ubX][ubTileY] + bClosedToOpen,
 				g_sCurrentLevel.pVisTiles[ubX][ubTileY]
@@ -1205,7 +1210,7 @@ void mapSetOrRemoveDoorInteractionAt(
 		// Right wall tile
 		interactionChangeOrRemoveTile(
 			mapGetInteractionByTile(ubX, ubTileY),
-			pInteraction, ubX, ubTileY, INTERACTION_KIND_GATE,
+			pNewInteraction, ubX, ubTileY, INTERACTION_KIND_GATE,
 			TILE_WALL, TILE_WALL,
 			g_sCurrentLevel.pVisTiles[ubX][ubTileY] + bClosedToOpen,
 			g_sCurrentLevel.pVisTiles[ubX][ubTileY]
@@ -1221,7 +1226,7 @@ void mapSetOrRemoveDoorInteractionAt(
 		// Top wall tile
 		interactionChangeOrRemoveTile(
 			mapGetInteractionByTile(ubTileX, ubY),
-			pInteraction, ubTileX, ubY, INTERACTION_KIND_GATE,
+			pNewInteraction, ubTileX, ubY, INTERACTION_KIND_GATE,
 			TILE_WALL, TILE_WALL,
 			g_sCurrentLevel.pVisTiles[ubTileX][ubY] + bClosedToOpen,
 			g_sCurrentLevel.pVisTiles[ubTileX][ubY]
@@ -1232,7 +1237,7 @@ void mapSetOrRemoveDoorInteractionAt(
 		while(g_sCurrentLevel.pTiles[ubTileX][ubY] == TILE_DOOR_CLOSED) {
 			interactionChangeOrRemoveTile(
 				mapGetInteractionByTile(ubTileX, ubY),
-				pInteraction, ubTileX, ubY, INTERACTION_KIND_GATE,
+				pNewInteraction, ubTileX, ubY, INTERACTION_KIND_GATE,
 				TILE_DOOR_OPEN, TILE_DOOR_CLOSED,
 				g_sCurrentLevel.pVisTiles[ubTileX][ubY] + bClosedToOpen,
 				g_sCurrentLevel.pVisTiles[ubTileX][ubY]
@@ -1243,7 +1248,7 @@ void mapSetOrRemoveDoorInteractionAt(
 		// Bottom wall tile
 		interactionChangeOrRemoveTile(
 			mapGetInteractionByTile(ubTileX, ubY),
-			pInteraction, ubTileX, ubY, INTERACTION_KIND_GATE,
+			pNewInteraction, ubTileX, ubY, INTERACTION_KIND_GATE,
 			TILE_WALL, TILE_WALL,
 			g_sCurrentLevel.pVisTiles[ubTileX][ubY] + bClosedToOpen,
 			g_sCurrentLevel.pVisTiles[ubTileX][ubY]

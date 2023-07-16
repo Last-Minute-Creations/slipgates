@@ -43,7 +43,7 @@ General:
 	☐ Upgrade steep angle tracer precision, e.g. shooting floor on the ground
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
-	☐ Bigger max velocity?
+	☐ Limit accumulated velocity (infinite loop, then down2up)
 	☐ Save/load vistiles
 	☐ Add audio mixer
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
@@ -76,6 +76,7 @@ Autotiles:
 	✔ Bouncer source and receiver @done(23-06-24 12:35)
 	✔ Non-slipgatables @done(23-06-24 13:53)
 	✔ Pipes @done(23-06-24 18:34)
+	☐ Vistiles for opened doors
 
 Boxes:
 	✔ Generalize @done(23-05-26 20:26)
@@ -115,7 +116,7 @@ Misc objects:
 	✔ Doors (17 chambers) @done(23-05-25 20:33)
 	✔ ANDed doors @done(23-05-26 15:47)
 	✔ Generalize, configurable interaction relations @done(23-05-26 15:47)
-	☐ Lifts (4 chambers)
+	✘ Lifts (4 chambers) @cancelled(23-07-16 18:07)
 	✘ Entrance door @cancelled(23-06-10 08:31)
 	✘ Box spawner (1 chamber) @cancelled(23-05-28 11:26)
 	✘ Crushers (3 chambers) @cancelled(23-05-28 11:26)
