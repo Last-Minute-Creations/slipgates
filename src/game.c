@@ -73,6 +73,7 @@ static BYTE s_bHubActiveDoors;
 static UBYTE s_ubHubLevelTens;
 static UWORD s_uwPrevButtonPresses;
 static UBYTE s_isDrawGrid;
+static UBYTE s_isDrawInteractions;
 static tSlipgateDirectionFrameData s_pSlipgateDirectionFrameData[SLIPGATE_FRAME_COUNT];
 static UWORD s_pPalettes[PLAYER_MAX_HEALTH + 1][1 << GAME_BPP];
 static UBYTE s_ubCurrentPaletteIndex;
@@ -239,6 +240,15 @@ static void hubProcess(void) {
 
 static void gameToggleGrid(void) {
 	s_isDrawGrid = !s_isDrawGrid;
+	for(UBYTE ubTileX = 0; ubTileX < MAP_TILE_WIDTH; ++ubTileX) {
+		for(UBYTE ubTileY = 0; ubTileY < MAP_TILE_HEIGHT; ++ubTileY) {
+			mapRequestTileDraw(ubTileX, ubTileY);
+		}
+	}
+}
+
+static void gameToggleInteractions(void) {
+	s_isDrawInteractions = !s_isDrawInteractions;
 	for(UBYTE ubTileX = 0; ubTileX < MAP_TILE_WIDTH; ++ubTileX) {
 		for(UBYTE ubTileY = 0; ubTileY < MAP_TILE_HEIGHT; ++ubTileY) {
 			mapRequestTileDraw(ubTileX, ubTileY);
@@ -424,6 +434,9 @@ static void gameGsLoop(void) {
 	}
 	if(keyUse(KEY_RBRACKET)) {
 		gameToggleGrid();
+	}
+	if(keyUse(KEY_P)) {
+		gameToggleInteractions();
 	}
 #endif
 	if(keyUse(KEY_LBRACKET)) {
@@ -738,17 +751,19 @@ void gameDrawTile(UBYTE ubTileX, UBYTE ubTileY) {
 	g_pCustom->bltsize = (uwHeight << HSIZEBITS) | uwBlitWords;
 
 #if defined(GAME_EDITOR_ENABLED)
-	if(mapTileIsButton(eTile)) {
-		UBYTE ubButtonIndex = (eTile & MAP_TILE_INDEX_MASK) - (TILE_BUTTON_A & MAP_TILE_INDEX_MASK);
-		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(ubButtonIndex));
-	}
-	else if(eTile == TILE_RECEIVER) {
-		gameDrawTileInteractionMask(ubTileX, ubTileY, BV(MAP_BOUNCER_BUTTON_INDEX));
-	}
-	else {
-		tInteraction *pInteraction = mapGetInteractionByTile(ubTileX, ubTileY);
-		if(pInteraction) {
-			gameDrawTileInteractionMask(ubTileX, ubTileY, pInteraction->uwButtonMask);
+	if(s_isDrawInteractions) {
+		if(mapTileIsButton(eTile)) {
+			UBYTE ubButtonIndex = (eTile & MAP_TILE_INDEX_MASK) - (TILE_BUTTON_A & MAP_TILE_INDEX_MASK);
+			gameDrawTileInteractionMask(ubTileX, ubTileY, BV(ubButtonIndex));
+		}
+		else if(eTile == TILE_RECEIVER) {
+			gameDrawTileInteractionMask(ubTileX, ubTileY, BV(MAP_BOUNCER_BUTTON_INDEX));
+		}
+		else {
+			tInteraction *pInteraction = mapGetInteractionByTile(ubTileX, ubTileY);
+			if(pInteraction) {
+				gameDrawTileInteractionMask(ubTileX, ubTileY, pInteraction->uwButtonMask);
+			}
 		}
 	}
 #endif
