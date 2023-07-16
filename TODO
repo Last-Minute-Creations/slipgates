@@ -40,6 +40,7 @@ General:
 	✔ Soft velocity cap @done(23-06-28 15:57)
 	✔ Add ptplayer @done(23-07-01 14:37)
 	✔ Better air control @done(23-07-01 16:13)
+	✔ Slipgate draw before bobs save bg @done(23-07-16 18:47)
 	☐ Upgrade steep angle tracer precision, e.g. shooting floor on the ground
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
