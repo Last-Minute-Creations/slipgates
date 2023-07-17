@@ -5,8 +5,8 @@
 #include "body_box.h"
 #include "game.h"
 
-static const fix16_t s_fVeloLimitPositive = F16(100);
-static const fix16_t s_fVeloLimitNegative = F16(-100);
+static const fix16_t s_fVeloLimitPositive = F16(11);
+static const fix16_t s_fVeloLimitNegative = F16(-11);
 static const fix16_t s_fVeloClampPositive = F16(7);
 static const fix16_t s_fVeloClampNegative = F16(-7);
 

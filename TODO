@@ -42,10 +42,10 @@ General:
 	✔ Better air control @done(23-07-01 16:13)
 	✔ Slipgate draw before bobs save bg @done(23-07-16 18:47)
 	✔ Bouncer gets stuck on one-sided slipgate tunnel @done(23-07-17 16:27)
+	✔ Limit accumulated velocity (infinite loop, then down2up) @done(23-07-17 16:46)
 	☐ Upgrade steep angle tracer precision, e.g. shooting floor on the ground
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
-	☐ Limit accumulated velocity (infinite loop, then down2up)
 	☐ Save/load vistiles
 	☐ Add audio mixer
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
