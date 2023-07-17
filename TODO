@@ -41,6 +41,7 @@ General:
 	✔ Add ptplayer @done(23-07-01 14:37)
 	✔ Better air control @done(23-07-01 16:13)
 	✔ Slipgate draw before bobs save bg @done(23-07-16 18:47)
+	✔ Bouncer gets stuck on one-sided slipgate tunnel @done(23-07-17 16:27)
 	☐ Upgrade steep angle tracer precision, e.g. shooting floor on the ground
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
@@ -139,5 +140,3 @@ Momentum, normal-wise:
 	✔ down-up @done(23-05-27 10:04)
 	✔ down-left @done(23-05-27 10:04)
 	✔ down-right @done(23-05-27 10:04)
-
-Test chambers:

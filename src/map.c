@@ -70,6 +70,34 @@ static const tGatewayKind s_pGatewayKinds[] = {
 
 //------------------------------------------------------------ PRIVATE FUNCTIONS
 
+static void mapLogicTryOpenSlipgates() {
+	if(!mapIsSlipgateTunnelOpen()) {
+		return;
+	}
+
+	tUbCoordYX *pSlipgateTiles = g_pSlipgates[0].sTilePositions;
+	g_sCurrentLevel.pTiles[pSlipgateTiles[0].ubX][pSlipgateTiles[0].ubY] = TILE_SLIPGATE_A;
+	g_sCurrentLevel.pTiles[pSlipgateTiles[1].ubX][pSlipgateTiles[1].ubY] = TILE_SLIPGATE_A;
+
+	pSlipgateTiles = g_pSlipgates[1].sTilePositions;
+	g_sCurrentLevel.pTiles[pSlipgateTiles[0].ubX][pSlipgateTiles[0].ubY] = TILE_SLIPGATE_B;
+	g_sCurrentLevel.pTiles[pSlipgateTiles[1].ubX][pSlipgateTiles[1].ubY] = TILE_SLIPGATE_B;
+}
+
+static void mapLogicCloseSlipgates() {
+	tSlipgate *pSlipgate = &g_pSlipgates[0];
+	if(pSlipgate->eNormal != DIRECTION_NONE) {
+		g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[0].ubX][pSlipgate->sTilePositions[0].ubY] = pSlipgate->pPrevTiles[0];
+		g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[1].ubX][pSlipgate->sTilePositions[1].ubY] = pSlipgate->pPrevTiles[1];
+	}
+
+	pSlipgate = &g_pSlipgates[1];
+	if(pSlipgate->eNormal != DIRECTION_NONE) {
+		g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[0].ubX][pSlipgate->sTilePositions[0].ubY] = pSlipgate->pPrevTiles[0];
+		g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[1].ubX][pSlipgate->sTilePositions[1].ubY] = pSlipgate->pPrevTiles[1];
+	}
+}
+
 static void mapOpenSlipgate(UBYTE ubIndex) {
 	tSlipgate *pSlipgate = &g_pSlipgates[ubIndex];
 	// Save logic tiles
@@ -77,8 +105,7 @@ static void mapOpenSlipgate(UBYTE ubIndex) {
 	pSlipgate->pPrevTiles[1] = g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[1].ubX][pSlipgate->sTilePositions[1].ubY];
 
 	// Change logic tiles to slipgate
-	g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[0].ubX][pSlipgate->sTilePositions[0].ubY] = TILE_SLIPGATE_A + ubIndex;
-	g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[1].ubX][pSlipgate->sTilePositions[1].ubY] = TILE_SLIPGATE_A + ubIndex;
+	mapLogicTryOpenSlipgates();
 
 	if(s_ubPendingSlipgateOpenIndex != MAP_PENDING_SLIPGATE_OPEN_INVALID) {
 		logWrite("ERR: Previous pending slipgate haven't been opened!\n");
@@ -91,12 +118,11 @@ static void mapCloseSlipgate(UBYTE ubIndex) {
 	tSlipgate *pSlipgate = &g_pSlipgates[ubIndex];
 	if(pSlipgate->eNormal != DIRECTION_NONE) {
 		// Restore logic tiles
-		g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[0].ubX][pSlipgate->sTilePositions[0].ubY] = pSlipgate->pPrevTiles[0];
-		mapRequestTileDraw(pSlipgate->sTilePositions[0].ubX, pSlipgate->sTilePositions[0].ubY);
-		g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[1].ubX][pSlipgate->sTilePositions[1].ubY] = pSlipgate->pPrevTiles[1];
-		mapRequestTileDraw(pSlipgate->sTilePositions[1].ubX, pSlipgate->sTilePositions[1].ubY);
+		mapLogicCloseSlipgates();
 
-		// Redraw bg tiles
+		// Redraw tiles
+		mapRequestTileDraw(pSlipgate->sTilePositions[0].ubX, pSlipgate->sTilePositions[0].ubY);
+		mapRequestTileDraw(pSlipgate->sTilePositions[1].ubX, pSlipgate->sTilePositions[1].ubY);
 		mapRequestTileDraw(pSlipgate->sTilePositions[2].ubX, pSlipgate->sTilePositions[2].ubY);
 		mapRequestTileDraw(pSlipgate->sTilePositions[3].ubX, pSlipgate->sTilePositions[3].ubY);
 
@@ -1135,6 +1161,13 @@ void mapRecalculateVisTilesNearTileAt(UBYTE ubTileX, UBYTE ubTileY) {
 			mapRequestTileDraw(ubX, ubY);
 		}
 	}
+}
+
+UBYTE mapIsSlipgateTunnelOpen(void) {
+	return (
+		g_pSlipgates[0].eNormal != DIRECTION_NONE &&
+		g_pSlipgates[1].eNormal != DIRECTION_NONE
+	);
 }
 
 //----------------------------------------------------------------- INTERACTIONS
