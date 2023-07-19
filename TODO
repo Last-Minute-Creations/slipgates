@@ -59,7 +59,7 @@ Game flow:
 	✔ Intro/outro screen @done(23-07-01 11:34)
 	✔ LMC/ACE logos @done(23-07-01 11:48)
 	✔ Menu: continue @done(23-07-02 08:53)
-	☐ Attract mode?
+	✘ Attract mode? @cancelled(23-07-19 17:50)
 
 Editor:
 	☐ Editable story text
@@ -78,7 +78,7 @@ Autotiles:
 	✔ Bouncer source and receiver @done(23-06-24 12:35)
 	✔ Non-slipgatables @done(23-06-24 13:53)
 	✔ Pipes @done(23-06-24 18:34)
-	☐ Vistiles for opened doors
+	✔ Fix vistiles save for opened doors @done(23-07-19 18:37)
 
 Boxes:
 	✔ Generalize @done(23-05-26 20:26)
