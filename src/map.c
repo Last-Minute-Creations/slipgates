@@ -869,6 +869,8 @@ void mapLoad(UBYTE ubIndex) {
 				fileRead(pFile, &pTargetTile->eKind, sizeof(pTargetTile->eKind));
 				fileRead(pFile, &pTargetTile->eTileActive, sizeof(pTargetTile->eTileActive));
 				fileRead(pFile, &pTargetTile->eTileInactive, sizeof(pTargetTile->eTileInactive));
+				fileRead(pFile, &pTargetTile->eVisTileActive, sizeof(pTargetTile->eVisTileActive));
+				fileRead(pFile, &pTargetTile->eVisTileInactive, sizeof(pTargetTile->eVisTileInactive));
 				fileRead(pFile, &pTargetTile->sPos.uwYX, sizeof(pTargetTile->sPos.uwYX));
 			}
 		}
@@ -977,6 +979,8 @@ void mapSave(UBYTE ubIndex) {
 			fileWrite(pFile, &pTargetTile->eKind, sizeof(pTargetTile->eKind));
 			fileWrite(pFile, &pTargetTile->eTileActive, sizeof(pTargetTile->eTileActive));
 			fileWrite(pFile, &pTargetTile->eTileInactive, sizeof(pTargetTile->eTileInactive));
+			fileWrite(pFile, &pTargetTile->eVisTileActive, sizeof(pTargetTile->eVisTileActive));
+			fileWrite(pFile, &pTargetTile->eVisTileInactive, sizeof(pTargetTile->eVisTileInactive));
 			fileWrite(pFile, &pTargetTile->sPos.uwYX, sizeof(pTargetTile->sPos.uwYX));
 		}
 	}
