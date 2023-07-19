@@ -822,6 +822,8 @@ static void mapFillVisTiles(tLevel *pLevel) {
 
 void mapLoad(UBYTE ubIndex) {
 	memset(s_pInteractions, 0, sizeof(s_pInteractions));
+	s_sLoadedLevel.ubBouncerSpawnerTileX = 0;
+	s_sLoadedLevel.ubBouncerSpawnerTileY = 0;
 	s_sLoadedLevel.ubSpikeTilesCount = 0;
 	s_ubTurretCount = 0;
 
@@ -912,7 +914,10 @@ void mapLoad(UBYTE ubIndex) {
 				s_sLoadedLevel.pTiles[ubX][ubY] = uwTileCode;
 				if(uwTileCode == TILE_BOUNCER_SPAWNER) {
 					if(s_sLoadedLevel.ubBouncerSpawnerTileX != BOUNCER_TILE_INVALID) {
-						logWrite("ERR: More than one bouncer spawner on map\n");
+						logWrite(
+							"ERR: More than one bouncer spawner on map, previous on %hhu, %hhu\n",
+							s_sLoadedLevel.ubBouncerSpawnerTileX, s_sLoadedLevel.ubBouncerSpawnerTileY
+						);
 					}
 					s_sLoadedLevel.ubBouncerSpawnerTileX = ubX;
 					s_sLoadedLevel.ubBouncerSpawnerTileY = ubY;
