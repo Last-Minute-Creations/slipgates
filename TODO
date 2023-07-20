@@ -62,8 +62,8 @@ Game flow:
 	✘ Attract mode? @cancelled(23-07-19 17:50)
 
 Editor:
+	✔ Togglable edit mode @done(23-07-20 13:20)
 	☐ Editable story text
-	☐ Togglable edit mode
 
 Autotiles:
 	✔ Walls @done(23-06-22 17:50)
