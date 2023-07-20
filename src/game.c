@@ -71,6 +71,7 @@ static UBYTE s_isDrawGrid;
 static UBYTE s_isDrawInteractions;
 static UWORD s_pPalettes[PLAYER_MAX_HEALTH + 1][1 << GAME_BPP];
 static UBYTE s_ubCurrentPaletteIndex;
+static tUbCoordYX s_sPrevCursorTilePos;
 
 static const tBCoordYX s_pSlipgateOffsets[DIRECTION_COUNT] = {
 	[DIRECTION_LEFT] = {.bX = -2, .bY = 0},
@@ -381,6 +382,7 @@ static void gameGsCreate(void) {
 	mouseSetBounds(MOUSE_PORT_1, 0, 0, SCREEN_PAL_WIDTH - 16, SCREEN_PAL_HEIGHT - 27);
 
 	s_isDrawGrid = 0;
+	s_sPrevCursorTilePos.uwYX = 0;
 
 	systemUnuse();
 	loadLevel(g_sConfig.ubCurrentLevel, 1);
@@ -440,6 +442,18 @@ static void gameGsLoop(void) {
 #if defined(GAME_EDITOR_ENABLED)
 	UWORD uwCursorTileX = sPosCross.uwX / MAP_TILE_SIZE;
 	UWORD uwCursorTileY = sPosCross.uwY / MAP_TILE_SIZE;
+
+	if(uwCursorTileX != s_sPrevCursorTilePos.ubX || uwCursorTileY != s_sPrevCursorTilePos.ubY) {
+		mapRequestTileDraw(s_sPrevCursorTilePos.ubX, s_sPrevCursorTilePos.ubY);
+		s_sPrevCursorTilePos.ubX = uwCursorTileX;
+		s_sPrevCursorTilePos.ubY = uwCursorTileY;
+	}
+
+	blitRect(s_pBufferMain->pBack, uwCursorTileX * MAP_TILE_SIZE, uwCursorTileY * MAP_TILE_SIZE, MAP_TILE_SIZE, 1, 15);
+	blitRect(s_pBufferMain->pBack, uwCursorTileX * MAP_TILE_SIZE, uwCursorTileY * MAP_TILE_SIZE, 1, MAP_TILE_SIZE, 15);
+	blitRect(s_pBufferMain->pBack, uwCursorTileX * MAP_TILE_SIZE + MAP_TILE_SIZE - 1, uwCursorTileY * MAP_TILE_SIZE, 1, MAP_TILE_SIZE, 15);
+	blitRect(s_pBufferMain->pBack, uwCursorTileX * MAP_TILE_SIZE, uwCursorTileY * MAP_TILE_SIZE + MAP_TILE_SIZE - 1, MAP_TILE_SIZE, 1, 15);
+
 	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[uwCursorTileX][uwCursorTileY];
 	if(keyCheck(KEY_Z)) {
 		*pTileUnderCursor = TILE_BG;
