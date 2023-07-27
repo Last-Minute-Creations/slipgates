@@ -10,6 +10,11 @@ set(CMAKE_C_STANDARD 11)
 # ACE
 set(ACE_BOB_WRAP_Y OFF)
 add_subdirectory(deps/ace ace)
+
+set(AUDIO_MIXER_HW_CHANNEL_MODE SINGLE)
+set(AUDIO_MIXER_HW_CHANNELS 3)
+set(AUDIO_MIXER_SW_CHANNEL_COUNT 2)
+set(AUDIO_MIXER_PERIOD 161)
 add_subdirectory(deps/ace_audio_mixer ace_audio_mixer)
 
 file(GLOB_RECURSE GAME_src src/*.c src/*.h)
