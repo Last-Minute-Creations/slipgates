@@ -43,11 +43,13 @@ General:
 	✔ Slipgate draw before bobs save bg @done(23-07-16 18:47)
 	✔ Bouncer gets stuck on one-sided slipgate tunnel @done(23-07-17 16:27)
 	✔ Limit accumulated velocity (infinite loop, then down2up) @done(23-07-17 16:46)
+	✔ Add audio mixer @done(23-08-04 21:40)
 	☐ Upgrade steep angle tracer precision, e.g. shooting floor on the ground
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
 	☐ Save/load vistiles
-	☐ Add audio mixer
+	☐ Intro/outro voiceovers
+	☐ Level voiceover
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Game flow:
@@ -63,6 +65,7 @@ Game flow:
 
 Editor:
 	✔ Togglable edit mode @done(23-07-20 13:20)
+	✔ Tile palette @done(23-08-04 21:39)
 	☐ Editable story text
 
 Autotiles:
