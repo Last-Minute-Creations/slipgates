@@ -13,7 +13,7 @@
 #define MAP_DIRTY_TILES_MAX (MAP_TILE_WIDTH * MAP_TILE_HEIGHT)
 #define MAP_TURRET_ATTACK_COOLDOWN 10
 #define MAP_TURRET_ATTACK_FRAME_COOLDOWN 5
-#define MAP_TURRET_TILE_RANGE 5
+#define MAP_TURRET_TILE_RANGE 20
 #define MAP_PENDING_SLIPGATE_OPEN_INVALID 0xFF
 
 typedef struct tTurret {
@@ -174,7 +174,7 @@ static void mapProcessNextInteraction(void) {
 }
 
 static void mapProcessNextTurret(void) {
-	if(++s_ubCurrentTurret > MAP_TURRETS_MAX) {
+	if(++s_ubCurrentTurret >= MAP_TURRETS_MAX) {
 		s_ubCurrentTurret = 0;
 	}
 
@@ -1125,6 +1125,7 @@ void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY, tDirection eDirection) {
 	for(UBYTE i = 0; i < s_ubTurretCount; ++i) {
 		if(s_pTurrets[i].sTilePos.uwYX == sPos.uwYX) {
 			g_sCurrentLevel.pTiles[ubX][ubY] = TILE_BG;
+			mapRecalculateVisTilesNearTileAt(ubX, ubY);
 			while(++i < s_ubTurretCount) {
 				s_pTurrets[i - 1] = s_pTurrets[i];
 			}
