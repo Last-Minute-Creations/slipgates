@@ -735,7 +735,7 @@ static void gameGsLoop(void) {
 	spriteProcess(s_pSpriteCrosshair);
 	playerProcess(&s_sPlayer);
 
-	if(keyUse(KEY_R)) {
+	if(keyUse(KEY_R) || (!s_sPlayer.bHealth && mouseUse(MOUSE_PORT_1, MOUSE_LMB))) {
 		gameTransitionToExit(EXIT_RESTART);
 	}
 
