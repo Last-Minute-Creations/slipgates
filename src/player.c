@@ -73,6 +73,7 @@ static void playerSlipgateHandler(void *pData) {
 
 static void playerDropBox(tPlayer *pPlayer) {
 	pPlayer->pGrabbedBox->fAccelerationY = fix16_one / 4;// restore gravity
+	pPlayer->pGrabbedBox->isSlipgatable = 1;
 	pPlayer->pGrabbedBox = 0;
 }
 
@@ -231,6 +232,7 @@ void playerProcess(tPlayer *pPlayer) {
 						uwBoxY <= sPosCross.uwY && sPosCross.uwY < uwBoxY + pBox->ubHeight
 					) {
 						pPlayer->pGrabbedBox = pBox;
+						pPlayer->pGrabbedBox->isSlipgatable = 0;
 						pPlayer->pGrabbedBox->fAccelerationY = 0;
 					}
 				}

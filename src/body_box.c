@@ -31,9 +31,15 @@ void bodyInit(
 	pBody->cbTileCollisionHandler = 0;
 	pBody->cbSlipgateHandler = 0;
 	pBody->bBobOffsX = 0;
+	pBody->isOnGround = 0;
+	pBody->isSlipgatable = 1;
 }
 
 static UBYTE moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
+	if(!pBody->isSlipgatable) {
+		return 0;
+	}
+
 	// Here be dragons
 
 	switch(g_pSlipgates[ubIndexSrc].eNormal) {

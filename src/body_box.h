@@ -30,7 +30,7 @@ typedef struct tBodyBox {
 	UBYTE ubWidth;
 	UBYTE ubHeight;
 	UBYTE isOnGround;
-	UBYTE isAlive;
+	UBYTE isSlipgatable;
 	BYTE bBobOffsX;
 } tBodyBox;
 
