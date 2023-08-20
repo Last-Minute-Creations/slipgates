@@ -532,7 +532,9 @@ static UBYTE gameProcessEditor(void) {
 		}
 	}
 	if(keyUse(KEY_U)) {
-		bodyTeleport(bouncerGetBody(), sPosCross.uwX, sPosCross.uwY);
+		if(g_sCurrentLevel.ubBoxCount) {
+			--g_sCurrentLevel.ubBoxCount;
+		}
 	}
 
 	return 0;
