@@ -532,7 +532,7 @@ static UBYTE gameProcessEditor(void) {
 		}
 	}
 	if(keyUse(KEY_U)) {
-		if(g_sCurrentLevel.ubBoxCount) {
+		if(g_sCurrentLevel.ubBoxCount && !s_sPlayer.pGrabbedBox) {
 			--g_sCurrentLevel.ubBoxCount;
 		}
 	}
