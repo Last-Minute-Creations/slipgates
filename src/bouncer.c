@@ -39,6 +39,9 @@ static UBYTE bouncerCollisionHandler(
 			s_eBouncerState = BOUNCER_STATE_RECEIVER_REACHED;
 		}
 		else {
+			if(eTile == TILE_BOUNCER_SPAWNER) {
+				s_uwBouncerCooldown = BOUNCER_LIFE_COOLDOWN;
+			}
 			s_hasBouncerNewVelocity = 1;
 			s_fNewBouncerVelocityX = -s_sBodyBouncer.fVelocityX;
 			s_fNewBouncerVelocityY = -s_sBodyBouncer.fVelocityY;
