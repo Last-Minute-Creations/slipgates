@@ -826,6 +826,9 @@ void mapLoad(UBYTE ubIndex) {
 	s_sLoadedLevel.ubBouncerSpawnerTileY = 0;
 	s_sLoadedLevel.ubSpikeTilesCount = 0;
 	s_ubTurretCount = 0;
+	for(UBYTE i = 0; i < MAP_TURRETS_MAX; ++i) {
+		s_pTurrets[i].isActive = 0;
+	}
 
 	if(ubIndex == MAP_INDEX_DEVELOP) {
 		// hadcoded level
@@ -1126,6 +1129,7 @@ void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY, tDirection eDirection) {
 		if(s_pTurrets[i].sTilePos.uwYX == sPos.uwYX) {
 			g_sCurrentLevel.pTiles[ubX][ubY] = TILE_BG;
 			mapRecalculateVisTilesNearTileAt(ubX, ubY);
+			s_pTurrets[i].isActive = 0;
 			while(++i < s_ubTurretCount) {
 				s_pTurrets[i - 1] = s_pTurrets[i];
 			}
