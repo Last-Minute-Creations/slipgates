@@ -50,7 +50,16 @@ General:
 	☐ Save/load vistiles
 	☐ Intro/outro voiceovers
 	☐ Level voiceover
+	☐ Add door/grate/exit tiles for unslipgatable walls?
+	☐ Show level number somewhere (decor?)
+	☐ Rectangle draw for walls/doors/eraser in editor
+	☐ Ability to close open portals?
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
+
+Fixes:
+	☐ pressing direction button in same direction as falling/flying reduces velocity
+	☐ hitting ceiling should remove velocity instantly/faster
+	☐ Boxes are sometimes sliding indefinitely on ground
 
 Game flow:
 	✔ Faster map restarts without file reload @done(23-06-13 18:39)
