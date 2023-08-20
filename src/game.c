@@ -282,6 +282,8 @@ static void gameTileRefreshAll(void) {
 			mapRequestTileDraw(ubTileX, ubTileY);
 		}
 	}
+	bobDiscardUndraw();
+	bobSetCurrentBuffer(s_pBufferMain->pBack);
 }
 
 static void gameToggleEditorOption(UBYTE *pOption) {
@@ -353,7 +355,7 @@ static void gameTransitionToExit(tExitState eExitState) {
 	fadeStart(s_pFade, FADE_STATE_OUT, 15, 0, onGameFadeOut);
 }
 
-static void gameProcessEditor(void) {
+static UBYTE gameProcessEditor(void) {
 	tUwCoordYX sPosCross = gameGetCrossPosition();
 	UWORD uwCursorTileX = sPosCross.uwX / MAP_TILE_SIZE;
 	UWORD uwCursorTileY = sPosCross.uwY / MAP_TILE_SIZE;
@@ -371,7 +373,7 @@ static void gameProcessEditor(void) {
 
 	if(keyUse(KEY_C)) {
 		statePush(g_pGameStateManager, &s_sStateTilePalette);
-		return;
+		return 1;
 	}
 
 	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[uwCursorTileX][uwCursorTileY];
@@ -532,6 +534,8 @@ static void gameProcessEditor(void) {
 	if(keyUse(KEY_U)) {
 		bodyTeleport(bouncerGetBody(), sPosCross.uwX, sPosCross.uwY);
 	}
+
+	return 0;
 }
 
 static void gameDrawTileInteractionMask(UBYTE ubTileX, UBYTE ubTileY, UWORD uwMask) {
@@ -721,7 +725,9 @@ static void gameGsLoop(void) {
 
 	// Level editor
 	if(s_isEditorEnabled) {
-		gameProcessEditor();
+		if(gameProcessEditor()) {
+			return;
+		}
 	}
 
 	spriteProcess(s_pSpriteCrosshair);
