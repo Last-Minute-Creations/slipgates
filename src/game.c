@@ -825,8 +825,8 @@ static void tilePaletteGsLoop(void) {
 			UWORD uwLeft = 32 + uwButtonSpaceX * (i % uwCols);
 			UWORD uwTop = 32 + uwButtonSpaceY * (i / uwCols);
 			if(
-				uwLeft <= sPosCross.uwX && sPosCross.uwX <= uwLeft + uwButtonSpaceX &&
-				uwTop <= sPosCross.uwY && sPosCross.uwY <= uwTop + uwButtonSpaceX
+				uwLeft + 8 <= sPosCross.uwX && sPosCross.uwX <= uwLeft + uwButtonSpaceX - 16 &&
+				uwTop + 4 <= sPosCross.uwY && sPosCross.uwY <= uwTop + uwButtonSpaceY - 8
 			) {
 				s_eEditorCurrentTool = i;
 				statePop(g_pGameStateManager);
