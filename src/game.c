@@ -978,7 +978,7 @@ void gameDrawSlipgate(UBYTE ubIndex) {
 		pFrames, 0, ubFrame ? SLIPGATE_FRAME_HEIGHT_VERTICAL : 0,
 		s_pBufferMain->pBack, uwX, uwY, 16,
 		ubFrame ? SLIPGATE_FRAME_HEIGHT_HORIZONTAL : SLIPGATE_FRAME_HEIGHT_VERTICAL,
-		(UWORD*)g_pSlipgateMasks->Planes[0]
+		g_pSlipgateMasks->Planes[0]
 	);
 }
 
