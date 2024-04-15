@@ -44,17 +44,25 @@ General:
 	✔ Bouncer gets stuck on one-sided slipgate tunnel @done(23-07-17 16:27)
 	✔ Limit accumulated velocity (infinite loop, then down2up) @done(23-07-17 16:46)
 	✔ Add audio mixer @done(23-08-04 21:40)
+	☐ Less placeholder-looking menu
 	☐ Upgrade steep angle tracer precision, e.g. shooting floor on the ground
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
 	☐ Save/load vistiles
-	☐ Intro/outro voiceovers
-	☐ Level voiceover
 	☐ Add door/grate/exit tiles for unslipgatable walls?
 	☐ Show level number somewhere (decor?)
 	☐ Rectangle draw for walls/doors/eraser in editor
-	☐ Ability to close open portals?
+	✘ Ability to close open portals? @cancelled(24-04-15 17:16)
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
+
+Graphics:
+	☐ Tiles
+	☐ Character main body
+	☐ Character limb
+
+VO:
+	☐ Intro/outro voiceovers
+	☐ Level voiceover
 
 Fixes:
 	☐ pressing direction button in same direction as falling/flying reduces velocity
@@ -76,6 +84,7 @@ Editor:
 	✔ Togglable edit mode @done(23-07-20 13:20)
 	✔ Tile palette @done(23-08-04 21:39)
 	☐ Editable story text
+	☐ BG decor placement palette
 
 Autotiles:
 	✔ Walls @done(23-06-22 17:50)
