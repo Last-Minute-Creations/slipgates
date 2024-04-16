@@ -190,9 +190,18 @@ static void menuRedrawAll(void) {
 		g_pFont, s_pMenuBfr->pBack, 320, 50, szVersion,
 		0b0010, FONT_RIGHT | FONT_COOKIE, s_pTextBuffer
 	);
+	fontDrawStr(
+		g_pFont, s_pMenuBfr->pFront, 320, 50, szVersion,
+		0b0010, FONT_RIGHT | FONT_COOKIE, s_pTextBuffer
+	);
 
 	fontDrawStr(
 		g_pFont, s_pMenuBfr->pBack, SCREEN_PAL_WIDTH / 2, SCREEN_PAL_HEIGHT,
+		"A game by Last Minute Creations",
+		0b0010, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM, s_pTextBuffer
+	);
+	fontDrawStr(
+		g_pFont, s_pMenuBfr->pFront, SCREEN_PAL_WIDTH / 2, SCREEN_PAL_HEIGHT,
 		"A game by Last Minute Creations",
 		0b0010, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM, s_pTextBuffer
 	);
@@ -217,7 +226,8 @@ tFade *menuGetFade(void) {
 static void menuGsCreate(void) {
 	s_pMenuView = viewCreate(0,
 		TAG_VIEW_GLOBAL_PALETTE, 1,
-		TAG_VIEW_COPLIST_MODE, COPPER_MODE_BLOCK,
+		TAG_VIEW_COPLIST_MODE, COPPER_MODE_RAW,
+		TAG_VIEW_COPLIST_RAW_COUNT, 16 + simpleBufferGetRawCopperlistInstructionCount(4),
 	TAG_END);
 
 	s_pMenuVp = vPortCreate(0,
@@ -232,6 +242,7 @@ static void menuGsCreate(void) {
 		TAG_SIMPLEBUFFER_BOUND_HEIGHT, 256 + 32,
 		TAG_SIMPLEBUFFER_USE_X_SCROLLING, 0,
 		TAG_SIMPLEBUFFER_IS_DBLBUF, 1,
+		TAG_SIMPLEBUFFER_COPLIST_OFFSET, 16,
 	TAG_END);
 
 	paletteLoad("data/slipgates.plt", s_pPalette, 32);
@@ -303,7 +314,7 @@ static void menuGsLoop(void) {
 	s_pMenuBfr->sCommon.process(&s_pMenuBfr->sCommon);
 	copProcessBlocks();
 	systemIdleBegin();
-	vPortWaitForEnd(s_pMenuVp);
+	vPortWaitUntilEnd(s_pMenuVp);
 	systemIdleEnd();
 }
 

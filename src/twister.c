@@ -12,7 +12,7 @@
 #define CLIP_MARGIN_X 32
 #define CLIP_MARGIN_Y 16
 #define TWISTER_CENTER_X (160)
-#define TWISTER_CENTER_Y (100)
+#define TWISTER_CENTER_Y (120)
 #define TWISTER_CENTER_RADIUS 2
 #define TWISTER_BLOCK_SIZE 32
 #define TWISTER_MIN_BLOCK_X (-(((TWISTER_CENTER_X + TWISTER_BLOCK_SIZE - 1) / TWISTER_BLOCK_SIZE) + 2))
@@ -27,6 +27,9 @@ static UBYTE s_ps;
 static tBitMap s_sFront;
 static tBitMap s_sBack;
 
+#if defined(ACE_DEBUG)
+#define twisterBlitCopy blitCopy
+#else
 static void twisterBlitCopy(
 	const tBitMap *pSrc, WORD wSrcX, WORD wSrcY,
 	tBitMap *pDst, WORD wDstX, WORD wDstY, WORD wWidth, WORD wHeight,
@@ -37,8 +40,7 @@ static void twisterBlitCopy(
 	ULONG ulSrcOffs, ulDstOffs;
 	UBYTE ubShift, ubMaskFShift, ubMaskLShift;
 	// Blitter register values
-	UWORD uwBltCon0, uwBltCon1, uwFirstMask, uwLastMask;
-	WORD wSrcModulo, wDstModulo;
+	UWORD uwBltCon1, uwFirstMask, uwLastMask;
 
 	UBYTE ubSrcDelta = wSrcX & 0xF;
 	UBYTE ubDstDelta = wDstX & 0xF;
@@ -84,39 +86,38 @@ static void twisterBlitCopy(
 		ulDstOffs = uwBufferBytesPerRow * wDstY + (wDstX >> 3);
 	}
 
-	uwBltCon0 = (ubShift << ASHIFTSHIFT) | USEB|USEC|USED | ubMinterm;
+	UWORD uwBltCon0 = (ubShift << ASHIFTSHIFT) | USEB|USEC|USED | ubMinterm;
 
 	wHeight *= 2;
-	wSrcModulo = uwBufferByteWidth - uwBlitWords * 2;
-	wDstModulo = uwBufferByteWidth - uwBlitWords * 2;
+	WORD wModulo = uwBufferByteWidth - uwBlitWords * 2;
 
 	blitWait(); // Don't modify registers when other blit is in progress
 	g_pCustom->bltcon0 = uwBltCon0;
 	g_pCustom->bltcon1 = uwBltCon1;
 	g_pCustom->bltafwm = uwFirstMask;
 	g_pCustom->bltalwm = uwLastMask;
-	g_pCustom->bltbmod = wSrcModulo;
-	g_pCustom->bltcmod = wDstModulo;
-	g_pCustom->bltdmod = wDstModulo;
-	g_pCustom->bltadat = 0xFFFF;
+	g_pCustom->bltbmod = wModulo;
+	g_pCustom->bltcmod = wModulo;
+	g_pCustom->bltdmod = wModulo;
 	g_pCustom->bltbpt = &pSrc->Planes[0][ulSrcOffs];
 	g_pCustom->bltcpt = &pDst->Planes[0][ulDstOffs];
 	g_pCustom->bltdpt = &pDst->Planes[0][ulDstOffs];
 	g_pCustom->bltsize = (wHeight << HSIZEBITS) | uwBlitWords;
 }
+#endif
 
-void twisterChunkyToPlanar(UBYTE ubColor, UWORD uwX, UWORD uwY, tBitMap *pOut) {
+static void twisterChunkyToPlanar(UWORD uwColor, UWORD uwX, UWORD uwY, tBitMap *pOut) {
 	ULONG ulOffset = uwY * ((TWISTER_BITMAP_WIDTH / 8 * 4) / 2) + (uwX / 16);
 	UWORD uwMask = BV(15) >> (uwX & 0xF);
 	for(UBYTE ubPlane = 0; ubPlane < 2; ++ubPlane) {
 		UWORD *pPlane = (UWORD*)pOut->Planes[ubPlane];
-		if(ubColor & 1) {
+		if(uwColor & 1) {
 			pPlane[ulOffset] |= uwMask;
 		}
 		else {
 			pPlane[ulOffset] &= ~uwMask;
 		}
-		ubColor >>= 1;
+		uwColor >>= 1;
 	}
 }
 
@@ -141,6 +142,11 @@ void twisterInit(UWORD *pPalette) {
 }
 
 void twisterLoop(tSimpleBufferManager *pBfr) {
+#if !defined(ACE_DEBUG)
+	blitWait();
+	g_pCustom->bltadat = 0xFFFF;
+#endif
+
 	++s_ps;
 	s_sFront.Planes[0] = pBfr->pFront->Planes[0];
 	s_sFront.Planes[1] = pBfr->pFront->Planes[2];
@@ -156,7 +162,7 @@ void twisterLoop(tSimpleBufferManager *pBfr) {
 		uwShift = (uwShift << 1) | ((s_ps >> 4) & 1);
 	// }
 
-	for(BYTE y = TWISTER_MIN_BLOCK_Y + 2; y < TWISTER_MAX_BLOCK_Y; ++y) {
+	for(BYTE y = TWISTER_MIN_BLOCK_Y + 1; y < TWISTER_MAX_BLOCK_Y - 1; ++y) {
 		WORD yy = TWISTER_CENTER_Y + y * TWISTER_BLOCK_SIZE + uwShift;
 		for(BYTE x = TWISTER_MIN_BLOCK_X + 1; x < TWISTER_MAX_BLOCK_X; ++x) {
 			WORD xx = TWISTER_CENTER_X + x * TWISTER_BLOCK_SIZE + uwShift;
@@ -219,8 +225,7 @@ void twisterLoop(tSimpleBufferManager *pBfr) {
 
 	for(UWORD y = TWISTER_CENTER_Y - TWISTER_CENTER_RADIUS; y <= TWISTER_CENTER_Y + TWISTER_CENTER_RADIUS; ++y) {
 		for(UWORD x = TWISTER_CENTER_X - TWISTER_CENTER_RADIUS; x <= TWISTER_CENTER_X + TWISTER_CENTER_RADIUS; ++x) {
-			UBYTE ubColor = randUw(&s_sRand) & 3;
-			twisterChunkyToPlanar(ubColor, x, y, &s_sBack);
+			twisterChunkyToPlanar(randUw(&s_sRand), x, y, &s_sBack);
 		}
 	}
 }
