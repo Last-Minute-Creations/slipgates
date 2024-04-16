@@ -138,7 +138,7 @@ void twisterInit(void) {
 	randInit(&s_sRand, 1911, 2184);
 }
 
-void twisterLoop(tSimpleBufferManager *pBfr) {
+void twisterProcess(tSimpleBufferManager *pBfr) {
 #if !defined(ACE_DEBUG)
 	blitWait();
 	g_pCustom->bltadat = 0xFFFF;

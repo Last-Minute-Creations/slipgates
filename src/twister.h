@@ -9,6 +9,6 @@
 
 void twisterInit(void);
 
-void twisterLoop(tSimpleBufferManager *pBfr);
+void twisterProcess(tSimpleBufferManager *pBfr);
 
 #endif // SLIPGATES_TWISTER_H

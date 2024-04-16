@@ -11,10 +11,10 @@
 #include <ace/managers/blit.h>
 #include <ace/managers/sprite.h>
 #include <ace/utils/palette.h>
+#include <ace/utils/string.h>
 #include "slipgates.h"
 #include "assets.h"
 #include "game.h"
-#include "credits.h"
 #include "cutscene.h"
 #include "config.h"
 #include "twister.h"
@@ -78,8 +78,16 @@ static tBitMap s_sMenuLayerBuffers[2] = {
 	}
 };
 static tBitMap *s_pMenuLayerFront, *s_pMenuLayerBack;
+static tStateManager *s_pMenuStateManager;
+static tState s_sMenuStateMain;
+static tState s_sMenuStateCredits;
 
 //------------------------------------------------------------------ PRIVATE FNS
+
+static void menuClear(void) {
+	blitRect(s_pMenuLayerBack, 0, 60, SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT - 60, 0);
+	blitRect(s_pMenuLayerFront, 0, 60, SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT - 60, 0);
+}
 
 static void menuProcessExit(void) {
 	switch(s_eMenuExit) {
@@ -93,7 +101,7 @@ static void menuProcessExit(void) {
 			stateChange(g_pGameStateManager, &g_sStateGame);
 			break;
 		case MENU_EXIT_CREDITS:
-			statePush(g_pGameStateManager, &g_sStateCredits);
+			stateChange(s_pMenuStateManager, &s_sMenuStateCredits);
 			break;
 		case MENU_EXIT_WORKBENCH:
 			statePop(g_pGameStateManager);
@@ -122,7 +130,7 @@ static void onContinue(void) {
 
 static void onCredits(void) {
 	s_eMenuExit = MENU_EXIT_CREDITS;
-	fadeStart(s_pFade, FADE_STATE_OUT, 15, 0, onFadeOut);
+	menuProcessExit();
 }
 
 static void onExit(void) {
@@ -157,7 +165,7 @@ static void menuDrawStr(
 	const tFont *pFont, UWORD uwX, UWORD uwY,
 	const char *szText, UBYTE ubColor, UBYTE ubFlags
 ) {
-	fontFillTextBitMap(g_pFont, s_pTextBuffer, szText);
+	fontFillTextBitMap(pFont, s_pTextBuffer, szText);
 	fontDrawTextBitMap(s_pMenuLayerBack, s_pTextBuffer, uwX, uwY, ubColor, ubFlags);
 	fontDrawTextBitMap(s_pMenuLayerFront, s_pTextBuffer, uwX, uwY, ubColor, ubFlags);
 }
@@ -320,31 +328,19 @@ static void menuGsCreate(void) {
 
 	systemUnuse();
 
-	s_eMenuExit = MENU_EXIT_NONE;
+	s_pMenuStateManager = stateManagerCreate();
+	statePush(s_pMenuStateManager, &s_sMenuStateMain);
 
-	menuClearOptions();
-	UBYTE isContinueEnabled = g_sConfig.ubUnlockedLevels > 1;
-	menuAddOption("NEW GAME", 1, onNewGame);
-	menuAddOption("CONTINUE", isContinueEnabled, onContinue);
-	menuAddOption("CREDITS", 1, onCredits);
-	menuAddOption("EXIT", 1, onExit);
-
-	menuRedrawAll();
 	fadeStart(s_pFade, FADE_STATE_IN, 15, 0, 0);
 	viewLoad(s_pMenuView);
 }
 
 static void menuGsLoop(void) {
-	if(keyUse(KEY_ESCAPE)) {
-		statePop(g_pGameStateManager);
-		return;
-	}
-
 	if(fadeProcess(s_pFade) == FADE_STATE_EVENT_FIRED) {
 		return;
 	}
 
-	twisterLoop(s_pMenuBfr);
+	twisterProcess(s_pMenuBfr);
 
 	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
 	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
@@ -353,7 +349,7 @@ static void menuGsLoop(void) {
 	spriteProcess(s_pSpriteCrosshair);
 	spriteProcessChannel(0);
 
-	menuProcess(uwMouseX, uwMouseY);
+	stateProcess(s_pMenuStateManager);
 
 	s_pMenuBfr->sCommon.process(&s_pMenuBfr->sCommon);
 	copProcessBlocks();
@@ -372,24 +368,118 @@ static void menuGsDestroy(void) {
 	systemSetDmaBit(DMAB_SPRITE, 0);
 
 	systemUse();
-
+	stateManagerDestroy(s_pMenuStateManager);
 	fadeDestroy(s_pFade);
 	spriteManagerDestroy();
 	fontDestroyTextBitMap(s_pTextBuffer);
 	viewDestroy(s_pMenuView);
 }
 
-static void menuGsResume(void) {
+//------------------------------------------------------------ SUBSATE MAIN MENU
+
+static const char *s_pCreditsLines[] = {
+	"Slipgates by Last Minute Creations",
+	"lastminutecreations.itch.io/slipgates",
+	"  Softiron: graphics",
+	"  Luc3k: sounds, music",
+	"  KaiN: code, levels, story",
+	"",
+	"Based on Portal: The Flash Version by We Create Stuff",
+	"Special thanks to:",
+	"  Paul S, Proxy, Rav.En, Stefan",
+	"",
+	"Game source code is available on:",
+	"  github.com/Last-Minute-Creations/slipgates",
+	"",
+	"Used third party code and assets:",
+	"  Amiga C Engine: github.com/AmigaPorts/ACE",
+	"  uni05_54 font by Craig Kroeger: minimal.com/fonts",
+	"",
+	"Thanks for playing!"
+};
+#define CREDITS_LINE_COUNT (sizeof(s_pCreditsLines) / sizeof(s_pCreditsLines[0]))
+
+static void menuMainGsCreate(void) {
+	s_eMenuExit = MENU_EXIT_NONE;
+	menuClearOptions();
+	UBYTE isContinueEnabled = g_sConfig.ubUnlockedLevels > 1;
+	menuAddOption("NEW GAME", 1, onNewGame);
+	menuAddOption("CONTINUE", isContinueEnabled, onContinue);
+	menuAddOption("CREDITS", 1, onCredits);
+	menuAddOption("EXIT", 1, onExit);
+
 	menuRedrawAll();
-	systemSetDmaBit(DMAB_SPRITE, 1);
-	fadeStart(s_pFade, FADE_STATE_IN, 15, 0, 0);
 }
 
-static void menuGsSuspend(void) {
-	systemSetDmaBit(DMAB_SPRITE, 0);
+static void menuMainGsLoop(void) {
+	if(keyUse(KEY_ESCAPE)) {
+		statePop(g_pGameStateManager);
+		return;
+	}
+
+	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
+	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
+	menuProcess(uwMouseX, uwMouseY);
+
 }
+
+static void menuMainGsDestroy(void) {
+
+}
+
+
+//-------------------------------------------------------------- SUBSATE CREDITS
+
+static UWORD s_uwCreditsLine;
+static UWORD s_uwCreditsDrawOffsY;
+
+static void onCreditsFadeOut(void) {
+	stateChange(s_pMenuStateManager, &s_sMenuStateMain);
+}
+
+static void menuCreditsGsCreate(void) {
+	s_uwCreditsLine = 0;
+	s_uwCreditsDrawOffsY = 65;
+	menuClear();
+
+	menuDrawStr(
+		g_pFont, SCREEN_PAL_WIDTH / 2, SCREEN_PAL_HEIGHT,
+		"Press LMB to exit",
+		MENU_LAYER_COLOR_INACTIVE, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM
+	);
+}
+
+static void menuCreditsGsLoop(void) {
+	if(s_uwCreditsLine < CREDITS_LINE_COUNT) {
+		if(!stringIsEmpty(s_pCreditsLines[s_uwCreditsLine])) {
+			menuDrawStr(
+				g_pFont, 10, s_uwCreditsDrawOffsY, s_pCreditsLines[s_uwCreditsLine],
+				MENU_LAYER_COLOR_MAIN, FONT_COOKIE | FONT_SHADOW
+			);
+			s_uwCreditsDrawOffsY += g_pFont->uwHeight + 1;
+		}
+
+		++s_uwCreditsLine;
+	}
+
+	if(keyUse(KEY_ESCAPE) || keyUse(KEY_F) || mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
+		menuClear();
+		stateChange(s_pMenuStateManager, &s_sMenuStateMain);
+		return;
+	}
+}
+
+static void menuCreditsGsDestroy(void) {
+
+}
+
+static tState s_sMenuStateMain = {
+	.cbCreate = menuMainGsCreate, .cbLoop = menuMainGsLoop, .cbDestroy = menuMainGsDestroy,
+};
+static tState s_sMenuStateCredits = {
+	.cbCreate = menuCreditsGsCreate, .cbLoop = menuCreditsGsLoop, .cbDestroy = menuCreditsGsDestroy,
+};
 
 tState g_sStateMenu = {
 	.cbCreate = menuGsCreate, .cbLoop = menuGsLoop, .cbDestroy = menuGsDestroy,
-	.cbResume = menuGsResume, .cbSuspend = menuGsSuspend
 };
