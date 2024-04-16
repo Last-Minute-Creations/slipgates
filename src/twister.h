@@ -7,7 +7,7 @@
 
 #include <ace/managers/viewport/simplebuffer.h>
 
-void twisterInit(UWORD *pPalette);
+void twisterInit(void);
 
 void twisterLoop(tSimpleBufferManager *pBfr);
 

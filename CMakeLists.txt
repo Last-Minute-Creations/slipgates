@@ -63,6 +63,7 @@ file(GLOB COPY_FILES ${RES_DIR}/copied/*)
 file(COPY ${COPY_FILES} DESTINATION ${DATA_DIR})
 
 # Palette
+file(GLOB palette_menu_plt ${RES_DIR}/menu.plt)
 file(GLOB palette_slipgates_gpl ${RES_DIR}/slipgates.gpl)
 file(GLOB palette_sprite_gpl ${RES_DIR}/sprite_export.gpl)
 set(palette_slipgates "${DATA_DIR}/slipgates.plt")
@@ -302,11 +303,19 @@ convertTileset(
 )
 
 convertBitmaps(
+	TARGET ${GAME_EXECUTABLE} PALETTE ${palette_menu_plt}
+	INTERLEAVED SOURCES
+		${RES_DIR}/menu_bg.png
+	DESTINATIONS
+		${DATA_DIR}/menu_bg.bm
+)
+
+convertBitmaps(
 	TARGET ${GAME_EXECUTABLE} PALETTE ${palette_slipgates_gpl}
 	INTERLEAVED SOURCES
-		${GEN_DIR}/tiles.png ${RES_DIR}/menu_bg.png
+		${GEN_DIR}/tiles.png
 	DESTINATIONS
-		${DATA_DIR}/tiles.bm ${DATA_DIR}/menu_bg.bm
+		${DATA_DIR}/tiles.bm
 )
 
 convertBitmaps(

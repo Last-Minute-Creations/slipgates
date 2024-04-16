@@ -121,12 +121,9 @@ static void twisterChunkyToPlanar(UWORD uwColor, UWORD uwX, UWORD uwY, tBitMap *
 	}
 }
 
-void twisterInit(UWORD *pPalette) {
+void twisterInit(void) {
 	// Init stuff
 	s_ps = 0;
-	pPalette[0b0001] = 0x303; // 0x707;
-	pPalette[0b0100] = 0x634; // 0xD69;
-	pPalette[0b0101] = 0x501; // 0xB03;
 
 	s_sFront.BytesPerRow = TWISTER_BITMAP_WIDTH / 8 * 4;
 	s_sFront.Rows = 256 + 32;
