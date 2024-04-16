@@ -17,6 +17,7 @@
 #include "credits.h"
 #include "cutscene.h"
 #include "config.h"
+#include "twister.h"
 
 //------------------------------------------------------------------------ TYPES
 
@@ -40,10 +41,9 @@ typedef enum tMenuExit {
 
 //----------------------------------------------------------------- PRIVATE VARS
 
-static tView *s_pView;
-static tVPort *s_pVp;
-static tSimpleBufferManager *s_pBfr;
-static tBitMap *s_pBg;
+static tView *s_pMenuView;
+static tVPort *s_pMenuVp;
+static tSimpleBufferManager *s_pMenuBfr;
 static tTextBitMap *s_pTextBuffer;
 static tMenuExit s_eMenuExit;
 static tSprite *s_pSpriteCrosshair;
@@ -130,16 +130,20 @@ static void menuAddOption(
 static void menuDrawPos(UBYTE ubIndex) {
 	tMenuOption *pOption = &s_pOptions[ubIndex];
 
-	UBYTE ubColor = 15;
+	UBYTE ubColor = 0b1000;
 	if(!pOption->isEnabled) {
-		ubColor = 4;
+		ubColor = 0b0010;
 	}
 	else if(pOption->isHovered) {
-		ubColor = 8;
+		ubColor = 0b1010;
 	}
 
 	fontDrawStr(
-		g_pFont, s_pBfr->pBack, pOption->sRect.uwX1, pOption->sRect.uwY1,
+		g_pFont, s_pMenuBfr->pBack, pOption->sRect.uwX1, pOption->sRect.uwY1,
+		pOption->szLabel, ubColor, FONT_COOKIE, s_pTextBuffer
+	);
+	fontDrawStr(
+		g_pFont, s_pMenuBfr->pFront, pOption->sRect.uwX1, pOption->sRect.uwY1,
 		pOption->szLabel, ubColor, FONT_COOKIE, s_pTextBuffer
 	);
 }
@@ -179,34 +183,25 @@ static void menuProcess(UWORD uwMouseX, UWORD uwMouseY) {
 }
 
 static void menuRedrawAll(void) {
-	menuDrawBackground();
 	menuDraw();
 
 	static const char szVersion[15] = "V." GAME_VERSION;
 	fontDrawStr(
-		g_pFont, s_pBfr->pBack, 320, 50, szVersion,
-		12, FONT_RIGHT | FONT_COOKIE, s_pTextBuffer
+		g_pFont, s_pMenuBfr->pBack, 320, 50, szVersion,
+		0b0010, FONT_RIGHT | FONT_COOKIE, s_pTextBuffer
 	);
 
 	fontDrawStr(
-		g_pFont, s_pBfr->pBack, SCREEN_PAL_WIDTH / 2, SCREEN_PAL_HEIGHT,
+		g_pFont, s_pMenuBfr->pBack, SCREEN_PAL_WIDTH / 2, SCREEN_PAL_HEIGHT,
 		"A game by Last Minute Creations",
-		12, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM, s_pTextBuffer
+		0b0010, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM, s_pTextBuffer
 	);
 }
 
 //------------------------------------------------------------------- PUBLIC FNS
 
-void menuDrawBackground(void) {
-	blitCopyAligned(s_pBg, 0, 0, s_pBfr->pBack, 0, 0, SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT  / 2);
-	blitCopyAligned(
-		s_pBg, 0, SCREEN_PAL_HEIGHT  / 2, s_pBfr->pBack, 0, SCREEN_PAL_HEIGHT  / 2,
-		SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT  / 2
-	);
-}
-
 tSimpleBufferManager *menuGetBuffer(void) {
-	return s_pBfr;
+	return s_pMenuBfr;
 }
 
 tTextBitMap *menuGetTextBitmap(void) {
@@ -220,34 +215,50 @@ tFade *menuGetFade(void) {
 //-------------------------------------------------------------------- GAMESTATE
 
 static void menuGsCreate(void) {
-	s_pView = viewCreate(0,
+	s_pMenuView = viewCreate(0,
 		TAG_VIEW_GLOBAL_PALETTE, 1,
 		TAG_VIEW_COPLIST_MODE, COPPER_MODE_BLOCK,
 	TAG_END);
 
-	s_pVp = vPortCreate(0,
-		TAG_VPORT_VIEW, s_pView,
-		TAG_VPORT_BPP, 5,
+	s_pMenuVp = vPortCreate(0,
+		TAG_VPORT_VIEW, s_pMenuView,
+		TAG_VPORT_BPP, 4,
 	TAG_END);
 
-	s_pBfr = simpleBufferCreate(0,
-		TAG_SIMPLEBUFFER_VPORT, s_pVp,
+	s_pMenuBfr = simpleBufferCreate(0,
+		TAG_SIMPLEBUFFER_VPORT, s_pMenuVp,
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
+		TAG_SIMPLEBUFFER_BOUND_WIDTH, 320,
+		TAG_SIMPLEBUFFER_BOUND_HEIGHT, 256 + 32,
 		TAG_SIMPLEBUFFER_USE_X_SCROLLING, 0,
-		TAG_SIMPLEBUFFER_IS_DBLBUF, 0,
+		TAG_SIMPLEBUFFER_IS_DBLBUF, 1,
 	TAG_END);
 
 	paletteLoad("data/slipgates.plt", s_pPalette, 32);
-	s_pPalette[17] = 0xA86;
-	s_pPalette[18] = 0x27D;
-	s_pPalette[19] = 0xE96;
-	s_pFade = fadeCreate(s_pView, s_pPalette, 32);
+	s_pPalette[17] = 0xD69;
+	s_pPalette[18] = 0x707;
+	s_pPalette[19] = 0xB03;
+	twisterInit(s_pPalette);
 
-	s_pBg = bitmapCreateFromFile("data/menu_bg.bm", 0);
+	s_pPalette[0b0010] = 0xF00;
+	s_pPalette[0b0011] = 0xF00;
+	s_pPalette[0b0110] = 0xF00;
+	s_pPalette[0b0111] = 0xF00;
+
+	s_pPalette[0b1000] = 0x0F0;
+	s_pPalette[0b1001] = 0x0F0;
+	s_pPalette[0b1100] = 0x0F0;
+	s_pPalette[0b1101] = 0x0F0;
+
+	s_pPalette[0b1010] = 0x00F;
+	s_pPalette[0b1011] = 0x00F;
+	s_pPalette[0b1110] = 0x00F;
+	s_pPalette[0b1111] = 0x00F;
+	s_pFade = fadeCreate(s_pMenuView, s_pPalette, 32);
 
 	s_pTextBuffer = fontCreateTextBitMap(336, g_pFont->uwHeight);
 
-	spriteManagerCreate(s_pView, 0);
+	spriteManagerCreate(s_pMenuView, 0);
 	s_pSpriteCrosshair = spriteAdd(0, g_pBmCursor);
 	systemSetDmaBit(DMAB_SPRITE, 1);
 	spriteProcessChannel(0);
@@ -266,7 +277,7 @@ static void menuGsCreate(void) {
 
 	menuRedrawAll();
 	fadeStart(s_pFade, FADE_STATE_IN, 15, 0, 0);
-	viewLoad(s_pView);
+	viewLoad(s_pMenuView);
 }
 
 static void menuGsLoop(void) {
@@ -279,6 +290,8 @@ static void menuGsLoop(void) {
 		return;
 	}
 
+	twisterLoop(s_pMenuBfr);
+
 	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
 	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
 	s_pSpriteCrosshair->wX = uwMouseX - 8;
@@ -287,8 +300,11 @@ static void menuGsLoop(void) {
 
 	menuProcess(uwMouseX, uwMouseY);
 
-	vPortWaitForEnd(s_pVp);
-	viewProcessManagers(s_pView);
+	s_pMenuBfr->sCommon.process(&s_pMenuBfr->sCommon);
+	copProcessBlocks();
+	systemIdleBegin();
+	vPortWaitForEnd(s_pMenuVp);
+	systemIdleEnd();
 }
 
 static void menuGsDestroy(void) {
@@ -300,8 +316,7 @@ static void menuGsDestroy(void) {
 	fadeDestroy(s_pFade);
 	spriteManagerDestroy();
 	fontDestroyTextBitMap(s_pTextBuffer);
-	bitmapDestroy(s_pBg);
-	viewDestroy(s_pView);
+	viewDestroy(s_pMenuView);
 }
 
 static void menuGsResume(void) {
