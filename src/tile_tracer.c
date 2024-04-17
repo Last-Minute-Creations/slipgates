@@ -56,10 +56,15 @@ void tracerStart(
 	fix16_t fSin = csin(ubAngle);
 	fix16_t fCos = ccos(ubAngle);
 
+#if defined(ACE_DEBUG)
+	char szSin[10], szCos[10];
+	fix16_to_str(fSin,szSin, 5);
+	fix16_to_str(fCos,szCos, 5);
 	logWrite(
-		"tracer start: %hu,%hu stop: %hu,%hu, angle: %hhu (%d)",
-		uwSourceX, uwSourceY, uwTargetX, uwTargetY, ubAngle, (360 * ubAngle) / ANGLE_360
+		"tracer start: %hu,%hu stop: %hu,%hu, angle: %hhu (%d), sin: %s, cos: %s",
+		uwSourceX, uwSourceY, uwTargetX, uwTargetY, ubAngle, (360 * ubAngle) / ANGLE_360, szSin, szCos
 	);
+#endif
 
 	// Big enough number in case of division by zero
 	static const fix16_t fInfinity = F16(32767) / 2;
@@ -68,6 +73,16 @@ void tracerStart(
 	pTracer->fAccumulatorY = (fSin == 0) ? fInfinity : fix16_div(fix16_from_int(uwTraversedY), fSin); // LUT: 8k
 	pTracer->fAccumulatorDeltaX = (fCos == 0) ? fInfinity : fix16_div(fix16_from_int(MAP_TILE_SIZE), fCos); // LUT: 512
 	pTracer->fAccumulatorDeltaY = (fSin == 0) ? fInfinity : fix16_div(fix16_from_int(MAP_TILE_SIZE), fSin); // LUT: 512
+
+#if defined(ACE_DEBUG)
+	char szAccX[15], szAccY[15];
+	char szDeltaX[15], szDeltaY[15];
+	fix16_to_str(pTracer->fAccumulatorX, szAccX, 5);
+	fix16_to_str(pTracer->fAccumulatorY, szAccY, 5);
+	fix16_to_str(pTracer->fAccumulatorDeltaX, szDeltaX, 5);
+	fix16_to_str(pTracer->fAccumulatorDeltaY, szDeltaY, 5);
+	logWrite("accumulators %s, %s, delta %s, %s", szAccX, szAccY, szDeltaX, szDeltaY);
+#endif
 
 	pTracer->uwTileX = uwSourceX / MAP_TILE_SIZE;
 	pTracer->uwTileY = uwSourceY / MAP_TILE_SIZE;
@@ -84,14 +99,19 @@ void tracerProcess(tTileTracer *pTracer) {
 	tSimpleBufferManager *pBuffer = gameGetBuffer();
 #endif
 
+	// Beware processing the wrong one when starting with accumulators 0, 0
+	fix16_t fNextX = fix16_add(pTracer->fAccumulatorX, pTracer->fAccumulatorDeltaX);
+	fix16_t fNextY = fix16_add(pTracer->fAccumulatorY, pTracer->fAccumulatorDeltaY);
 	for(UBYTE i = TRACER_ITERATIONS_PER_FRAME; i--;) {
-		if(pTracer->fAccumulatorX < pTracer->fAccumulatorY) {
-			pTracer->fAccumulatorX = fix16_add(pTracer->fAccumulatorX, pTracer->fAccumulatorDeltaX);
+		if(fNextX < fNextY) {
+			pTracer->fAccumulatorX = fNextX;
 			pTracer->uwTileX += pTracer->wDeltaTileX;
+			fNextX = fix16_add(pTracer->fAccumulatorX, pTracer->fAccumulatorDeltaX);
 		}
 		else {
-			pTracer->fAccumulatorY = fix16_add(pTracer->fAccumulatorY, pTracer->fAccumulatorDeltaY);
+			pTracer->fAccumulatorY = fNextY;
 			pTracer->uwTileY += pTracer->wDeltaTileY;
+			fNextY = fix16_add(pTracer->fAccumulatorY, pTracer->fAccumulatorDeltaY);
 		}
 
 #if defined(DEBUG_TRACER_DRAW_TRAJECTORY)
@@ -102,6 +122,7 @@ void tracerProcess(tTileTracer *pTracer) {
 #endif
 
 		if(mapIsCollidingWithPortalProjectilesAt(pTracer->uwTileX, pTracer->uwTileY)) {
+			logWrite("tracer hit at tile %hu,%hu\n", pTracer->uwTileX, pTracer->uwTileY);
 			pTracer->isActive = 0;
 			mapTrySpawnSlipgate(pTracer->ubIndex, pTracer->uwTileX, pTracer->uwTileY);
 			break;

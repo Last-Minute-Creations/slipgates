@@ -44,8 +44,8 @@ General:
 	✔ Bouncer gets stuck on one-sided slipgate tunnel @done(23-07-17 16:27)
 	✔ Limit accumulated velocity (infinite loop, then down2up) @done(23-07-17 16:46)
 	✔ Add audio mixer @done(23-08-04 21:40)
-	☐ Less placeholder-looking menu
-	☐ Upgrade steep angle tracer precision, e.g. shooting floor on the ground
+	✔ Less placeholder-looking menu @done(24-04-16 18:30)
+	✔ Upgrade steep angle tracer precision, e.g. shooting floor on the ground @done(24-04-17 16:49)
 	☐ Show where portal will be opened (realtime tracing)?
 	☐ Multi-bob character body
 	☐ Save/load vistiles
@@ -54,6 +54,21 @@ General:
 	☐ Rectangle draw for walls/doors/eraser in editor
 	✘ Ability to close open portals? @cancelled(24-04-15 17:16)
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
+
+Levels:
+	☐ 7: fill/move
+	☐ 12: fill/move
+	☐ 19: fill/move
+	☐ 31
+	☐ 32
+	☐ 33
+	☐ 34
+	☐ 35
+	☐ 36
+	☐ 37
+	☐ 38
+	☐ 39
+	☐ 40
 
 Graphics:
 	☐ Tiles
