@@ -47,10 +47,10 @@ General:
 	✔ Less placeholder-looking menu @done(24-04-16 18:30)
 	✔ Upgrade steep angle tracer precision, e.g. shooting floor on the ground @done(24-04-17 16:49)
 	✔ Show where slipgate will be opened (realtime tracing)? @done(24-04-18 13:00)
+	✔ Show level number somewhere (decor?) @done(24-04-18 14:08)
 	☐ Multi-bob character body
 	☐ Save/load vistiles
 	☐ Add door/grate/exit tiles for unslipgatable walls?
-	☐ Show level number somewhere (decor?)
 	☐ Rectangle draw for walls/doors/eraser in editor
 	✘ Place slipgate center closer to crosshair @cancelled(24-04-18 13:00)
 	✘ Ability to close open slipgates? @cancelled(24-04-15 17:16)

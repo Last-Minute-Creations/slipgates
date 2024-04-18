@@ -145,6 +145,13 @@ static void drawMap(void) {
 		g_sCurrentLevel.szStoryText,
 		GAME_COLOR_TEXT, FONT_COOKIE | FONT_HCENTER, s_pTextBuffer
 	);
+
+	char szLevel[11];
+	sprintf(szLevel, "Level %hhu", g_sConfig.ubCurrentLevel);
+	fontDrawStr(
+		g_pFont, s_pBufferMain->pBack, 320/2, 256, szLevel,
+		GAME_COLOR_TEXT, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM, s_pTextBuffer
+	);
 }
 
 static void gameRequestInteractionTilesDraw(const tInteraction *pInteraction) {
