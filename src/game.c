@@ -739,7 +739,7 @@ static void gameGsLoop(void) {
 		gameTransitionToExit(EXIT_RESTART);
 	}
 
-	if(g_pSlipgates[SLIPGATE_AIM].eNormal != DIRECTION_NONE) {
+	if(g_pSlipgates[SLIPGATE_AIM].eNormal != DIRECTION_NONE && !s_sPlayer.pGrabbedBox) {
 		bobPush(&s_sBobAim);
 	}
 	for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {
