@@ -57,19 +57,17 @@ General:
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Levels:
-	☐ 7: fill/move
-	☐ 12: fill/move
-	☐ 19: fill/move
-	☐ 31
-	☐ 32
-	☐ 33
-	☐ 34
-	☐ 35
-	☐ 36
-	☐ 37
-	☐ 38
-	☐ 39
-	☐ 40
+	✔ get rid of holes @done(24-04-18 13:11)
+	☐ orig 31
+	☐ orig 32
+	☐ orig 33
+	☐ orig 34
+	☐ orig 35
+	☐ orig 36
+	☐ orig 37
+	☐ orig 38
+	☐ orig 39
+	☐ orig 40
 
 Graphics:
 	☐ Tiles
