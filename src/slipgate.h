@@ -9,8 +9,13 @@
 #include "direction.h"
 #include "tile.h"
 
+#define SLIPGATE_A 0
+#define SLIPGATE_B 1
+#define SLIPGATE_AIM 2
+
 typedef struct tSlipgate {
 	tUbCoordYX sTilePositions[4]; // 0 is always top-left wall tile, 1 is other wall tile, 2-3 are bg tiles
+	UBYTE isAiming;
 	tDirection eNormal; // set to DIRECTION_NONE when is off
 	tTile pPrevTiles[2];
 } tSlipgate;

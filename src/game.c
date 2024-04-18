@@ -35,9 +35,7 @@
 #define SLIPGATE_FRAME_VERTICAL 0
 #define SLIPGATE_FRAME_HORIZONTAL 1
 #define SLIPGATE_FRAME_COUNT 2
-#define SLIPGATE_A 0
-#define SLIPGATE_B 1
-#define SLIPGATE_COUNT 2
+
 #define SLIPGATE_FRAME_HEIGHT_VERTICAL 16
 #define SLIPGATE_FRAME_HEIGHT_HORIZONTAL 4
 
@@ -98,6 +96,7 @@ static tFade *s_pFade;
 static tPlayer s_sPlayer;
 static tBodyBox s_pBoxBodies[MAP_BOXES_MAX];
 static tSprite *s_pSpriteCrosshair;
+static tBob s_sBobAim;
 static tTextBitMap *s_pTextBuffer;
 
 static UWORD s_uwGameFrame;
@@ -640,6 +639,7 @@ static void gameGsCreate(void) {
 		&s_sPlayer.sBody.sBob, 16, 16, 1,
 		g_pPlayerFrames->Planes[0], g_pPlayerMasks->Planes[0], 0, 0
 	);
+	bobInit(&s_sBobAim, 16, 16, 1, 0, 0, 0, 0);
 
 	for(UBYTE i = 0; i < MAP_BOXES_MAX; ++i) {
 		bobInit(
@@ -739,6 +739,9 @@ static void gameGsLoop(void) {
 		gameTransitionToExit(EXIT_RESTART);
 	}
 
+	if(g_pSlipgates[SLIPGATE_AIM].eNormal != DIRECTION_NONE) {
+		bobPush(&s_sBobAim);
+	}
 	for(UBYTE i = 0; i < g_sCurrentLevel.ubBoxCount; ++i) {
 		bodySimulate(&s_pBoxBodies[i]);
 		bobPush(&s_pBoxBodies[i].sBob);
@@ -980,6 +983,15 @@ void gameDrawSlipgate(UBYTE ubIndex) {
 		ubFrame ? SLIPGATE_FRAME_HEIGHT_HORIZONTAL : SLIPGATE_FRAME_HEIGHT_VERTICAL,
 		g_pSlipgateMasks->Planes[0]
 	);
+}
+
+void gameUpdateAim(void) {
+	UBYTE ubFrame = (g_pSlipgates[SLIPGATE_AIM].eNormal < DIRECTION_LEFT);
+	s_sBobAim.sPos.uwX = g_pSlipgates[SLIPGATE_AIM].sTilePositions[0].ubX * MAP_TILE_SIZE + s_pSlipgateOffsets[g_pSlipgates[SLIPGATE_AIM].eNormal].bX;
+	s_sBobAim.sPos.uwY = g_pSlipgates[SLIPGATE_AIM].sTilePositions[0].ubY * MAP_TILE_SIZE + s_pSlipgateOffsets[g_pSlipgates[SLIPGATE_AIM].eNormal].bY;
+	UBYTE* pOffsFrame = bobCalcFrameAddress(g_pAim, ubFrame ? SLIPGATE_FRAME_HEIGHT_VERTICAL : 0);
+	UBYTE* pOffsMask = bobCalcFrameAddress(g_pAimMasks, ubFrame ? SLIPGATE_FRAME_HEIGHT_VERTICAL : 0);
+	bobSetFrame(&s_sBobAim, pOffsFrame, pOffsMask);
 }
 
 tPlayer *gameGetPlayer(void) {

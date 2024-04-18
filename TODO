@@ -1,5 +1,5 @@
 General:
-	✔ Spawning portals on cursor position @done(23-05-19 11:35)
+	✔ Spawning slipgates on cursor position @done(23-05-19 11:35)
 	✔ writing/loading levels @done(23-05-19 12:37)
 	✔ 8x8 tileset @done(23-05-19 13:08)
 	✔ 8x16 character bounding box @done(23-05-19 13:08)
@@ -46,13 +46,14 @@ General:
 	✔ Add audio mixer @done(23-08-04 21:40)
 	✔ Less placeholder-looking menu @done(24-04-16 18:30)
 	✔ Upgrade steep angle tracer precision, e.g. shooting floor on the ground @done(24-04-17 16:49)
-	☐ Show where portal will be opened (realtime tracing)?
+	✔ Show where slipgate will be opened (realtime tracing)? @done(24-04-18 13:00)
 	☐ Multi-bob character body
 	☐ Save/load vistiles
 	☐ Add door/grate/exit tiles for unslipgatable walls?
 	☐ Show level number somewhere (decor?)
 	☐ Rectangle draw for walls/doors/eraser in editor
-	✘ Ability to close open portals? @cancelled(24-04-15 17:16)
+	✘ Place slipgate center closer to crosshair @cancelled(24-04-18 13:00)
+	✘ Ability to close open slipgates? @cancelled(24-04-15 17:16)
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Levels:
@@ -127,7 +128,7 @@ Boxes:
 	✘ Collisions between player and boxes - needed? @cancelled(23-06-13 13:20)
 
 Tiles:
-	✔ No-portal wall @done(23-05-23 14:44)
+	✔ No-slipgate wall @done(23-05-23 14:44)
 	✔ Impassable (blue) beam @done(23-05-23 15:02)
 	✔ Death (red) beam @done(23-05-24 14:31)
 	✔ Button @done(23-05-25 20:36)

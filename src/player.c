@@ -165,11 +165,15 @@ void playerProcess(tPlayer *pPlayer) {
 
 	// Player shooting slipgates
 	tracerProcess(&g_sTracerSlipgate);
+	playerTryShootSlipgate(pPlayer, SLIPGATE_AIM);
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB) || keyUse(KEY_Q)) {
 		if(pPlayer->pGrabbedBox) {
 			playerDropBox(pPlayer);
 		}
 		else {
+			if(g_sTracerSlipgate.ubIndex == SLIPGATE_AIM) {
+				g_sTracerSlipgate.isActive = 0;
+			}
 			playerTryShootSlipgate(pPlayer, 0);
 		}
 	}
@@ -178,6 +182,9 @@ void playerProcess(tPlayer *pPlayer) {
 			playerDropBox(pPlayer);
 		}
 		else {
+			if(g_sTracerSlipgate.ubIndex == SLIPGATE_AIM) {
+				g_sTracerSlipgate.isActive = 0;
+			}
 			playerTryShootSlipgate(pPlayer, 1);
 		}
 	}

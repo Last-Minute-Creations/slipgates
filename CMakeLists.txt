@@ -73,11 +73,11 @@ set(transparency_hex "#993399")
 convertBitmaps(
 	TARGET ${GAME_EXECUTABLE} PALETTE ${palette_slipgates_gpl} MASK_COLOR ${transparency_hex}
 	INTERLEAVED SOURCES
-		${RES_DIR}/player.png ${RES_DIR}/box.png ${RES_DIR}/bouncer.png ${RES_DIR}/slipgates_a.png ${RES_DIR}/slipgates_b.png
+		${RES_DIR}/player.png ${RES_DIR}/box.png ${RES_DIR}/bouncer.png ${RES_DIR}/slipgates_a.png ${RES_DIR}/slipgates_b.png ${RES_DIR}/aim.png
 	DESTINATIONS
-		${DATA_DIR}/player.bm ${DATA_DIR}/box.bm ${DATA_DIR}/bouncer.bm ${DATA_DIR}/slipgate_a.bm ${DATA_DIR}/slipgate_b.bm
+		${DATA_DIR}/player.bm ${DATA_DIR}/box.bm ${DATA_DIR}/bouncer.bm ${DATA_DIR}/slipgate_a.bm ${DATA_DIR}/slipgate_b.bm ${DATA_DIR}/aim.bm
 	MASKS
-		${DATA_DIR}/player_mask.bm ${DATA_DIR}/box_mask.bm ${DATA_DIR}/bouncer_mask.bm ${DATA_DIR}/slipgates_mask.bm NONE
+		${DATA_DIR}/player_mask.bm ${DATA_DIR}/box_mask.bm ${DATA_DIR}/bouncer_mask.bm ${DATA_DIR}/slipgates_mask.bm NONE ${DATA_DIR}/aim_mask.bm
 )
 
 extractBitmaps(

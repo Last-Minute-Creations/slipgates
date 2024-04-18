@@ -32,6 +32,8 @@ void assetsGameCreate(void) {
 	g_pSlipgateFramesA = bitmapCreateFromFile("data/slipgate_a.bm", 0);
 	g_pSlipgateFramesB = bitmapCreateFromFile("data/slipgate_b.bm", 0);
 	g_pSlipgateMasks = bitmapCreateFromFile("data/slipgates_mask.bm", 0);
+	g_pAim = bitmapCreateFromFile("data/aim.bm", 0);
+	g_pAimMasks = bitmapCreateFromFile("data/aim_mask.bm", 0);
 	g_pBmTiles = bitmapCreateFromFile("data/tiles.bm", 0);
 
 	g_pPlayerWhiteFrame = bitmapCreate(16, 16, 5, BMF_INTERLEAVED);
@@ -67,6 +69,8 @@ tBitMap *g_pBouncerMasks;
 tBitMap *g_pSlipgateFramesA;
 tBitMap *g_pSlipgateFramesB;
 tBitMap *g_pSlipgateMasks;
+tBitMap *g_pAim;
+tBitMap *g_pAimMasks;
 tBitMap *g_pBmCursor;
 tBitMap *g_pBmTiles;
 tBitMap *g_pPlayerWhiteFrame;

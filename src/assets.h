@@ -26,6 +26,8 @@ extern tBitMap *g_pBouncerMasks;
 extern tBitMap *g_pSlipgateFramesA;
 extern tBitMap *g_pSlipgateFramesB;
 extern tBitMap *g_pSlipgateMasks;
+extern tBitMap *g_pAim;
+extern tBitMap *g_pAimMasks;
 extern tBitMap *g_pBmCursor;
 extern tBitMap *g_pBmTiles;
 extern tBitMap *g_pPlayerWhiteFrame;

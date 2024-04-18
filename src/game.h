@@ -30,4 +30,6 @@ tSimpleBufferManager *gameGetBuffer(void);
 
 UWORD gameGetFrameIndex(void);
 
+void gameUpdateAim(void);
+
 #endif // SLIPGATES_GAME_H

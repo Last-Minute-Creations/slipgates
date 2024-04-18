@@ -51,7 +51,7 @@ typedef struct tLevel {
 	char szStoryText[MAP_STORY_TEXT_MAX];
 } tLevel;
 
-extern tSlipgate g_pSlipgates[2];
+extern tSlipgate g_pSlipgates[3];
 extern tLevel g_sCurrentLevel;
 
 void mapLoad(UBYTE ubIndex);
@@ -131,7 +131,9 @@ UBYTE mapTileIsOnWall(tTile eTile);
 
 //-------------------------------------------------------------------- SLIPGATES
 
-UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY);
+UBYTE mapTrySpawnSlipgate(
+	UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY, tDirection eNormal
+);
 
 void mapTryCloseSlipgateAt(UBYTE ubIndex, tUbCoordYX sPos);
 

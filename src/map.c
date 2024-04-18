@@ -75,23 +75,23 @@ static void mapLogicTryOpenSlipgates() {
 		return;
 	}
 
-	tUbCoordYX *pSlipgateTiles = g_pSlipgates[0].sTilePositions;
+	tUbCoordYX *pSlipgateTiles = g_pSlipgates[SLIPGATE_A].sTilePositions;
 	g_sCurrentLevel.pTiles[pSlipgateTiles[0].ubX][pSlipgateTiles[0].ubY] = TILE_SLIPGATE_A;
 	g_sCurrentLevel.pTiles[pSlipgateTiles[1].ubX][pSlipgateTiles[1].ubY] = TILE_SLIPGATE_A;
 
-	pSlipgateTiles = g_pSlipgates[1].sTilePositions;
+	pSlipgateTiles = g_pSlipgates[SLIPGATE_B].sTilePositions;
 	g_sCurrentLevel.pTiles[pSlipgateTiles[0].ubX][pSlipgateTiles[0].ubY] = TILE_SLIPGATE_B;
 	g_sCurrentLevel.pTiles[pSlipgateTiles[1].ubX][pSlipgateTiles[1].ubY] = TILE_SLIPGATE_B;
 }
 
 static void mapLogicCloseSlipgates() {
-	tSlipgate *pSlipgate = &g_pSlipgates[0];
+	tSlipgate *pSlipgate = &g_pSlipgates[SLIPGATE_A];
 	if(pSlipgate->eNormal != DIRECTION_NONE) {
 		g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[0].ubX][pSlipgate->sTilePositions[0].ubY] = pSlipgate->pPrevTiles[0];
 		g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[1].ubX][pSlipgate->sTilePositions[1].ubY] = pSlipgate->pPrevTiles[1];
 	}
 
-	pSlipgate = &g_pSlipgates[1];
+	pSlipgate = &g_pSlipgates[SLIPGATE_B];
 	if(pSlipgate->eNormal != DIRECTION_NONE) {
 		g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[0].ubX][pSlipgate->sTilePositions[0].ubY] = pSlipgate->pPrevTiles[0];
 		g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[1].ubX][pSlipgate->sTilePositions[1].ubY] = pSlipgate->pPrevTiles[1];
@@ -100,22 +100,26 @@ static void mapLogicCloseSlipgates() {
 
 static void mapOpenSlipgate(UBYTE ubIndex) {
 	tSlipgate *pSlipgate = &g_pSlipgates[ubIndex];
-	// Save logic tiles
-	pSlipgate->pPrevTiles[0] = g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[0].ubX][pSlipgate->sTilePositions[0].ubY];
-	pSlipgate->pPrevTiles[1] = g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[1].ubX][pSlipgate->sTilePositions[1].ubY];
-
-	// Change logic tiles to slipgate
-	mapLogicTryOpenSlipgates();
-
-	if(s_ubPendingSlipgateOpenIndex != MAP_PENDING_SLIPGATE_OPEN_INVALID) {
-		logWrite("ERR: Previous pending slipgate haven't been opened!\n");
+	if(pSlipgate->isAiming) {
+		gameUpdateAim();
 	}
-	s_ubPendingSlipgateOpenIndex = ubIndex;
-	s_ubPendingSlipgateDraws = 2;
+	else {
+		// Save logic tiles
+		pSlipgate->pPrevTiles[0] = g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[0].ubX][pSlipgate->sTilePositions[0].ubY];
+		pSlipgate->pPrevTiles[1] = g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[1].ubX][pSlipgate->sTilePositions[1].ubY];
+
+		// Change logic tiles to slipgate
+		mapLogicTryOpenSlipgates();
+
+		if(s_ubPendingSlipgateOpenIndex != MAP_PENDING_SLIPGATE_OPEN_INVALID) {
+			logWrite("ERR: Previous pending slipgate haven't been opened!\n");
+		}
+		s_ubPendingSlipgateOpenIndex = ubIndex;
+		s_ubPendingSlipgateDraws = 2;
+	}
 }
 
-static void mapCloseSlipgate(UBYTE ubIndex) {
-	tSlipgate *pSlipgate = &g_pSlipgates[ubIndex];
+static void mapCloseSlipgate(tSlipgate *pSlipgate) {
 	if(pSlipgate->eNormal != DIRECTION_NONE) {
 		// Restore logic tiles
 		mapLogicCloseSlipgates();
@@ -818,6 +822,282 @@ static void mapFillVisTiles(tLevel *pLevel) {
 	}
 }
 
+static UBYTE mapTrySpawnSlipgateLeftBelow(
+	tSlipgate *pSlipgate, UBYTE ubTileX, UBYTE ubTileY
+) {
+	if( // x,y is top tile of left-normal slipgate
+		!mapIsEmptyAt(ubTileX, ubTileY - 1) &&
+		mapIsEmptyAt(ubTileX - 1, ubTileY) &&
+		mapIsSlipgatableAt(ubTileX, ubTileY + 1) &&
+		mapIsEmptyAt(ubTileX - 1, ubTileY + 1) &&
+		!mapIsEmptyAt(ubTileX, ubTileY + 2)
+	) {
+		// ?! y-1
+		// .+ y
+		// .+ y+1
+		// ?! y+2
+		if(pSlipgate->isAiming) {
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+		}
+		else {
+			mapCloseSlipgate(pSlipgate);
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+			pSlipgate->sTilePositions[1].ubX = ubTileX;
+			pSlipgate->sTilePositions[1].ubY = ubTileY + 1;
+			pSlipgate->sTilePositions[2].ubX = ubTileX - 1;
+			pSlipgate->sTilePositions[2].ubY = ubTileY;
+			pSlipgate->sTilePositions[3].ubX = ubTileX - 1;
+			pSlipgate->sTilePositions[3].ubY = ubTileY + 1;
+		}
+		pSlipgate->eNormal = DIRECTION_LEFT;
+		return 1;
+	}
+	return 0;
+}
+
+static UBYTE mapTrySpawnSlipgateLeftAbove(
+	tSlipgate *pSlipgate, UBYTE ubTileX, UBYTE ubTileY
+) {
+	if( // x,y is bottom tile of left-normal slipgate
+		!mapIsEmptyAt(ubTileX, ubTileY - 2) &&
+		mapIsEmptyAt(ubTileX - 1, ubTileY - 1) &&
+		mapIsSlipgatableAt(ubTileX, ubTileY - 1) &&
+		mapIsEmptyAt(ubTileX - 1, ubTileY) &&
+		!mapIsEmptyAt(ubTileX - 1, ubTileY + 1)
+	) {
+		// ?! y-2
+		// .+ y-1
+		// .+ y
+		// ?! y+1
+		if(pSlipgate->isAiming) {
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY - 1;
+		}
+		else {
+			mapCloseSlipgate(pSlipgate);
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY - 1;
+			pSlipgate->sTilePositions[1].ubX = ubTileX;
+			pSlipgate->sTilePositions[1].ubY = ubTileY;
+			pSlipgate->sTilePositions[2].ubX = ubTileX - 1;
+			pSlipgate->sTilePositions[2].ubY = ubTileY - 1;
+			pSlipgate->sTilePositions[3].ubX = ubTileX - 1;
+			pSlipgate->sTilePositions[3].ubY = ubTileY;
+		}
+		pSlipgate->eNormal = DIRECTION_LEFT;
+		return 1;
+	}
+	return 0;
+}
+
+static UBYTE mapTrySpawnSlipgateRightBelow(
+	tSlipgate *pSlipgate, UBYTE ubTileX, UBYTE ubTileY
+) {
+	if( // x,y is top tile of right-normal slipgate
+		!mapIsEmptyAt(ubTileX, ubTileY - 1) &&
+		mapIsEmptyAt(ubTileX + 1, ubTileY) &&
+		mapIsSlipgatableAt(ubTileX, ubTileY + 1) &&
+		mapIsEmptyAt(ubTileX + 1, ubTileY + 1) &&
+		!mapIsEmptyAt(ubTileX, ubTileY + 2)
+	) {
+		// !? y-1
+		// +. y
+		// +. y+1
+		// !? y+2
+		if(pSlipgate->isAiming) {
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+		}
+		else {
+			mapCloseSlipgate(pSlipgate);
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+			pSlipgate->sTilePositions[1].ubX = ubTileX;
+			pSlipgate->sTilePositions[1].ubY = ubTileY + 1;
+			pSlipgate->sTilePositions[2].ubX = ubTileX + 1;
+			pSlipgate->sTilePositions[2].ubY = ubTileY;
+			pSlipgate->sTilePositions[3].ubX = ubTileX + 1;
+			pSlipgate->sTilePositions[3].ubY = ubTileY + 1;
+		}
+		pSlipgate->eNormal = DIRECTION_RIGHT;
+		return 1;
+	}
+	return 0;
+}
+
+static UBYTE mapTrySpawnSlipgateRightAbove(
+	tSlipgate *pSlipgate, UBYTE ubTileX, UBYTE ubTileY
+) {
+	if( // x,y is bottom tile of right-normal slipgate
+		!mapIsEmptyAt(ubTileX, ubTileY - 2) &&
+		mapIsEmptyAt(ubTileX + 1, ubTileY - 1) &&
+		mapIsSlipgatableAt(ubTileX, ubTileY - 1) &&
+		mapIsEmptyAt(ubTileX + 1, ubTileY) &&
+		!mapIsEmptyAt(ubTileX, ubTileY + 1)
+	) {
+		// !? y-2
+		// +. y-1
+		// +. y
+		// !? y+1
+		if(pSlipgate->isAiming) {
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY - 1;
+		}
+		else {
+			mapCloseSlipgate(pSlipgate);
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY - 1;
+			pSlipgate->sTilePositions[1].ubX = ubTileX;
+			pSlipgate->sTilePositions[1].ubY = ubTileY;
+			pSlipgate->sTilePositions[2].ubX = ubTileX + 1;
+			pSlipgate->sTilePositions[2].ubY = ubTileY - 1;
+			pSlipgate->sTilePositions[3].ubX = ubTileX + 1;
+			pSlipgate->sTilePositions[3].ubY = ubTileY;
+		}
+		pSlipgate->eNormal = DIRECTION_RIGHT;
+		return 1;
+	}
+	return 0;
+}
+
+static UBYTE mapTrySpawnSlipgateUpRight(
+	tSlipgate *pSlipgate, UBYTE ubTileX, UBYTE ubTileY
+) {
+	if( // x,y is left tile of up-normal slipgate
+		!mapIsEmptyAt(ubTileX - 1, ubTileY) &&
+		mapIsEmptyAt(ubTileX, ubTileY - 1) &&
+		mapIsSlipgatableAt(ubTileX + 1, ubTileY) &&
+		mapIsEmptyAt(ubTileX + 1, ubTileY - 1) &&
+		!mapIsEmptyAt(ubTileX + 2, ubTileY)
+	) {
+		//  x
+		// ?..? y-1
+		// !++! y
+		if(pSlipgate->isAiming) {
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+		}
+		else {
+			mapCloseSlipgate(pSlipgate);
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+			pSlipgate->sTilePositions[1].ubX = ubTileX + 1;
+			pSlipgate->sTilePositions[1].ubY = ubTileY;
+			pSlipgate->sTilePositions[2].ubX = ubTileX;
+			pSlipgate->sTilePositions[2].ubY = ubTileY - 1;
+			pSlipgate->sTilePositions[3].ubX = ubTileX + 1;
+			pSlipgate->sTilePositions[3].ubY = ubTileY - 1;
+		}
+		pSlipgate->eNormal = DIRECTION_UP;
+		return 1;
+	}
+	return 0;
+}
+
+static UBYTE mapTrySpawnSlipgateUpLeft(
+	tSlipgate *pSlipgate, UBYTE ubTileX, UBYTE ubTileY
+) {
+	if( // x,y is right tile of up-normal slipgate
+		!mapIsEmptyAt(ubTileX - 2, ubTileY) &&
+		mapIsEmptyAt(ubTileX - 1, ubTileY - 1) &&
+		mapIsSlipgatableAt(ubTileX - 1, ubTileY) &&
+		mapIsEmptyAt(ubTileX, ubTileY - 1) &&
+		!mapIsEmptyAt(ubTileX + 1, ubTileY)
+	) {
+		//   x
+		// ?..? y-1
+		// !++! y
+		if(pSlipgate->isAiming) {
+			pSlipgate->sTilePositions[0].ubX = ubTileX - 1;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+		}
+		else {
+			mapCloseSlipgate(pSlipgate);
+			pSlipgate->sTilePositions[0].ubX = ubTileX - 1;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+			pSlipgate->sTilePositions[1].ubX = ubTileX;
+			pSlipgate->sTilePositions[1].ubY = ubTileY;
+			pSlipgate->sTilePositions[2].ubX = ubTileX - 1;
+			pSlipgate->sTilePositions[2].ubY = ubTileY - 1;
+			pSlipgate->sTilePositions[3].ubX = ubTileX;
+			pSlipgate->sTilePositions[3].ubY = ubTileY - 1;
+		}
+		pSlipgate->eNormal = DIRECTION_UP;
+		return 1;
+	}
+	return 0;
+}
+
+static UBYTE mapTrySpawnSlipgateDownRight(
+	tSlipgate *pSlipgate, UBYTE ubTileX, UBYTE ubTileY
+) {
+	if( // x,y is left tile of down-normal slipgate
+		!mapIsEmptyAt(ubTileX - 1, ubTileY) &&
+		mapIsEmptyAt(ubTileX, ubTileY + 1) &&
+		mapIsSlipgatableAt(ubTileX + 1, ubTileY) &&
+		mapIsEmptyAt(ubTileX + 1, ubTileY + 1) &&
+		!mapIsEmptyAt(ubTileX + 2, ubTileY)
+	) {
+		//  x
+		// !++! y
+		// ?..? y+1
+		if(pSlipgate->isAiming) {
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+		}
+		else {
+			mapCloseSlipgate(pSlipgate);
+			pSlipgate->sTilePositions[0].ubX = ubTileX;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+			pSlipgate->sTilePositions[1].ubX = ubTileX + 1;
+			pSlipgate->sTilePositions[1].ubY = ubTileY;
+			pSlipgate->sTilePositions[2].ubX = ubTileX;
+			pSlipgate->sTilePositions[2].ubY = ubTileY + 1;
+			pSlipgate->sTilePositions[3].ubX = ubTileX + 1;
+			pSlipgate->sTilePositions[3].ubY = ubTileY + 1;
+		}
+		pSlipgate->eNormal = DIRECTION_DOWN;
+		return 1;
+	}
+	return 0;
+}
+
+static UBYTE mapTrySpawnSlipgateDownLeft(
+	tSlipgate *pSlipgate, UBYTE ubTileX, UBYTE ubTileY
+) {
+	if( // x,y is right tile of down-normal slipgate
+		!mapIsEmptyAt(ubTileX - 2, ubTileY) &&
+		mapIsEmptyAt(ubTileX - 1, ubTileY + 1) &&
+		mapIsSlipgatableAt(ubTileX - 1, ubTileY) &&
+		mapIsEmptyAt(ubTileX, ubTileY + 1) &&
+		!mapIsEmptyAt(ubTileX + 1, ubTileY)
+	) {
+		//   x
+		// !++! y
+		// ?..? y+1
+		if(pSlipgate->isAiming) {
+			pSlipgate->sTilePositions[0].ubX = ubTileX - 1;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+		}
+		else {
+			mapCloseSlipgate(pSlipgate);
+			pSlipgate->sTilePositions[0].ubX = ubTileX - 1;
+			pSlipgate->sTilePositions[0].ubY = ubTileY;
+			pSlipgate->sTilePositions[1].ubX = ubTileX;
+			pSlipgate->sTilePositions[1].ubY = ubTileY;
+			pSlipgate->sTilePositions[2].ubX = ubTileX - 1;
+			pSlipgate->sTilePositions[2].ubY = ubTileY + 1;
+			pSlipgate->sTilePositions[3].ubX = ubTileX;
+			pSlipgate->sTilePositions[3].ubY = ubTileY + 1;
+		}
+		pSlipgate->eNormal = DIRECTION_DOWN;
+		return 1;
+	}
+	return 0;
+}
+
 //------------------------------------------------------------- PUBLIC FUNCTIONS
 
 void mapLoad(UBYTE ubIndex) {
@@ -953,8 +1233,13 @@ void mapRestart(void) {
 		mapInitTurret(&s_pTurrets[i]);
 	}
 
-	g_pSlipgates[0].eNormal = DIRECTION_NONE;
-	g_pSlipgates[1].eNormal = DIRECTION_NONE;
+	g_pSlipgates[SLIPGATE_A].isAiming = 0;
+	g_pSlipgates[SLIPGATE_A].eNormal = DIRECTION_NONE;
+	g_pSlipgates[SLIPGATE_B].isAiming = 0;
+	g_pSlipgates[SLIPGATE_B].eNormal = DIRECTION_NONE;
+	g_pSlipgates[SLIPGATE_AIM].isAiming = 1;
+	g_pSlipgates[SLIPGATE_AIM].eNormal = DIRECTION_NONE;
+
 	s_ubCurrentInteraction = 0;
 	s_uwSpikeCooldown = 1;
 	s_isSpikeActive = 0;
@@ -964,11 +1249,12 @@ void mapRestart(void) {
 	s_ubCurrentTurret = 0;
 	s_ubPendingSlipgateOpenIndex = MAP_PENDING_SLIPGATE_OPEN_INVALID;
 	memset(s_pDirtyTiles, 0, MAP_TILE_WIDTH * MAP_TILE_HEIGHT);
+
 }
 
 void mapSave(UBYTE ubIndex) {
-	mapCloseSlipgate(0);
-	mapCloseSlipgate(1);
+	mapCloseSlipgate(&g_pSlipgates[SLIPGATE_A]);
+	mapCloseSlipgate(&g_pSlipgates[SLIPGATE_B]);
 
 	char szName[30];
 	sprintf(szName, "data/levels/L%03hhu.dat", ubIndex);
@@ -1179,8 +1465,8 @@ void mapRecalculateVisTilesNearTileAt(UBYTE ubTileX, UBYTE ubTileY) {
 
 UBYTE mapIsSlipgateTunnelOpen(void) {
 	return (
-		g_pSlipgates[0].eNormal != DIRECTION_NONE &&
-		g_pSlipgates[1].eNormal != DIRECTION_NONE
+		g_pSlipgates[SLIPGATE_A].eNormal != DIRECTION_NONE &&
+		g_pSlipgates[SLIPGATE_B].eNormal != DIRECTION_NONE
 	);
 }
 
@@ -1385,177 +1671,68 @@ UBYTE mapTileIsOnWall(tTile eTile) {
 
 //-------------------------------------------------------------------- SLIPGATES
 
-UBYTE mapTrySpawnSlipgate(UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY) {
+UBYTE mapTrySpawnSlipgate(
+	UBYTE ubIndex, UBYTE ubTileX, UBYTE ubTileY, tDirection eNormal
+) {
 	if(!mapIsSlipgatableAt(ubTileX, ubTileY)) {
 		return 0;
 	}
 
 	tSlipgate *pSlipgate = &g_pSlipgates[ubIndex];
+	UBYTE isOpened = 0;
 
 	// TODO: this should only check for empty tile on left/right/up/down direction
 	// and then do the same comparisons for x-1,x,x+1 for up/down and y for left-right
-	if( // x,y is top tile of left-normal slipgate
-		!mapIsEmptyAt(ubTileX, ubTileY - 1) &&
-		mapIsEmptyAt(ubTileX - 1, ubTileY) &&
-		mapIsSlipgatableAt(ubTileX, ubTileY + 1) &&
-		mapIsEmptyAt(ubTileX - 1, ubTileY + 1) &&
-		!mapIsEmptyAt(ubTileX, ubTileY + 2)
-	) {
-		mapCloseSlipgate(ubIndex);
-		pSlipgate->sTilePositions[0].ubX = ubTileX;
-		pSlipgate->sTilePositions[0].ubY = ubTileY;
-		pSlipgate->sTilePositions[1].ubX = ubTileX;
-		pSlipgate->sTilePositions[1].ubY = ubTileY + 1;
-		pSlipgate->sTilePositions[2].ubX = ubTileX - 1;
-		pSlipgate->sTilePositions[2].ubY = ubTileY;
-		pSlipgate->sTilePositions[3].ubX = ubTileX - 1;
-		pSlipgate->sTilePositions[3].ubY = ubTileY + 1;
-		pSlipgate->eNormal = DIRECTION_LEFT;
+	// TODO: reverse spawn orders depending on exact hit position in the tile
+	switch(eNormal) {
+		case DIRECTION_LEFT:
+			isOpened = (
+				mapTrySpawnSlipgateLeftAbove(pSlipgate, ubTileX, ubTileY) ||
+				mapTrySpawnSlipgateLeftBelow(pSlipgate, ubTileX, ubTileY)
+			);
+			break;
+		case DIRECTION_RIGHT:
+			isOpened = (
+				mapTrySpawnSlipgateRightAbove(pSlipgate, ubTileX, ubTileY) ||
+				mapTrySpawnSlipgateRightBelow(pSlipgate, ubTileX, ubTileY)
+			);
+			break;
+		case DIRECTION_UP:
+			isOpened = (
+				mapTrySpawnSlipgateUpRight(pSlipgate, ubTileX, ubTileY) ||
+				mapTrySpawnSlipgateUpLeft(pSlipgate, ubTileX, ubTileY)
+			);
+			break;
+		case DIRECTION_DOWN:
+			isOpened = (
+				mapTrySpawnSlipgateDownRight(pSlipgate, ubTileX, ubTileY) ||
+				mapTrySpawnSlipgateDownLeft(pSlipgate, ubTileX, ubTileY)
+			);
+			break;
+		default:
+			break;
 	}
-	else if( // x,y is bottom tile of left-normal slipgate
-		!mapIsEmptyAt(ubTileX, ubTileY - 2) &&
-		mapIsEmptyAt(ubTileX - 1, ubTileY - 1) &&
-		mapIsSlipgatableAt(ubTileX, ubTileY - 1) &&
-		mapIsEmptyAt(ubTileX - 1, ubTileY) &&
-		!mapIsEmptyAt(ubTileX - 1, ubTileY + 1)
-	) {
-		mapCloseSlipgate(ubIndex);
-		pSlipgate->sTilePositions[0].ubX = ubTileX;
-		pSlipgate->sTilePositions[0].ubY = ubTileY - 1;
-		pSlipgate->sTilePositions[1].ubX = ubTileX;
-		pSlipgate->sTilePositions[1].ubY = ubTileY;
-		pSlipgate->sTilePositions[2].ubX = ubTileX - 1;
-		pSlipgate->sTilePositions[2].ubY = ubTileY - 1;
-		pSlipgate->sTilePositions[3].ubX = ubTileX - 1;
-		pSlipgate->sTilePositions[3].ubY = ubTileY;
-		pSlipgate->eNormal = DIRECTION_LEFT;
-	}
-	else if( // x,y is top tile of right-normal slipgate
-		!mapIsEmptyAt(ubTileX, ubTileY - 1) &&
-		mapIsEmptyAt(ubTileX + 1, ubTileY) &&
-		mapIsSlipgatableAt(ubTileX, ubTileY + 1) &&
-		mapIsEmptyAt(ubTileX + 1, ubTileY + 1) &&
-		!mapIsEmptyAt(ubTileX, ubTileY + 2)
-	) {
-		mapCloseSlipgate(ubIndex);
-		pSlipgate->sTilePositions[0].ubX = ubTileX;
-		pSlipgate->sTilePositions[0].ubY = ubTileY;
-		pSlipgate->sTilePositions[1].ubX = ubTileX;
-		pSlipgate->sTilePositions[1].ubY = ubTileY + 1;
-		pSlipgate->sTilePositions[2].ubX = ubTileX + 1;
-		pSlipgate->sTilePositions[2].ubY = ubTileY;
-		pSlipgate->sTilePositions[3].ubX = ubTileX + 1;
-		pSlipgate->sTilePositions[3].ubY = ubTileY + 1;
-		pSlipgate->eNormal = DIRECTION_RIGHT;
-	}
-	else if( // x,y is bottom tile of right-normal slipgate
-		!mapIsEmptyAt(ubTileX, ubTileY - 2) &&
-		mapIsEmptyAt(ubTileX + 1, ubTileY - 1) &&
-		mapIsSlipgatableAt(ubTileX, ubTileY - 1) &&
-		mapIsEmptyAt(ubTileX + 1, ubTileY) &&
-		!mapIsEmptyAt(ubTileX + 1, ubTileY + 1)
-	) {
-		mapCloseSlipgate(ubIndex);
-		pSlipgate->sTilePositions[0].ubX = ubTileX;
-		pSlipgate->sTilePositions[0].ubY = ubTileY - 1;
-		pSlipgate->sTilePositions[1].ubX = ubTileX;
-		pSlipgate->sTilePositions[1].ubY = ubTileY;
-		pSlipgate->sTilePositions[2].ubX = ubTileX + 1;
-		pSlipgate->sTilePositions[2].ubY = ubTileY - 1;
-		pSlipgate->sTilePositions[3].ubX = ubTileX + 1;
-		pSlipgate->sTilePositions[3].ubY = ubTileY;
-		pSlipgate->eNormal = DIRECTION_RIGHT;
-	}
-	else if( // x,y is left tile of up-normal slipgate
-		!mapIsEmptyAt(ubTileX - 1, ubTileY) &&
-		mapIsEmptyAt(ubTileX, ubTileY - 1) &&
-		mapIsSlipgatableAt(ubTileX + 1, ubTileY) &&
-		mapIsEmptyAt(ubTileX + 1, ubTileY - 1) &&
-		!mapIsEmptyAt(ubTileX + 2, ubTileY)
-	) {
-		mapCloseSlipgate(ubIndex);
-		pSlipgate->sTilePositions[0].ubX = ubTileX;
-		pSlipgate->sTilePositions[0].ubY = ubTileY;
-		pSlipgate->sTilePositions[1].ubX = ubTileX + 1;
-		pSlipgate->sTilePositions[1].ubY = ubTileY;
-		pSlipgate->sTilePositions[2].ubX = ubTileX;
-		pSlipgate->sTilePositions[2].ubY = ubTileY - 1;
-		pSlipgate->sTilePositions[3].ubX = ubTileX + 1;
-		pSlipgate->sTilePositions[3].ubY = ubTileY - 1;
-		pSlipgate->eNormal = DIRECTION_UP;
-	}
-	else if( // x,y is right tile of up-normal slipgate
-		!mapIsEmptyAt(ubTileX - 2, ubTileY) &&
-		mapIsEmptyAt(ubTileX - 1, ubTileY - 1) &&
-		mapIsSlipgatableAt(ubTileX - 1, ubTileY) &&
-		mapIsEmptyAt(ubTileX, ubTileY - 1) &&
-		!mapIsEmptyAt(ubTileX + 1, ubTileY)
-	) {
-		mapCloseSlipgate(ubIndex);
-		pSlipgate->sTilePositions[0].ubX = ubTileX - 1;
-		pSlipgate->sTilePositions[0].ubY = ubTileY;
-		pSlipgate->sTilePositions[1].ubX = ubTileX;
-		pSlipgate->sTilePositions[1].ubY = ubTileY;
-		pSlipgate->sTilePositions[2].ubX = ubTileX - 1;
-		pSlipgate->sTilePositions[2].ubY = ubTileY - 1;
-		pSlipgate->sTilePositions[3].ubX = ubTileX;
-		pSlipgate->sTilePositions[3].ubY = ubTileY - 1;
-		pSlipgate->eNormal = DIRECTION_UP;
-	}
-	else if( // x,y is left tile of down-normal slipgate
-		!mapIsEmptyAt(ubTileX - 1, ubTileY) &&
-		mapIsEmptyAt(ubTileX, ubTileY + 1) &&
-		mapIsSlipgatableAt(ubTileX + 1, ubTileY) &&
-		mapIsEmptyAt(ubTileX + 1, ubTileY + 1) &&
-		!mapIsEmptyAt(ubTileX + 2, ubTileY)
-	) {
-		mapCloseSlipgate(ubIndex);
-		pSlipgate->sTilePositions[0].ubX = ubTileX;
-		pSlipgate->sTilePositions[0].ubY = ubTileY;
-		pSlipgate->sTilePositions[1].ubX = ubTileX + 1;
-		pSlipgate->sTilePositions[1].ubY = ubTileY;
-		pSlipgate->sTilePositions[2].ubX = ubTileX;
-		pSlipgate->sTilePositions[2].ubY = ubTileY + 1;
-		pSlipgate->sTilePositions[3].ubX = ubTileX + 1;
-		pSlipgate->sTilePositions[3].ubY = ubTileY + 1;
-		pSlipgate->eNormal = DIRECTION_DOWN;
-	}
-	else if( // x,y is right tile of down-normal slipgate
-		!mapIsEmptyAt(ubTileX - 2, ubTileY) &&
-		mapIsEmptyAt(ubTileX - 1, ubTileY + 1) &&
-		mapIsSlipgatableAt(ubTileX - 1, ubTileY) &&
-		mapIsEmptyAt(ubTileX, ubTileY + 1) &&
-		!mapIsEmptyAt(ubTileX + 1, ubTileY)
-	) {
-		mapCloseSlipgate(ubIndex);
-		pSlipgate->sTilePositions[0].ubX = ubTileX - 1;
-		pSlipgate->sTilePositions[0].ubY = ubTileY;
-		pSlipgate->sTilePositions[1].ubX = ubTileX;
-		pSlipgate->sTilePositions[1].ubY = ubTileY;
-		pSlipgate->sTilePositions[2].ubX = ubTileX - 1;
-		pSlipgate->sTilePositions[2].ubY = ubTileY + 1;
-		pSlipgate->sTilePositions[3].ubX = ubTileX;
-		pSlipgate->sTilePositions[3].ubY = ubTileY + 1;
-		pSlipgate->eNormal = DIRECTION_DOWN;
-	}
-	else {
+
+	if(!isOpened) {
 		return 0;
 	}
 
-	mapTryCloseSlipgateAt(!ubIndex, pSlipgate->sTilePositions[0]);
-	mapTryCloseSlipgateAt(!ubIndex, pSlipgate->sTilePositions[1]);
-
+	if(!pSlipgate->isAiming) {
+		mapTryCloseSlipgateAt(!ubIndex, pSlipgate->sTilePositions[0]);
+		mapTryCloseSlipgateAt(!ubIndex, pSlipgate->sTilePositions[1]);
+	}
 	mapOpenSlipgate(ubIndex);
+
 	return 1;
 }
 
 void mapTryCloseSlipgateAt(UBYTE ubIndex, tUbCoordYX sPos) {
 	if(slipgateIsOccupyingTile(&g_pSlipgates[ubIndex], sPos)) {
-		mapCloseSlipgate(ubIndex);
+		mapCloseSlipgate(&g_pSlipgates[ubIndex]);
 	}
 }
 
 //------------------------------------------------------------------ GLOBAL VARS
 
-tSlipgate g_pSlipgates[2];
+tSlipgate g_pSlipgates[3];
 tLevel g_sCurrentLevel;

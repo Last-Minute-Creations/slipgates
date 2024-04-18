@@ -19,6 +19,7 @@ typedef struct tTileTracer {
 	WORD wDeltaTileX;
 	WORD wDeltaTileY;
 	UBYTE isActive;
+	UBYTE ubIterations;
 	UBYTE ubIndex; // TODO: callback + data
 } tTileTracer;
 
