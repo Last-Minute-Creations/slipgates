@@ -135,9 +135,14 @@ void tracerProcess(tTileTracer *pTracer) {
 			else {
 				eNormal = (pTracer->wDeltaTileY > 0) ? DIRECTION_UP : DIRECTION_DOWN;
 			}
-			mapTrySpawnSlipgate(
-				pTracer->ubIndex, pTracer->uwTileX, pTracer->uwTileY, eNormal
-			);
+			if(
+				!mapTrySpawnSlipgate(
+					pTracer->ubIndex, pTracer->uwTileX, pTracer->uwTileY, eNormal
+				) &&
+				g_pSlipgates[pTracer->ubIndex].isAiming
+			) {
+				g_pSlipgates[pTracer->ubIndex].eNormal = DIRECTION_NONE;
+			}
 			break;
 		}
 	}
