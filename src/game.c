@@ -38,6 +38,7 @@
 
 #define SLIPGATE_FRAME_HEIGHT_VERTICAL 16
 #define SLIPGATE_FRAME_HEIGHT_HORIZONTAL 4
+#define GAME_COLOR_TEXT 25
 
 // BUILD SWITCHES
 #define GAME_EDITOR_ENABLED
@@ -142,7 +143,7 @@ static void drawMap(void) {
 	fontDrawStr(
 		g_pFont, s_pBufferMain->pBack, 320/2, 0,
 		g_sCurrentLevel.szStoryText,
-		13, FONT_COOKIE | FONT_HCENTER, s_pTextBuffer
+		GAME_COLOR_TEXT, FONT_COOKIE | FONT_HCENTER, s_pTextBuffer
 	);
 }
 
@@ -615,9 +616,6 @@ static void gameGsCreate(void) {
 	TAG_END);
 
 	paletteLoad("data/slipgates.plt", s_pPalettes[PLAYER_MAX_HEALTH], 32);
-	s_pPalettes[PLAYER_MAX_HEALTH][17] = 0xA86;
-	s_pPalettes[PLAYER_MAX_HEALTH][18] = 0x27D;
-	s_pPalettes[PLAYER_MAX_HEALTH][19] = 0xE96;
 	UBYTE ubPaletteIndexLast = PLAYER_MAX_HEALTH;
 	paletteToRed(s_pPalettes[ubPaletteIndexLast], s_pPalettes[0], 32);
 	for(UBYTE i = 0; i < ubPaletteIndexLast; ++i) {

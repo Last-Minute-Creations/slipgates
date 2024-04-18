@@ -56,6 +56,17 @@ General:
 	✘ Ability to close open slipgates? @cancelled(24-04-15 17:16)
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
+Fixes:
+	☐ pressing direction button in same direction as falling/flying reduces velocity
+	☐ hitting ceiling should remove velocity instantly/faster
+	☐ Boxes are sometimes sliding indefinitely on ground (e.g. when falling from newly created portal to horizontal one)
+
+Graphics:
+	✔ Migrate to new graphics/palette @done(24-04-18 17:43)
+	☐ Character main body
+	☐ Character limb
+	☐ Separate run/stand anims
+
 Levels:
 	✔ get rid of holes @done(24-04-18 13:11)
 	☐ orig 31
@@ -68,24 +79,14 @@ Levels:
 	☐ orig 38
 	☐ orig 39
 	☐ orig 40
-	☐ spawn point: stairs level
-	☐ spawn point: infinite loop
-	☐ rework The Sadistic Level (before spikes)
+	☐ fix spawn point: stairs level (7)
+	☐ verify spawn point: infinite loop (8)
+	☐ rework The Sadistic Level (10)
 	☐ add hub doors to early levels, permaclosed before ???
-
-Graphics:
-	☐ Tiles
-	☐ Character main body
-	☐ Character limb
 
 VO:
 	☐ Intro/outro voiceovers
 	☐ Level voiceover
-
-Fixes:
-	☐ pressing direction button in same direction as falling/flying reduces velocity
-	☐ hitting ceiling should remove velocity instantly/faster
-	☐ Boxes are sometimes sliding indefinitely on ground
 
 Game flow:
 	✔ Faster map restarts without file reload @done(23-06-13 18:39)
