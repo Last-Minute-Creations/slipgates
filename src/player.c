@@ -11,8 +11,8 @@
 
 #define PLAYER_BODY_WIDTH 8
 #define PLAYER_BODY_HEIGHT 16
-#define PLAYER_VELO_DELTA_X_GROUND (fix16_one * 5 / 2)
-#define PLAYER_VELO_DELTA_X_AIR (fix16_one / 8)
+#define PLAYER_VELO_DELTA_X_AIR (fix16_one / 16)
+#define PLAYER_VELO_DELTA_X_GROUND (PLAYER_VELO_DELTA_X_AIR * 40)
 
 #define PLAYER_FRAME_COUNT 4
 #define PLAYER_FRAME_COOLDOWN 10
@@ -213,16 +213,20 @@ void playerProcess(tPlayer *pPlayer) {
 	}
 	else {
 		if(keyCheck(KEY_A)) {
-			pPlayer->sBody.fVelocityX = fix16_max(fix16_sub(
-				pPlayer->sBody.fVelocityX,
-				PLAYER_VELO_DELTA_X_AIR
-			), -PLAYER_VELO_DELTA_X_GROUND);
+			if(pPlayer->sBody.fVelocityX > -PLAYER_VELO_DELTA_X_GROUND) {
+				pPlayer->sBody.fVelocityX = fix16_sub(
+					pPlayer->sBody.fVelocityX,
+					PLAYER_VELO_DELTA_X_AIR
+				);
+			}
 		}
 		else if(keyCheck(KEY_D)) {
-			pPlayer->sBody.fVelocityX = fix16_min(fix16_add(
-				pPlayer->sBody.fVelocityX,
-				PLAYER_VELO_DELTA_X_AIR
-			), PLAYER_VELO_DELTA_X_GROUND);
+			if(pPlayer->sBody.fVelocityX < PLAYER_VELO_DELTA_X_GROUND) {
+				pPlayer->sBody.fVelocityX = fix16_add(
+					pPlayer->sBody.fVelocityX,
+					PLAYER_VELO_DELTA_X_AIR
+				);
+			}
 		}
 	}
 

@@ -57,7 +57,7 @@ General:
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Fixes:
-	☐ pressing direction button in same direction as falling/flying reduces max velocity
+	✔ pressing direction button in same direction as falling/flying reduces max velocity @done(24-04-19 12:00)
 	☐ hitting ceiling should remove velocity instantly/faster
 	☐ Boxes are sometimes sliding indefinitely on ground (e.g. when falling from newly created portal to horizontal one)
 
