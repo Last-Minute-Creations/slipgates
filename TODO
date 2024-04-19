@@ -48,7 +48,7 @@ General:
 	✔ Upgrade steep angle tracer precision, e.g. shooting floor on the ground @done(24-04-17 16:49)
 	✔ Show where slipgate will be opened (realtime tracing)? @done(24-04-18 13:00)
 	✔ Show level number somewhere (decor?) @done(24-04-18 14:08)
-	☐ Multi-bob character body
+	✔ Multi-bob character body @done(24-04-19 11:25)
 	☐ Save/load vistiles
 	☐ Add door/grate/exit tiles for unslipgatable walls?
 	☐ Rectangle draw for walls/doors/eraser in editor
@@ -57,14 +57,14 @@ General:
 	✘ Abyss - tile that kills players and objects, invisible 3 rows under map? @cancelled(23-05-28 11:26)
 
 Fixes:
-	☐ pressing direction button in same direction as falling/flying reduces velocity
+	☐ pressing direction button in same direction as falling/flying reduces max velocity
 	☐ hitting ceiling should remove velocity instantly/faster
 	☐ Boxes are sometimes sliding indefinitely on ground (e.g. when falling from newly created portal to horizontal one)
 
 Graphics:
 	✔ Migrate to new graphics/palette @done(24-04-18 17:43)
-	☐ Character main body
-	☐ Character limb
+	✔ Character main body @done(24-04-19 11:25)
+	✔ Character limb @done(24-04-19 11:25)
 	☐ Separate run/stand anims
 
 Levels:

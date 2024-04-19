@@ -147,9 +147,16 @@ static void drawMap(void) {
 	);
 
 	char szLevel[11];
-	sprintf(szLevel, "Level %hhu", g_sConfig.ubCurrentLevel);
+	char *szLabel;
+	if(g_sConfig.ubCurrentLevel == MAP_INDEX_HUB) {
+		szLabel = "The Hub";
+	}
+	else {
+		sprintf(szLevel, "Level %hhu", g_sConfig.ubCurrentLevel);
+		szLabel = szLevel;
+	}
 	fontDrawStr(
-		g_pFont, s_pBufferMain->pBack, 320/2, 256, szLevel,
+		g_pFont, s_pBufferMain->pBack, 320/2, 256, szLabel,
 		GAME_COLOR_TEXT, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM, s_pTextBuffer
 	);
 }
