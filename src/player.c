@@ -32,7 +32,8 @@ typedef struct tAnimFrameDef {
 static fix16_t s_fPlayerJumpVeloY = F16(-3);
 static UBYTE s_ubFrameCooldown;
 static UBYTE s_ubAnimFrame;
-static tAnimFrameDef pFrameAddresses[2][PLAYER_FRAME_COUNT];
+static tAnimFrameDef s_pBodyFrameAddresses[2][PLAYER_FRAME_COUNT];
+static tAnimFrameDef s_pArmFrameAddresses[GAME_MATH_ANGLE_COUNT / 4];
 
 //------------------------------------------------------------------ PRIVATE FNS
 
@@ -97,10 +98,15 @@ static UBYTE playerTryShootSlipgate(tPlayer *pPlayer, UBYTE ubIndex) {
 
 void playerManagerInit(void) {
 	for(UBYTE i = 0; i < PLAYER_FRAME_COUNT; ++i) {
-		pFrameAddresses[PLAYER_FRAME_DIR_RIGHT][i].pFrame = bobCalcFrameAddress(g_pPlayerFrames, i * 16);
-		pFrameAddresses[PLAYER_FRAME_DIR_RIGHT][i].pMask = bobCalcFrameAddress(g_pPlayerMasks, i * 16);
-		pFrameAddresses[PLAYER_FRAME_DIR_LEFT][i].pFrame = bobCalcFrameAddress(g_pPlayerFrames, (PLAYER_FRAME_COUNT + i) * 16);
-		pFrameAddresses[PLAYER_FRAME_DIR_LEFT][i].pMask = bobCalcFrameAddress(g_pPlayerMasks, (PLAYER_FRAME_COUNT + i) * 16);
+		s_pBodyFrameAddresses[PLAYER_FRAME_DIR_RIGHT][i].pFrame = bobCalcFrameAddress(g_pPlayerFrames, i * 16);
+		s_pBodyFrameAddresses[PLAYER_FRAME_DIR_RIGHT][i].pMask = bobCalcFrameAddress(g_pPlayerMasks, i * 16);
+		s_pBodyFrameAddresses[PLAYER_FRAME_DIR_LEFT][i].pFrame = bobCalcFrameAddress(g_pPlayerFrames, (PLAYER_FRAME_COUNT + i) * 16);
+		s_pBodyFrameAddresses[PLAYER_FRAME_DIR_LEFT][i].pMask = bobCalcFrameAddress(g_pPlayerMasks, (PLAYER_FRAME_COUNT + i) * 16);
+	}
+	for(UBYTE ubAngle = ANGLE_0; ubAngle < ANGLE_360; ++ubAngle) {
+		UBYTE ubArmFrame = ubAngle / 4;
+		s_pArmFrameAddresses[ubArmFrame].pFrame = bobCalcFrameAddress(g_pArmFrames, 16 * ubArmFrame);
+		s_pArmFrameAddresses[ubArmFrame].pMask = bobCalcFrameAddress(g_pArmMasks, 16 * ubArmFrame);
 	}
 }
 
@@ -269,21 +275,22 @@ void playerProcess(tPlayer *pPlayer) {
 			pFrameData = g_pPlayerWhiteFrame->Planes[0];
 		}
 		else {
-			pFrameData = pFrameAddresses[pPlayer->ubAnimDirection][0].pFrame;
-			// pFrameData = pFrameAddresses[pPlayer->ubAnimDirection][s_ubAnimFrame].pFrame;
+			pFrameData = s_pBodyFrameAddresses[pPlayer->ubAnimDirection][0].pFrame;
+			// pFrameData = s_pBodyFrameAddresses[pPlayer->ubAnimDirection][s_ubAnimFrame].pFrame;
 		}
 		bobSetFrame(
 			&pPlayer->sBody.sBob,
 			pFrameData,
-			pFrameAddresses[pPlayer->ubAnimDirection][0].pMask
-			// pFrameAddresses[pPlayer->ubAnimDirection][s_ubAnimFrame].pMask
+			s_pBodyFrameAddresses[pPlayer->ubAnimDirection][0].pMask
+			// s_pBodyFrameAddresses[pPlayer->ubAnimDirection][s_ubAnimFrame].pMask
 		);
 	}
+
 	UBYTE ubArmFrame = ubAimAngle / 4;
 	bobSetFrame(
 		&pPlayer->sBobArm,
-		bobCalcFrameAddress(g_pArmFrames, 16 * ubArmFrame),
-		bobCalcFrameAddress(g_pArmMasks, 16 * ubArmFrame)
+		s_pArmFrameAddresses[ubArmFrame].pFrame,
+		s_pArmFrameAddresses[ubArmFrame].pMask
 	);
 }
 
