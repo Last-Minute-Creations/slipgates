@@ -25,10 +25,8 @@ void assetsGameCreate(void) {
 	systemUse();
 	g_pPlayerFrames = bitmapCreateFromFile("data/player.bm", 0);
 	g_pPlayerMasks = bitmapCreateFromFile("data/player_mask.bm", 0);
-	g_pArmLeftFrames = bitmapCreateFromFile("data/arm_left.bm", 0);
-	g_pArmLeftMasks = bitmapCreateFromFile("data/arm_left_mask.bm", 0);
-	g_pArmRightFrames = bitmapCreateFromFile("data/arm_right.bm", 0);
-	g_pArmRightMasks = bitmapCreateFromFile("data/arm_right_mask.bm", 0);
+	g_pArmFrames = bitmapCreateFromFile("data/arm.bm", 0);
+	g_pArmMasks = bitmapCreateFromFile("data/arm_mask.bm", 0);
 	g_pBoxFrames = bitmapCreateFromFile("data/box.bm", 0);
 	g_pBoxMasks = bitmapCreateFromFile("data/box_mask.bm", 0);
 	g_pBouncerFrames = bitmapCreateFromFile("data/bouncer.bm", 0);
@@ -50,10 +48,8 @@ void assetsGameDestroy(void) {
 	systemUse();
 	bitmapDestroy(g_pPlayerFrames);
 	bitmapDestroy(g_pPlayerMasks);
-	bitmapDestroy(g_pArmLeftFrames);
-	bitmapDestroy(g_pArmLeftMasks);
-	bitmapDestroy(g_pArmRightFrames);
-	bitmapDestroy(g_pArmRightMasks);
+	bitmapDestroy(g_pArmFrames);
+	bitmapDestroy(g_pArmMasks);
 	bitmapDestroy(g_pBoxFrames);
 	bitmapDestroy(g_pBoxMasks);
 	bitmapDestroy(g_pBouncerFrames);
@@ -72,10 +68,8 @@ void assetsGameDestroy(void) {
 
 tBitMap *g_pPlayerFrames;
 tBitMap *g_pPlayerMasks;
-tBitMap *g_pArmLeftFrames;
-tBitMap *g_pArmLeftMasks;
-tBitMap *g_pArmRightFrames;
-tBitMap *g_pArmRightMasks;
+tBitMap *g_pArmFrames;
+tBitMap *g_pArmMasks;
 tBitMap *g_pBoxFrames;
 tBitMap *g_pBoxMasks;
 tBitMap *g_pBouncerFrames;

@@ -19,10 +19,8 @@ void assetsGameDestroy(void);
 
 extern tBitMap *g_pPlayerFrames;
 extern tBitMap *g_pPlayerMasks;
-extern tBitMap *g_pArmLeftFrames;
-extern tBitMap *g_pArmLeftMasks;
-extern tBitMap *g_pArmRightFrames;
-extern tBitMap *g_pArmRightMasks;
+extern tBitMap *g_pArmFrames;
+extern tBitMap *g_pArmMasks;
 extern tBitMap *g_pBoxFrames;
 extern tBitMap *g_pBoxMasks;
 extern tBitMap *g_pBouncerFrames;

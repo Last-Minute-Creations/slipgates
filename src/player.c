@@ -106,7 +106,7 @@ void playerManagerInit(void) {
 
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	bodyInit(&pPlayer->sBody, fPosX, fPosY, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT);
-	bobInit(&pPlayer->sBobArm, 16, 16, 0, g_pArmRightFrames->Planes[0], g_pArmRightMasks->Planes[0], 0, 0);
+	bobInit(&pPlayer->sBobArm, 16, 16, 0, g_pArmFrames->Planes[0], g_pArmMasks->Planes[0], 0, 0);
 	pPlayer->sBody.bBobOffsX = -4;
 	pPlayer->sBody.cbTileCollisionHandler = playerCollisionHandler;
 	pPlayer->sBody.cbSlipgateHandler = playerSlipgateHandler;
@@ -115,6 +115,7 @@ void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	pPlayer->bHealth = PLAYER_MAX_HEALTH;
 	pPlayer->ubDamageFrameCooldown = 0;
 	pPlayer->ubRegenCooldown = PLAYER_REGEN_COOLDOWN;
+	pPlayer->ubAnimDirection = 0;
 	s_ubAnimFrame = 0;
 	s_ubFrameCooldown = PLAYER_FRAME_COOLDOWN;
 }
@@ -162,7 +163,7 @@ void playerProcess(tPlayer *pPlayer) {
 	}
 
 	// TODO: don't update after death
-	UBYTE ubAnimDirection = (uwPlayerCenterX <= sPosCross.uwX) ? PLAYER_FRAME_DIR_RIGHT : PLAYER_FRAME_DIR_LEFT;
+	pPlayer->ubAnimDirection = (uwPlayerCenterX <= sPosCross.uwX) ? PLAYER_FRAME_DIR_RIGHT : PLAYER_FRAME_DIR_LEFT;
 
 	// Player shooting slipgates
 	tracerProcess(&g_sTracerSlipgate);
@@ -268,33 +269,29 @@ void playerProcess(tPlayer *pPlayer) {
 			pFrameData = g_pPlayerWhiteFrame->Planes[0];
 		}
 		else {
-			pFrameData = pFrameAddresses[ubAnimDirection][0].pFrame;
-			// pFrameData = pFrameAddresses[ubAnimDirection][s_ubAnimFrame].pFrame;
+			pFrameData = pFrameAddresses[pPlayer->ubAnimDirection][0].pFrame;
+			// pFrameData = pFrameAddresses[pPlayer->ubAnimDirection][s_ubAnimFrame].pFrame;
 		}
 		bobSetFrame(
 			&pPlayer->sBody.sBob,
 			pFrameData,
-			pFrameAddresses[ubAnimDirection][0].pMask
-			// pFrameAddresses[ubAnimDirection][s_ubAnimFrame].pMask
+			pFrameAddresses[pPlayer->ubAnimDirection][0].pMask
+			// pFrameAddresses[pPlayer->ubAnimDirection][s_ubAnimFrame].pMask
 		);
 	}
-	UBYTE ubArmFrame;
-	if(ubAimAngle <= 32) {
-		ubArmFrame = 8 - ubAimAngle / 4;
-	}
-	else {
-		ubArmFrame = (160 - ubAimAngle) / 4;
-	}
-	logWrite("angle %hhu, arm frame %hhu", ubAimAngle, ubArmFrame);
+	UBYTE ubArmFrame = ubAimAngle / 4;
 	bobSetFrame(
 		&pPlayer->sBobArm,
-		bobCalcFrameAddress(g_pArmRightFrames, 16 * ubArmFrame),
-		bobCalcFrameAddress(g_pArmRightMasks, 16 * ubArmFrame)
+		bobCalcFrameAddress(g_pArmFrames, 16 * ubArmFrame),
+		bobCalcFrameAddress(g_pArmMasks, 16 * ubArmFrame)
 	);
 }
 
 void playerProcessArm(tPlayer *pPlayer) {
 	pPlayer->sBobArm.sPos.uwX = pPlayer->sBody.sBob.sPos.uwX;
+	if(pPlayer->ubAnimDirection == PLAYER_FRAME_DIR_LEFT) {
+		pPlayer->sBobArm.sPos.uwX += 1;
+	}
 	pPlayer->sBobArm.sPos.uwY = pPlayer->sBody.sBob.sPos.uwY - 2;
 }
 

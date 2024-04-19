@@ -60,7 +60,7 @@ file(MAKE_DIRECTORY ${DATA_DIR}/logo)
 file(MAKE_DIRECTORY ${GEN_DIR})
 file(MAKE_DIRECTORY ${GEN_DIR}/tiles)
 file(MAKE_DIRECTORY ${GEN_DIR}/arm_right)
-file(MAKE_DIRECTORY ${GEN_DIR}/arm_left)
+file(MAKE_DIRECTORY ${GEN_DIR}/arm)
 file(GLOB COPY_FILES ${RES_DIR}/copied/*)
 file(COPY ${COPY_FILES} DESTINATION ${DATA_DIR})
 
@@ -294,51 +294,20 @@ convertTileset(
 	TILE_PATHS ${TILES_FILES}
 )
 
-set(image_name arm_right)
+set(image_name arm)
 set(decimals 3)
-set(angles 16)
+set(angles 32)
 math(EXPR decimals_add "${decimals} - 1")
-set(half_angle 180)
+set(angle_span 360)
 foreach(i RANGE ${decimals_add})
-	set(half_angle "${half_angle}0")
+	set(angle_span "${angle_span}0")
 endforeach()
 
 foreach(frame RANGE ${angles})
-	math(EXPR deg "-((${half_angle} * (${frame})) / ${angles})")
-	string(LENGTH ${deg} deg_length)
-	math(EXPR deg_length "${deg_length}-${decimals}")
-	if(deg_length GREATER_EQUAL 0)
-		string(SUBSTRING "${deg}" 0 ${deg_length} integral)
-		string(SUBSTRING ${deg} ${deg_length} ${decimals} decimal)
-		set(deg "${integral}.${decimal}")
+	if(frame EQUAL angles)
+		break()
 	endif()
-
-	set(rotated_paths ${rotated_paths}; ${GEN_DIR}/${image_name}/${frame}.png)
-	transformBitmap(
-		TARGET ${GAME_EXECUTABLE}
-		SOURCE ${RES_DIR}/${image_name}.png
-		DESTINATION ${GEN_DIR}/${image_name}/${frame}.png
-		TRANSFORM -rotate ${deg} ${transparency_hex}
-	)
-endforeach()
-convertTileset(
-	TARGET ${GAME_EXECUTABLE}
-	SOURCE ${GEN_DIR}/${image_name} DESTINATION ${GEN_DIR}/${image_name}.png SIZE 16
-	COLUMN_WIDTH 16
-	TILE_PATHS ${rotated_paths}
-)
-
-set(image_name arm_left)
-set(decimals 3)
-set(angles 16)
-math(EXPR decimals_add "${decimals} - 1")
-set(half_angle 180)
-foreach(i RANGE ${decimals_add})
-	set(half_angle "${half_angle}0")
-endforeach()
-
-foreach(frame RANGE ${angles})
-	math(EXPR deg "((${half_angle} * (${frame})) / ${angles})")
+	math(EXPR deg "((${angle_span} * (${frame})) / ${angles})")
 	string(LENGTH ${deg} deg_length)
 	math(EXPR deg_length "${deg_length}-${decimals}")
 	if(deg_length GREATER_EQUAL 0)
@@ -367,15 +336,15 @@ convertBitmaps(
 	INTERLEAVED SOURCES
 		${RES_DIR}/player.png ${RES_DIR}/box.png ${RES_DIR}/bouncer.png
 		${RES_DIR}/slipgates_a.png ${RES_DIR}/slipgates_b.png ${RES_DIR}/aim.png
-		${GEN_DIR}/arm_left.png ${GEN_DIR}/arm_right.png
+		${GEN_DIR}/arm.png
 		DESTINATIONS
 		${DATA_DIR}/player.bm ${DATA_DIR}/box.bm ${DATA_DIR}/bouncer.bm
 		${DATA_DIR}/slipgate_a.bm ${DATA_DIR}/slipgate_b.bm ${DATA_DIR}/aim.bm
-		${DATA_DIR}/arm_left.bm ${DATA_DIR}/arm_right.bm
+		${DATA_DIR}/arm.bm
 		MASKS
 		${DATA_DIR}/player_mask.bm ${DATA_DIR}/box_mask.bm ${DATA_DIR}/bouncer_mask.bm
 		${DATA_DIR}/slipgates_mask.bm NONE ${DATA_DIR}/aim_mask.bm
-		${DATA_DIR}/arm_left_mask.bm ${DATA_DIR}/arm_right_mask.bm
+		${DATA_DIR}/arm_mask.bm
 )
 
 convertBitmaps(

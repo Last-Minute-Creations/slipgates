@@ -17,6 +17,7 @@ typedef struct tPlayer {
 	UBYTE isSlipgated;
 	UBYTE ubDamageFrameCooldown;
 	UBYTE ubRegenCooldown;
+	UBYTE ubAnimDirection;
 } tPlayer;
 
 void playerManagerInit(void);
