@@ -49,6 +49,9 @@ static UBYTE moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 					WORD wDeltaX = -(WORD)(g_pSlipgates[ubIndexSrc].sTilePositions[0].ubX * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].sTilePositions[0].ubX * MAP_TILE_SIZE);
 					pBody->fPosX = fix16_add(pBody->fPosX, fix16_from_int(wDeltaX));
 					pBody->fVelocityY = -pBody->fVelocityY;
+					if(pBody->fVelocityY > -(fix16_one)) {
+						pBody->fVelocityY = -(fix16_one);
+					}
 					// Be sure to teleport exactly at same height, otherwise U-loop will increase velocity
 					UWORD wDeltaY = -(WORD)(g_pSlipgates[ubIndexSrc].sTilePositions[0].ubY * MAP_TILE_SIZE) + (WORD)(g_pSlipgates[!ubIndexSrc].sTilePositions[0].ubY * MAP_TILE_SIZE);
 					pBody->fPosY = fix16_add(pBody->fPosY, fix16_from_int(wDeltaY));
