@@ -758,6 +758,8 @@ static void gameGsLoop(void) {
 
 	bodySimulate(&s_sPlayer.sBody);
 	bobPush(&s_sPlayer.sBody.sBob);
+	playerProcessArm(&s_sPlayer);
+	bobPush(&s_sPlayer.sBobArm);
 	bobPushingDone();
 	bobEnd();
 

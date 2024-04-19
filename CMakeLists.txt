@@ -59,6 +59,8 @@ file(MAKE_DIRECTORY ${DATA_DIR})
 file(MAKE_DIRECTORY ${DATA_DIR}/logo)
 file(MAKE_DIRECTORY ${GEN_DIR})
 file(MAKE_DIRECTORY ${GEN_DIR}/tiles)
+file(MAKE_DIRECTORY ${GEN_DIR}/arm_right)
+file(MAKE_DIRECTORY ${GEN_DIR}/arm_left)
 file(GLOB COPY_FILES ${RES_DIR}/copied/*)
 file(COPY ${COPY_FILES} DESTINATION ${DATA_DIR})
 
@@ -69,16 +71,6 @@ file(GLOB palette_sprite_gpl ${RES_DIR}/sprite_export.gpl)
 set(palette_slipgates "${DATA_DIR}/slipgates.plt")
 convertPalette(${GAME_EXECUTABLE} ${palette_slipgates_gpl} ${palette_slipgates})
 set(transparency_hex "#993399")
-
-convertBitmaps(
-	TARGET ${GAME_EXECUTABLE} PALETTE ${palette_slipgates_gpl} MASK_COLOR ${transparency_hex}
-	INTERLEAVED SOURCES
-		${RES_DIR}/player.png ${RES_DIR}/box.png ${RES_DIR}/bouncer.png ${RES_DIR}/slipgates_a.png ${RES_DIR}/slipgates_b.png ${RES_DIR}/aim.png
-	DESTINATIONS
-		${DATA_DIR}/player.bm ${DATA_DIR}/box.bm ${DATA_DIR}/bouncer.bm ${DATA_DIR}/slipgate_a.bm ${DATA_DIR}/slipgate_b.bm ${DATA_DIR}/aim.bm
-	MASKS
-		${DATA_DIR}/player_mask.bm ${DATA_DIR}/box_mask.bm ${DATA_DIR}/bouncer_mask.bm ${DATA_DIR}/slipgates_mask.bm NONE ${DATA_DIR}/aim_mask.bm
-)
 
 extractBitmaps(
 	TARGET ${GAME_EXECUTABLE} SOURCE ${RES_DIR}/tiles_mockup.png
@@ -300,6 +292,90 @@ convertTileset(
 	SOURCE ${GEN_DIR}/tiles DESTINATION ${GEN_DIR}/tiles.png SIZE 8
 	COLUMN_WIDTH 16
 	TILE_PATHS ${TILES_FILES}
+)
+
+set(image_name arm_right)
+set(decimals 3)
+set(angles 16)
+math(EXPR decimals_add "${decimals} - 1")
+set(half_angle 180)
+foreach(i RANGE ${decimals_add})
+	set(half_angle "${half_angle}0")
+endforeach()
+
+foreach(frame RANGE ${angles})
+	math(EXPR deg "-((${half_angle} * (${frame})) / ${angles})")
+	string(LENGTH ${deg} deg_length)
+	math(EXPR deg_length "${deg_length}-${decimals}")
+	if(deg_length GREATER_EQUAL 0)
+		string(SUBSTRING "${deg}" 0 ${deg_length} integral)
+		string(SUBSTRING ${deg} ${deg_length} ${decimals} decimal)
+		set(deg "${integral}.${decimal}")
+	endif()
+
+	set(rotated_paths ${rotated_paths}; ${GEN_DIR}/${image_name}/${frame}.png)
+	transformBitmap(
+		TARGET ${GAME_EXECUTABLE}
+		SOURCE ${RES_DIR}/${image_name}.png
+		DESTINATION ${GEN_DIR}/${image_name}/${frame}.png
+		TRANSFORM -rotate ${deg} ${transparency_hex}
+	)
+endforeach()
+convertTileset(
+	TARGET ${GAME_EXECUTABLE}
+	SOURCE ${GEN_DIR}/${image_name} DESTINATION ${GEN_DIR}/${image_name}.png SIZE 16
+	COLUMN_WIDTH 16
+	TILE_PATHS ${rotated_paths}
+)
+
+set(image_name arm_left)
+set(decimals 3)
+set(angles 16)
+math(EXPR decimals_add "${decimals} - 1")
+set(half_angle 180)
+foreach(i RANGE ${decimals_add})
+	set(half_angle "${half_angle}0")
+endforeach()
+
+foreach(frame RANGE ${angles})
+	math(EXPR deg "((${half_angle} * (${frame})) / ${angles})")
+	string(LENGTH ${deg} deg_length)
+	math(EXPR deg_length "${deg_length}-${decimals}")
+	if(deg_length GREATER_EQUAL 0)
+		string(SUBSTRING "${deg}" 0 ${deg_length} integral)
+		string(SUBSTRING ${deg} ${deg_length} ${decimals} decimal)
+		set(deg "${integral}.${decimal}")
+	endif()
+
+	set(rotated_paths ${rotated_paths}; ${GEN_DIR}/${image_name}/${frame}.png)
+	transformBitmap(
+		TARGET ${GAME_EXECUTABLE}
+		SOURCE ${RES_DIR}/${image_name}.png
+		DESTINATION ${GEN_DIR}/${image_name}/${frame}.png
+		TRANSFORM -rotate ${deg} ${transparency_hex}
+	)
+endforeach()
+convertTileset(
+	TARGET ${GAME_EXECUTABLE}
+	SOURCE ${GEN_DIR}/${image_name} DESTINATION ${GEN_DIR}/${image_name}.png SIZE 16
+	COLUMN_WIDTH 16
+	TILE_PATHS ${rotated_paths}
+)
+
+convertBitmaps(
+	TARGET ${GAME_EXECUTABLE} PALETTE ${palette_slipgates_gpl} MASK_COLOR ${transparency_hex}
+	INTERLEAVED SOURCES
+		${RES_DIR}/player.png ${RES_DIR}/box.png ${RES_DIR}/bouncer.png
+		${RES_DIR}/slipgates_a.png ${RES_DIR}/slipgates_b.png ${RES_DIR}/aim.png
+		${GEN_DIR}/arm_left.png ${GEN_DIR}/arm_right.png
+		DESTINATIONS
+		${DATA_DIR}/player.bm ${DATA_DIR}/box.bm ${DATA_DIR}/bouncer.bm
+		${DATA_DIR}/slipgate_a.bm ${DATA_DIR}/slipgate_b.bm ${DATA_DIR}/aim.bm
+		${DATA_DIR}/arm_left.bm ${DATA_DIR}/arm_right.bm
+		MASKS
+		${DATA_DIR}/player_mask.bm ${DATA_DIR}/box_mask.bm ${DATA_DIR}/bouncer_mask.bm
+		${DATA_DIR}/slipgates_mask.bm NONE ${DATA_DIR}/aim_mask.bm
+		${DATA_DIR}/arm_left_mask.bm ${DATA_DIR}/arm_right_mask.bm
 )
 
 convertBitmaps(

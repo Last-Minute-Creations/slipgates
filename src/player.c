@@ -106,6 +106,7 @@ void playerManagerInit(void) {
 
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	bodyInit(&pPlayer->sBody, fPosX, fPosY, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT);
+	bobInit(&pPlayer->sBobArm, 16, 16, 0, g_pArmRightFrames->Planes[0], g_pArmRightMasks->Planes[0], 0, 0);
 	pPlayer->sBody.bBobOffsX = -4;
 	pPlayer->sBody.cbTileCollisionHandler = playerCollisionHandler;
 	pPlayer->sBody.cbSlipgateHandler = playerSlipgateHandler;
@@ -267,14 +268,34 @@ void playerProcess(tPlayer *pPlayer) {
 			pFrameData = g_pPlayerWhiteFrame->Planes[0];
 		}
 		else {
-			pFrameData = pFrameAddresses[ubAnimDirection][s_ubAnimFrame].pFrame;
+			pFrameData = pFrameAddresses[ubAnimDirection][0].pFrame;
+			// pFrameData = pFrameAddresses[ubAnimDirection][s_ubAnimFrame].pFrame;
 		}
 		bobSetFrame(
 			&pPlayer->sBody.sBob,
 			pFrameData,
-			pFrameAddresses[ubAnimDirection][s_ubAnimFrame].pMask
+			pFrameAddresses[ubAnimDirection][0].pMask
+			// pFrameAddresses[ubAnimDirection][s_ubAnimFrame].pMask
 		);
 	}
+	UBYTE ubArmFrame;
+	if(ubAimAngle <= 32) {
+		ubArmFrame = 8 - ubAimAngle / 4;
+	}
+	else {
+		ubArmFrame = (160 - ubAimAngle) / 4;
+	}
+	logWrite("angle %hhu, arm frame %hhu", ubAimAngle, ubArmFrame);
+	bobSetFrame(
+		&pPlayer->sBobArm,
+		bobCalcFrameAddress(g_pArmRightFrames, 16 * ubArmFrame),
+		bobCalcFrameAddress(g_pArmRightMasks, 16 * ubArmFrame)
+	);
+}
+
+void playerProcessArm(tPlayer *pPlayer) {
+	pPlayer->sBobArm.sPos.uwX = pPlayer->sBody.sBob.sPos.uwX;
+	pPlayer->sBobArm.sPos.uwY = pPlayer->sBody.sBob.sPos.uwY - 2;
 }
 
 void playerDamage(tPlayer *pPlayer, UBYTE ubAmount) {
