@@ -39,6 +39,7 @@
 #define SLIPGATE_FRAME_HEIGHT_VERTICAL 16
 #define SLIPGATE_FRAME_HEIGHT_HORIZONTAL 4
 #define GAME_COLOR_TEXT 25
+#define GAME_COLOR_EDITOR_TEXT 16
 
 // BUILD SWITCHES
 #define GAME_EDITOR_ENABLED
@@ -114,7 +115,7 @@ static UBYTE s_isEditorDrawInteractions;
 static tEditorTool s_eEditorCurrentTool;
 static tUbCoordYX s_sEditorPrevCursorTilePos;
 
-static tState s_sStateTilePalette;
+static tState s_sStateTilePalette, s_sStateTextEdit;
 
 static const tBCoordYX s_pSlipgateOffsets[DIRECTION_COUNT] = {
 	[DIRECTION_LEFT] = {.bX = -2, .bY = 0},
@@ -158,6 +159,17 @@ static void drawMap(void) {
 	fontDrawStr(
 		g_pFont, s_pBufferMain->pBack, 320/2, 256, szLabel,
 		GAME_COLOR_TEXT, FONT_COOKIE | FONT_HCENTER | FONT_BOTTOM, s_pTextBuffer
+	);
+
+	blitCopyAligned(
+		s_pBufferMain->pBack, 0, 0,
+		s_pBufferMain->pFront, 0, 0,
+		SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT / 2
+	);
+	blitCopyAligned(
+		s_pBufferMain->pBack, 0, SCREEN_PAL_HEIGHT / 2,
+		s_pBufferMain->pFront, 0, SCREEN_PAL_HEIGHT / 2,
+		SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT / 2
 	);
 }
 
@@ -226,16 +238,6 @@ static void loadLevel(UBYTE ubIndex, UBYTE isForce) {
 	s_uwPrevButtonPresses = 0;
 
 	drawMap();
-	blitCopyAligned(
-		s_pBufferMain->pBack, 0, 0,
-		s_pBufferMain->pFront, 0, 0,
-		SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT / 2
-	);
-	blitCopyAligned(
-		s_pBufferMain->pBack, 0, SCREEN_PAL_HEIGHT / 2,
-		s_pBufferMain->pFront, 0, SCREEN_PAL_HEIGHT / 2,
-		SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT / 2
-	);
 
 	s_ubCurrentPaletteIndex = PLAYER_MAX_HEALTH;
 
@@ -387,6 +389,15 @@ static UBYTE gameProcessEditor(void) {
 
 	if(keyUse(KEY_C)) {
 		statePush(g_pGameStateManager, &s_sStateTilePalette);
+		return 1;
+	}
+	if(keyUse(KEY_V)) {
+		// TODO: decor palette
+		// statePush(g_pGameStateManager, &s_sStateTilePalette);
+		// return 1;
+	}
+	if(keyUse(KEY_B)) {
+		statePush(g_pGameStateManager, &s_sStateTextEdit);
 		return 1;
 	}
 
@@ -643,7 +654,7 @@ static void gameGsCreate(void) {
 	s_pFade = fadeCreate(s_pView, s_pPalettes[PLAYER_MAX_HEALTH], 1 << GAME_BPP);
 
 	assetsGameCreate();
-	s_pTextBuffer = fontCreateTextBitMap(336, g_pFont->uwHeight * 2);
+	s_pTextBuffer = fontCreateTextBitMap(336, g_pFont->uwHeight * 4);
 	playerManagerInit();
 
 	bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
@@ -869,6 +880,74 @@ static void tilePaletteGsDestroy(void) {
 	gameTileRefreshAll();
 }
 
+static UBYTE s_ubTextEditPos;
+
+static void textEditUpdateText(void) {
+	blitRect(s_pBufferMain->pFront, 0, 0, 320, g_pFont->uwHeight * 4, 0);
+	fontDrawStr(
+		g_pFont, s_pBufferMain->pFront, 0, 0,
+		g_sCurrentLevel.szStoryText,
+		GAME_COLOR_EDITOR_TEXT, FONT_LAZY, s_pTextBuffer
+	);
+}
+
+static void textEditGsCreate(void) {
+	textEditUpdateText();
+	s_ubTextEditPos = strlen(g_sCurrentLevel.szStoryText);
+}
+
+static void textEditGsLoop(void) {
+	if(keyUse(KEY_ESCAPE)) {
+		statePop(g_pGameStateManager);
+		return;
+	}
+
+	UBYTE isUpdate = 0;
+
+	if(keyUse(KEY_F1)) {
+		s_ubTextEditPos = 0;
+		for(UBYTE i = 0; i < sizeof(g_sCurrentLevel.szStoryText); ++i) {
+			g_sCurrentLevel.szStoryText[i] = '\0';
+		}
+		isUpdate = 1;
+	}
+	else if(s_ubTextEditPos < sizeof(g_sCurrentLevel.szStoryText)) {
+		if(keyUse(g_sKeyManager.ubLastKey)) {
+			char c = g_pToAscii[g_sKeyManager.ubLastKey];
+
+			if(g_sKeyManager.ubLastKey == KEY_BACKSPACE) {
+				--s_ubTextEditPos;
+				g_sCurrentLevel.szStoryText[s_ubTextEditPos] = '\0';
+				isUpdate = 1;
+			}
+			else if(g_sKeyManager.ubLastKey == KEY_RETURN) {
+				g_sCurrentLevel.szStoryText[s_ubTextEditPos] = '\n';
+				++s_ubTextEditPos;
+				g_sCurrentLevel.szStoryText[s_ubTextEditPos] = '\0';
+				isUpdate = 1;
+			}
+			else if(c) {
+				if('a' <= c && c <= 'z' && (keyCheck(KEY_LSHIFT) || keyCheck(KEY_RSHIFT))) {
+					c += 'A' - 'a';
+				}
+				g_sCurrentLevel.szStoryText[s_ubTextEditPos] = c;
+				++s_ubTextEditPos;
+				g_sCurrentLevel.szStoryText[s_ubTextEditPos] = '\0';
+				isUpdate = 1;
+			}
+		}
+	}
+
+	if(isUpdate) {
+		textEditUpdateText();
+	}
+}
+
+static void textEditGsDestroy(void) {
+	drawMap();
+}
+
+
 //------------------------------------------------------------------- PUBLIC FNS
 
 // TODO: move to map.c?
@@ -1038,4 +1117,5 @@ tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY) {
 //-------------------------------------------------------------------- GAMESTATE
 
 static tState s_sStateTilePalette = { .cbCreate = tilePaletteGsCreate, .cbLoop = tilePaletteGsLoop, .cbDestroy = tilePaletteGsDestroy };
+static tState s_sStateTextEdit = { .cbCreate = textEditGsCreate, .cbLoop = textEditGsLoop, .cbDestroy = textEditGsDestroy };
 tState g_sStateGame = { .cbCreate = gameGsCreate, .cbLoop = gameGsLoop, .cbDestroy = gameGsDestroy };
