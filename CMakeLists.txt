@@ -321,7 +321,7 @@ foreach(frame RANGE ${angles})
 		TARGET ${GAME_EXECUTABLE}
 		SOURCE ${RES_DIR}/${image_name}.png
 		DESTINATION ${GEN_DIR}/${image_name}/${frame}.png
-		TRANSFORM -rotate ${deg} ${transparency_hex}
+		TRANSFORM -rotate ${deg} ${transparency_hex} 7 7
 	)
 endforeach()
 convertTileset(
