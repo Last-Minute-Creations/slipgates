@@ -19,8 +19,8 @@
 - <kbd>Y</kbd> - add box under cursor
 - <kbd>U</kbd> - remove last box
 - <kbd>F10</kbd> - load empty level
-- <kbd>Ctrl</kbd> + (<kbd>F1</kbd> - <kbd>F9</kbd>) - save level 1..9
-- <kbd>F1</kbd> - <kbd>F9</kbd> - load level 1..9
+- <kbd>F1</kbd> - load selected level
+- <kbd>F2</kbd> - save as selected level
 - <kbd>[</kbd> - toggle debug colors
 - <kbd>]</kbd> - toggle grid
 - <kbd>P</kbd> - toggle interaction indices visibility

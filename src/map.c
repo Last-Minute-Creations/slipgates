@@ -1100,7 +1100,7 @@ static UBYTE mapTrySpawnSlipgateDownLeft(
 
 //------------------------------------------------------------- PUBLIC FUNCTIONS
 
-void mapLoad(UBYTE ubIndex) {
+UBYTE mapTryLoad(UBYTE ubIndex) {
 	memset(s_pInteractions, 0, sizeof(s_pInteractions));
 	s_sLoadedLevel.ubBouncerSpawnerTileX = 0;
 	s_sLoadedLevel.ubBouncerSpawnerTileY = 0;
@@ -1129,17 +1129,17 @@ void mapLoad(UBYTE ubIndex) {
 		s_sLoadedLevel.sSpawnPos.fX = fix16_from_int(100);
 		s_sLoadedLevel.sSpawnPos.fY = fix16_from_int(100);
 
-		strcpy(
-			s_sLoadedLevel.szStoryText,
-			"The ruins looked dormant, with no traces of previous adventurers\n"
-			"in sight, but soon first obstacles, and a helpful utility appeared."
-		);
+		strcpy(s_sLoadedLevel.szStoryText, "TODO: ADD TEXT\nLINE 2");
 	}
 	else {
 		char szName[30];
 		sprintf(szName, "data/levels/L%03hhu.dat", ubIndex);
 		systemUse();
 		tFile *pFile = fileOpen(szName, "rb");
+		if(!pFile) {
+			systemUnuse();
+			return 0;
+		}
 		fileRead(pFile, &s_sLoadedLevel.sSpawnPos.fX, sizeof(s_sLoadedLevel.sSpawnPos.fX));
 		fileRead(pFile, &s_sLoadedLevel.sSpawnPos.fY, sizeof(s_sLoadedLevel.sSpawnPos.fY));
 
@@ -1214,6 +1214,7 @@ void mapLoad(UBYTE ubIndex) {
 
 	mapFillVisTiles(&s_sLoadedLevel);
 	mapRestart();
+	return 1;
 }
 
 void mapRestart(void) {

@@ -13,6 +13,7 @@
 #include <ace/utils/palette.h>
 #include <ace/utils/file.h>
 #include <ace/utils/font.h>
+#include <ace/utils/string.h>
 #include <ace/managers/key.h>
 #include "slipgates.h"
 #include "body_box.h"
@@ -53,26 +54,25 @@ typedef enum tExitState {
 } tExitState;
 
 typedef enum tEditorTool {
-	EDITOR_TOOL_WALL,
-	EDITOR_TOOL_WALL_BLOCKED,
-	EDITOR_TOOL_GRATE,
-	EDITOR_TOOL_DEATH_FIELD,
-	EDITOR_TOOL_EXIT,
-	EDITOR_TOOL_DOOR,
-	EDITOR_TOOL_RECEIVER,
-	EDITOR_TOOL_WALL_TOGGLABLE,
-	EDITOR_TOOL_PIPE,
-	EDITOR_TOOL_EXIT_HUB,
-	EDITOR_TOOL_BUTTON,
-	EDITOR_TOOL_BOUNCER,
-	EDITOR_TOOL_SPIKE,
-	EDITOR_TOOL_TURRET_LEFT,
-	EDITOR_TOOL_TURRET_RIGHT,
-	EDITOR_TOOL_COUNT
+	EDITOR_TILE_PALETTE_TOOL_WALL,
+	EDITOR_TILE_PALETTE_TOOL_WALL_BLOCKED,
+	EDITOR_TILE_PALETTE_TOOL_GRATE,
+	EDITOR_TILE_PALETTE_TOOL_DEATH_FIELD,
+	EDITOR_TILE_PALETTE_TOOL_EXIT,
+	EDITOR_TILE_PALETTE_TOOL_DOOR,
+	EDITOR_TILE_PALETTE_TOOL_RECEIVER,
+	EDITOR_TILE_PALETTE_TOOL_WALL_TOGGLABLE,
+	EDITOR_TILE_PALETTE_TOOL_PIPE,
+	EDITOR_TILE_PALETTE_TOOL_EXIT_HUB,
+	EDITOR_TILE_PALETTE_TOOL_BUTTON,
+	EDITOR_TILE_PALETTE_TOOL_BOUNCER,
+	EDITOR_TILE_PALETTE_TOOL_SPIKE,
+	EDITOR_TILE_PALETTE_TOOL_TURRET_LEFT,
+	EDITOR_TILE_PALETTE_TOOL_TURRET_RIGHT,
+	EDITOR_TILE_PALETTE_TOOL_COUNT
 } tEditorTool;
 
-__attribute__((unused))
-static const char *s_pToolNames[] = {
+static const char *s_pTilePaletteToolNames[] = {
 	"Wall",
 	"Wall blocked",
 	"Grate",
@@ -89,6 +89,12 @@ static const char *s_pToolNames[] = {
 	"Turret left",
 	"Turret right",
 };
+
+typedef void (*tCbOptionPaletteOnSelect)(UBYTE ubToolIndex);
+typedef void (*tCbOptionPaletteDrawElement)(
+	tBitMap *pDestination, UBYTE ubIndex,
+	UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight
+);
 
 static tView *s_pView;
 static tVPort *s_pVpMain;
@@ -115,7 +121,7 @@ static UBYTE s_isEditorDrawInteractions;
 static tEditorTool s_eEditorCurrentTool;
 static tUbCoordYX s_sEditorPrevCursorTilePos;
 
-static tState s_sStateTilePalette, s_sStateTextEdit;
+static tState s_sStateOptionPalette, s_sStateTextEdit;
 
 static const tBCoordYX s_pSlipgateOffsets[DIRECTION_COUNT] = {
 	[DIRECTION_LEFT] = {.bX = -2, .bY = 0},
@@ -132,6 +138,12 @@ static const tBCoordYX s_pSlipgateOffsets[DIRECTION_COUNT] = {
 // static char s_szAccelerationY[13];
 
 tTileTracer g_sTracerSlipgate;
+
+static void editorEnterPalette(
+	UBYTE ubOptionPaletteToolCount,
+	tCbOptionPaletteOnSelect cbOptionPaletteOnSelect,
+	tCbOptionPaletteDrawElement cbOptionDrawElement
+);
 
 // TODO: refactor and move to map.c?
 static void drawMap(void) {
@@ -215,7 +227,9 @@ static void loadLevel(UBYTE ubIndex, UBYTE isForce) {
 			configSave();
 		}
 
-		mapLoad(ubIndex);
+		if(!mapTryLoad(ubIndex)) {
+			mapTryLoad(MAP_INDEX_DEVELOP);
+		}
 	}
 	bobDiscardUndraw();
 	playerReset(&s_sPlayer, g_sCurrentLevel.sSpawnPos.fX, g_sCurrentLevel.sSpawnPos.fY);
@@ -307,6 +321,42 @@ static void gameToggleEditorOption(UBYTE *pOption) {
 	gameTileRefreshAll();
 }
 
+static void onTilePaletteSelected(UBYTE ubToolIndex) {
+	s_eEditorCurrentTool = ubToolIndex;
+}
+
+static void tilePaletteDrawElement(
+	tBitMap *pDestination, UBYTE ubIndex,
+	UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight
+) {
+	fontDrawStr(
+		g_pFont, pDestination,
+		uwX + uwWidth / 2, uwY + uwHeight / 2,
+		s_pTilePaletteToolNames[ubIndex], 15,
+		FONT_COOKIE | FONT_SHADOW | FONT_CENTER, s_pTextBuffer
+	);
+}
+
+static void onLevelLoadSelected(UBYTE ubToolIndex) {
+	loadLevel(1 + ubToolIndex, 1);
+}
+
+static void onLevelSaveSelected(UBYTE ubToolIndex) {
+	saveLevel(1 + ubToolIndex);
+}
+
+static void levelPaletteDrawElement(
+	tBitMap *pDestination, UBYTE ubIndex,
+	UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight
+) {
+	char szLevel[4];
+	stringDecimalFromULong(ubIndex + 1, szLevel);
+	fontDrawStr(
+		g_pFont, pDestination, uwX + uwWidth / 2, uwY + uwHeight / 2, szLevel, 15,
+		FONT_COOKIE | FONT_SHADOW | FONT_CENTER, s_pTextBuffer
+	);
+}
+
 static void paletteToRed(
 	const UWORD *pPaletteIn, UWORD *pPaletteRed, UBYTE ubColorCount
 ) {
@@ -388,12 +438,14 @@ static UBYTE gameProcessEditor(void) {
 	blitRect(s_pBufferMain->pBack, uwCursorTileX * MAP_TILE_SIZE, uwCursorTileY * MAP_TILE_SIZE + MAP_TILE_SIZE - 1, MAP_TILE_SIZE, 1, 15);
 
 	if(keyUse(KEY_C)) {
-		statePush(g_pGameStateManager, &s_sStateTilePalette);
+		editorEnterPalette(
+			EDITOR_TILE_PALETTE_TOOL_COUNT,
+			onTilePaletteSelected, tilePaletteDrawElement
+		);
 		return 1;
 	}
 	if(keyUse(KEY_V)) {
 		// TODO: decor palette
-		// statePush(g_pGameStateManager, &s_sStateTilePalette);
 		// return 1;
 	}
 	if(keyUse(KEY_B)) {
@@ -408,48 +460,48 @@ static UBYTE gameProcessEditor(void) {
 	}
 	else if(keyCheck(KEY_X)) {
 		switch(s_eEditorCurrentTool) {
-			case EDITOR_TOOL_WALL:
+			case EDITOR_TILE_PALETTE_TOOL_WALL:
 				*pTileUnderCursor = TILE_WALL;
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_WALL_BLOCKED:
+			case EDITOR_TILE_PALETTE_TOOL_WALL_BLOCKED:
 				*pTileUnderCursor = TILE_WALL_BLOCKED;
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_GRATE:
+			case EDITOR_TILE_PALETTE_TOOL_GRATE:
 				*pTileUnderCursor = TILE_GRATE;
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_DEATH_FIELD:
+			case EDITOR_TILE_PALETTE_TOOL_DEATH_FIELD:
 				*pTileUnderCursor = TILE_DEATH_FIELD;
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_EXIT:
+			case EDITOR_TILE_PALETTE_TOOL_EXIT:
 				*pTileUnderCursor = TILE_EXIT;
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_DOOR:
+			case EDITOR_TILE_PALETTE_TOOL_DOOR:
 				*pTileUnderCursor = TILE_DOOR_CLOSED;
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_RECEIVER:
+			case EDITOR_TILE_PALETTE_TOOL_RECEIVER:
 				*pTileUnderCursor = TILE_RECEIVER;
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_WALL_TOGGLABLE:
+			case EDITOR_TILE_PALETTE_TOOL_WALL_TOGGLABLE:
 				*pTileUnderCursor = TILE_WALL_TOGGLABLE_OFF;
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_PIPE:
+			case EDITOR_TILE_PALETTE_TOOL_PIPE:
 				*pTileUnderCursor = TILE_PIPE;
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_EXIT_HUB:
+			case EDITOR_TILE_PALETTE_TOOL_EXIT_HUB:
 				*pTileUnderCursor = TILE_EXIT_HUB;
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
 
-			case EDITOR_TOOL_BUTTON:
+			case EDITOR_TILE_PALETTE_TOOL_BUTTON:
 				if(mapTileIsButton(*pTileUnderCursor)) {
 					if(keyUse(KEY_X)) {
 						if(*pTileUnderCursor == TILE_BUTTON_H) {
@@ -467,7 +519,7 @@ static UBYTE gameProcessEditor(void) {
 					mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				}
 				break;
-			case EDITOR_TOOL_BOUNCER:
+			case EDITOR_TILE_PALETTE_TOOL_BOUNCER:
 				if(g_sCurrentLevel.ubBouncerSpawnerTileX != BOUNCER_TILE_INVALID) {
 					g_sCurrentLevel.pTiles[g_sCurrentLevel.ubBouncerSpawnerTileX][g_sCurrentLevel.ubBouncerSpawnerTileY] = TILE_WALL;
 					mapRecalculateVisTilesNearTileAt(
@@ -485,16 +537,16 @@ static UBYTE gameProcessEditor(void) {
 				);
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_SPIKE:
+			case EDITOR_TILE_PALETTE_TOOL_SPIKE:
 				mapAddOrRemoveSpikeTile(uwCursorTileX, uwCursorTileY);
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY - 1);
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_TURRET_LEFT:
+			case EDITOR_TILE_PALETTE_TOOL_TURRET_LEFT:
 				mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY, DIRECTION_LEFT);
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
-			case EDITOR_TOOL_TURRET_RIGHT:
+			case EDITOR_TILE_PALETTE_TOOL_TURRET_RIGHT:
 				mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY, DIRECTION_RIGHT);
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
@@ -586,39 +638,6 @@ static void gameDrawTileInteractionMask(UBYTE ubTileX, UBYTE ubTileY, UWORD uwMa
 	}
 }
 
-void tilePaletteDraw(tBitMap *pDestination, UWORD uwElementCount) {
-	const UWORD uwCols = 4;
-	const UWORD uwRows = (uwElementCount + uwCols - 1) / uwCols;
-	const UWORD uwWidth = 320 - 64;
-	const UWORD uwHeight = 256 - 64;
-	const UWORD uwButtonSpaceX = uwWidth / uwCols;
-	const UWORD uwButtonSpaceY = uwHeight / uwRows;
-	blitRect(pDestination, 32, 32, uwWidth, uwHeight, 0);
-
-	for(UBYTE i = 0; i < uwElementCount; ++i) {
-		UWORD uwLeft = 32 + uwButtonSpaceX * (i % uwCols);
-		UWORD uwTop = 32 + uwButtonSpaceY * (i / uwCols);
-		blitRect(
-			pDestination,
-			uwLeft + 8,
-			uwTop + 4,
-			uwButtonSpaceX - 16,
-			uwButtonSpaceY - 8,
-			5
-		);
-		fontDrawStr(
-			g_pFont,
-			pDestination,
-			uwLeft + uwButtonSpaceX / 2,
-			uwTop + uwButtonSpaceY / 2,
-			s_pToolNames[i],
-			15,
-			FONT_COOKIE | FONT_SHADOW | FONT_CENTER,
-			s_pTextBuffer
-		);
-	}
-}
-
 //-------------------------------------------------------------------- GAMESTATE
 
 static void gameGsCreate(void) {
@@ -687,7 +706,7 @@ static void gameGsCreate(void) {
 	s_isEditorDrawGrid = 0;
 	s_isEditorDrawInteractions = 0;
 	s_sEditorPrevCursorTilePos.uwYX = 0;
-	s_eEditorCurrentTool = EDITOR_TOOL_WALL;
+	s_eEditorCurrentTool = EDITOR_TILE_PALETTE_TOOL_WALL;
 
 	systemUnuse();
 	loadLevel(g_sConfig.ubCurrentLevel, 1);
@@ -709,23 +728,16 @@ static void gameGsLoop(void) {
 		if(keyUse(KEY_F10)) {
 			loadLevel(MAP_INDEX_DEVELOP, 1);
 		}
-		else {
-			for(UBYTE i = 0; i < 9; ++i) {
-				if(keyUse(KEY_F1 + i)) {
-					if(keyCheck(KEY_CONTROL)) {
-						saveLevel(1 + i);
-					}
-					else {
-						loadLevel(1 + i, 1);
-					}
-					break;
-				}
-			}
+		else if(keyUse(KEY_F1)) {
+			editorEnterPalette(40, onLevelLoadSelected, levelPaletteDrawElement);
 		}
-		if(keyUse(KEY_RBRACKET)) {
+		else if(keyUse(KEY_F2)) {
+			editorEnterPalette(40, onLevelSaveSelected, levelPaletteDrawElement);
+		}
+		else if(keyUse(KEY_RBRACKET)) {
 			gameToggleEditorOption(&s_isEditorDrawGrid);
 		}
-		if(keyUse(KEY_P)) {
+		else if(keyUse(KEY_P)) {
 			gameToggleEditorOption(&s_isEditorDrawInteractions);
 		}
 	}
@@ -828,18 +840,59 @@ static void gameGsDestroy(void) {
 	assetsGameDestroy();
 }
 
-static void tilePaletteGsCreate(void) {
-	tilePaletteDraw(s_pBufferMain->pBack, EDITOR_TOOL_COUNT);
-	tilePaletteDraw(s_pBufferMain->pFront, EDITOR_TOOL_COUNT);
+static UBYTE s_ubOptionPaletteToolCount;
+static tCbOptionPaletteOnSelect s_cbOptionPaletteOnSelect;
+static tCbOptionPaletteDrawElement s_cbOptionPaletteDrawElement;
+
+static void editorEnterPalette(
+	UBYTE ubOptionPaletteToolCount,
+	tCbOptionPaletteOnSelect cbOptionPaletteOnSelect,
+	tCbOptionPaletteDrawElement cbOptionPaletteDrawElement
+) {
+	s_ubOptionPaletteToolCount = ubOptionPaletteToolCount;
+	s_cbOptionPaletteOnSelect = cbOptionPaletteOnSelect;
+	s_cbOptionPaletteDrawElement = cbOptionPaletteDrawElement;
+	statePush(g_pGameStateManager, &s_sStateOptionPalette);
 }
 
-static void tilePaletteGsLoop(void) {
+static void optionPaletteDraw(tBitMap *pDestination) {
+	const UWORD uwCols = 4;
+	const UWORD uwRows = (s_ubOptionPaletteToolCount + uwCols - 1) / uwCols;
+	const UWORD uwWidth = 320 - 64;
+	const UWORD uwHeight = 256 - 64;
+	const UWORD uwButtonSpaceX = uwWidth / uwCols;
+	const UWORD uwButtonSpaceY = uwHeight / uwRows;
+	blitRect(pDestination, 32, 32, uwWidth, uwHeight, 0);
+
+	for(UBYTE i = 0; i < s_ubOptionPaletteToolCount; ++i) {
+		UWORD uwLeft = 32 + uwButtonSpaceX * (i % uwCols);
+		UWORD uwTop = 32 + uwButtonSpaceY * (i / uwCols);
+		blitRect(
+			pDestination,
+			uwLeft + 8,
+			uwTop + 4,
+			uwButtonSpaceX - 16,
+			uwButtonSpaceY - 8,
+			5
+		);
+		s_cbOptionPaletteDrawElement(
+			pDestination, i, uwLeft, uwTop, uwButtonSpaceX, uwButtonSpaceY
+		);
+	}
+}
+
+static void optionPaletteGsCreate(void) {
+	optionPaletteDraw(s_pBufferMain->pBack);
+	optionPaletteDraw(s_pBufferMain->pFront);
+}
+
+static void optionPaletteGsLoop(void) {
 	if(keyUse(KEY_ESCAPE)) {
 		statePop(g_pGameStateManager);
 		return;
 	}
 
-	const UWORD uwElementCount = EDITOR_TOOL_COUNT;
+	const UWORD uwElementCount = s_ubOptionPaletteToolCount;
 	const UWORD uwCols = 4;
 	const UWORD uwRows = (uwElementCount + uwCols - 1) / uwCols;
 	const UWORD uwWidth = 320 - 64;
@@ -858,8 +911,8 @@ static void tilePaletteGsLoop(void) {
 				uwLeft + 8 <= sPosCross.uwX && sPosCross.uwX <= uwLeft + uwButtonSpaceX - 16 &&
 				uwTop + 4 <= sPosCross.uwY && sPosCross.uwY <= uwTop + uwButtonSpaceY - 8
 			) {
-				s_eEditorCurrentTool = i;
 				statePop(g_pGameStateManager);
+				s_cbOptionPaletteOnSelect(i);
 				return;
 			}
 		}
@@ -876,7 +929,7 @@ static void tilePaletteGsLoop(void) {
 	systemIdleEnd();
 }
 
-static void tilePaletteGsDestroy(void) {
+static void optionPaletteGsDestroy(void) {
 	gameTileRefreshAll();
 }
 
@@ -1116,6 +1169,6 @@ tBodyBox *gameGetBoxAt(UWORD uwX, UWORD uwY) {
 
 //-------------------------------------------------------------------- GAMESTATE
 
-static tState s_sStateTilePalette = { .cbCreate = tilePaletteGsCreate, .cbLoop = tilePaletteGsLoop, .cbDestroy = tilePaletteGsDestroy };
+static tState s_sStateOptionPalette = { .cbCreate = optionPaletteGsCreate, .cbLoop = optionPaletteGsLoop, .cbDestroy = optionPaletteGsDestroy };
 static tState s_sStateTextEdit = { .cbCreate = textEditGsCreate, .cbLoop = textEditGsLoop, .cbDestroy = textEditGsDestroy };
 tState g_sStateGame = { .cbCreate = gameGsCreate, .cbLoop = gameGsLoop, .cbDestroy = gameGsDestroy };

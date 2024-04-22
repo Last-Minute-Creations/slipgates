@@ -54,7 +54,7 @@ typedef struct tLevel {
 extern tSlipgate g_pSlipgates[3];
 extern tLevel g_sCurrentLevel;
 
-void mapLoad(UBYTE ubIndex);
+UBYTE mapTryLoad(UBYTE ubIndex);
 
 void mapSave(UBYTE ubIndex);
 
