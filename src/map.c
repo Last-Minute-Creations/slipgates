@@ -269,32 +269,26 @@ static void mapInitTurret(tTurret *pTurret) {
 		pTurret->isInAttackFrame = 1;
 		pTurret->ubLastAttackFrame = 0;
 
-		if(pTurret->eDirection == DIRECTION_LEFT) {
-			UBYTE ubLeftTileX = pTurret->sTilePos.ubX;
-			for(UBYTE i = 0; i < MAP_TURRET_TILE_RANGE; ++i) {
-				if(mapIsCollidingWithPortalProjectilesAt(ubLeftTileX - 1, pTurret->sTilePos.ubY)) {
-					break;
-				}
-				--ubLeftTileX;
+		UBYTE ubLeftTileX = pTurret->sTilePos.ubX;
+		for(UBYTE i = 0; i < MAP_TURRET_TILE_RANGE; ++i) {
+			if(mapIsCollidingWithPortalProjectilesAt(ubLeftTileX - 1, pTurret->sTilePos.ubY)) {
+				break;
 			}
-			pTurret->sScanTopLeft.uwX = ubLeftTileX * MAP_TILE_SIZE;
-			pTurret->sScanTopLeft.uwY = pTurret->sTilePos.ubY * MAP_TILE_SIZE;
-			pTurret->sScanBottomRight.uwX = pTurret->sTilePos.ubX * MAP_TILE_SIZE;
-			pTurret->sScanBottomRight.uwY = (pTurret->sTilePos.ubY + 1) * MAP_TILE_SIZE;
+			--ubLeftTileX;
 		}
-		else {
-			UBYTE ubRightTileX = pTurret->sTilePos.ubX + 1;
-			for(UBYTE i = 0; i < MAP_TURRET_TILE_RANGE; ++i) {
-				if(mapIsCollidingWithPortalProjectilesAt(ubRightTileX, pTurret->sTilePos.ubY)) {
-					break;
-				}
-				++ubRightTileX;
+
+		UBYTE ubRightTileX = pTurret->sTilePos.ubX + 1;
+		for(UBYTE i = 0; i < MAP_TURRET_TILE_RANGE; ++i) {
+			if(mapIsCollidingWithPortalProjectilesAt(ubRightTileX, pTurret->sTilePos.ubY)) {
+				break;
 			}
-			pTurret->sScanTopLeft.uwX = (pTurret->sTilePos.ubX + 1) * MAP_TILE_SIZE;
-			pTurret->sScanTopLeft.uwY = pTurret->sTilePos.ubY * MAP_TILE_SIZE;
-			pTurret->sScanBottomRight.uwX = ubRightTileX * MAP_TILE_SIZE;
-			pTurret->sScanBottomRight.uwY = (pTurret->sTilePos.ubY + 1) * MAP_TILE_SIZE;
+			++ubRightTileX;
 		}
+
+		pTurret->sScanTopLeft.uwX = ubLeftTileX * MAP_TILE_SIZE;
+		pTurret->sScanTopLeft.uwY = pTurret->sTilePos.ubY * MAP_TILE_SIZE;
+		pTurret->sScanBottomRight.uwX = ubRightTileX * MAP_TILE_SIZE;
+		pTurret->sScanBottomRight.uwY = (pTurret->sTilePos.ubY + 1) * MAP_TILE_SIZE;
 
 		// if(pTurret->sScanBottomRight.uwX - pTurret->sScanTopLeft.uwX != 0) {
 		// 	tSimpleBufferManager *pBuffer = gameGetBuffer();

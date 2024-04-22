@@ -58,11 +58,6 @@ static UBYTE playerCollisionHandler(
 		else if(mapTileIsButton(eTile)) {
 			mapPressButtonAt(ubTileX, ubTileY);
 		}
-		else if(
-			mapTileIsActiveTurret(eTile) && eBodyMovementDirection == DIRECTION_DOWN
-		) {
-			mapDisableTurretAt(ubTileX, ubTileY);
-		}
 	}
 	return isColliding;
 }
