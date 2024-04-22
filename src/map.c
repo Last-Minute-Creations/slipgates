@@ -20,7 +20,6 @@ typedef struct tTurret {
 	tUbCoordYX sTilePos;
 	tUwCoordYX sScanTopLeft;
 	tUwCoordYX sScanBottomRight;
-	tDirection eDirection;
 	UBYTE isActive;
 	UBYTE isInAttackFrame;
 	UBYTE ubLastAttackFrame;
@@ -191,11 +190,7 @@ static void mapProcessNextTurret(void) {
 			256 + ubCurrentGameFrame - pTurret->ubLastAttackFrame
 		);
 		if(pTurret->isInAttackFrame && ubDeltaAttack >= MAP_TURRET_ATTACK_FRAME_COOLDOWN) {
-			g_sCurrentLevel.pVisTiles[pTurret->sTilePos.ubX][pTurret->sTilePos.ubY] = (
-				(pTurret->eDirection == DIRECTION_LEFT) ?
-				VIS_TILE_TURRET_ACTIVE_LEFT :
-				VIS_TILE_TURRET_ACTIVE_RIGHT
-			);
+			g_sCurrentLevel.pVisTiles[pTurret->sTilePos.ubX][pTurret->sTilePos.ubY] = VIS_TILE_TURRET_ACTIVE;
 			mapRequestTileDraw(pTurret->sTilePos.ubX, pTurret->sTilePos.ubY);
 			pTurret->isInAttackFrame = 0;
 		}
@@ -212,11 +207,7 @@ static void mapProcessNextTurret(void) {
 				playerDamage(pPlayer, 1);
 				pTurret->isInAttackFrame = 1;
 				pTurret->ubLastAttackFrame = ubCurrentGameFrame;
-				g_sCurrentLevel.pVisTiles[pTurret->sTilePos.ubX][pTurret->sTilePos.ubY] = (
-					(pTurret->eDirection == DIRECTION_LEFT) ?
-					VIS_TILE_TURRET_SHOOTING_LEFT :
-					VIS_TILE_TURRET_SHOOTING_RIGHT
-				);
+				g_sCurrentLevel.pVisTiles[pTurret->sTilePos.ubX][pTurret->sTilePos.ubY] = VIS_TILE_TURRET_SHOOTING;
 				mapRequestTileDraw(pTurret->sTilePos.ubX, pTurret->sTilePos.ubY);
 			}
 		}
@@ -784,14 +775,10 @@ static tVisTile mapCalculateVisTileOnLevel(
 				return pBgLookup[eNeighbors];
 			}
 		} break;
-		case TILE_TURRET_ACTIVE_LEFT:
-			return VIS_TILE_TURRET_ACTIVE_LEFT;
-		case TILE_TURRET_ACTIVE_RIGHT:
-			return VIS_TILE_TURRET_ACTIVE_RIGHT;
-		case TILE_TURRET_INACTIVE_LEFT:
-			return VIS_TILE_TURRET_INACTIVE_LEFT;
-		case TILE_TURRET_INACTIVE_RIGHT:
-			return VIS_TILE_TURRET_INACTIVE_RIGHT;
+		case TILE_TURRET_ACTIVE:
+			return VIS_TILE_TURRET_ACTIVE;
+		case TILE_TURRET_INACTIVE:
+			return VIS_TILE_TURRET_INACTIVE;
 		case TILE_SPIKES_OFF_BG:
 			return VIS_TILE_SPIKES_OFF_BG_1;
 		case TILE_SPIKES_OFF_FLOOR:
@@ -1168,7 +1155,6 @@ UBYTE mapTryLoad(UBYTE ubIndex) {
 		fileRead(pFile, &s_sLoadedLevel.ubTurretCount, sizeof(s_sLoadedLevel.ubTurretCount));
 		for(UBYTE i = 0; i < s_sLoadedLevel.ubTurretCount; ++i) {
 			fileRead(pFile, &s_sLoadedLevel.pTurretSpawns[i].sTilePos.uwYX, sizeof(s_sLoadedLevel.pTurretSpawns[i].sTilePos.uwYX));
-			fileRead(pFile, &s_sLoadedLevel.pTurretSpawns[i].eDirection, sizeof(s_sLoadedLevel.pTurretSpawns[i].eDirection));
 		}
 
 		UBYTE ubStoryTextLength;
@@ -1222,7 +1208,6 @@ void mapRestart(void) {
 	for(UBYTE i = 0; i < s_ubTurretCount; ++i)  {
 		// Populate turret vars from spawns
 		s_pTurrets[i].sTilePos.uwYX = s_sLoadedLevel.pTurretSpawns[i].sTilePos.uwYX;
-		s_pTurrets[i].eDirection = s_sLoadedLevel.pTurretSpawns[i].eDirection;
 
 		// Now that tiles are loaded, determine turret range etc
 		mapInitTurret(&s_pTurrets[i]);
@@ -1285,23 +1270,22 @@ void mapSave(UBYTE ubIndex) {
 		fileWrite(pFile, &g_sCurrentLevel.pSpikeTiles[i].uwYX, sizeof(g_sCurrentLevel.pSpikeTiles[i].uwYX));
 	}
 
-		fileWrite(pFile, &s_ubTurretCount, sizeof(s_ubTurretCount));
-		for(UBYTE i = 0; i < s_ubTurretCount; ++i) {
-			fileWrite(pFile, &s_pTurrets[i].sTilePos.uwYX, sizeof(s_pTurrets[i].sTilePos.uwYX));
-			fileWrite(pFile, &s_pTurrets[i].eDirection, sizeof(s_pTurrets[i].eDirection));
-		}
+	fileWrite(pFile, &s_ubTurretCount, sizeof(s_ubTurretCount));
+	for(UBYTE i = 0; i < s_ubTurretCount; ++i) {
+		fileWrite(pFile, &s_pTurrets[i].sTilePos.uwYX, sizeof(s_pTurrets[i].sTilePos.uwYX));
+	}
 
-		UBYTE ubStoryTextLength = strlen(g_sCurrentLevel.szStoryText);
-		fileWrite(pFile, &ubStoryTextLength, sizeof(ubStoryTextLength));
-		if(ubStoryTextLength) {
-			fileWrite(pFile, g_sCurrentLevel.szStoryText, ubStoryTextLength);
-		}
+	UBYTE ubStoryTextLength = strlen(g_sCurrentLevel.szStoryText);
+	fileWrite(pFile, &ubStoryTextLength, sizeof(ubStoryTextLength));
+	if(ubStoryTextLength) {
+		fileWrite(pFile, g_sCurrentLevel.szStoryText, ubStoryTextLength);
+	}
 
-		UBYTE ubReservedCount1 = 0;
-		fileWrite(pFile, &ubReservedCount1, sizeof(ubReservedCount1));
+	UBYTE ubReservedCount1 = 0;
+	fileWrite(pFile, &ubReservedCount1, sizeof(ubReservedCount1));
 
-		UBYTE ubReservedCount2 = 0;
-		fileWrite(pFile, &ubReservedCount2, sizeof(ubReservedCount2));
+	UBYTE ubReservedCount2 = 0;
+	fileWrite(pFile, &ubReservedCount2, sizeof(ubReservedCount2));
 
 	for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
 		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
@@ -1348,14 +1332,8 @@ void mapDisableTurretAt(UBYTE ubX, UBYTE ubY) {
 			s_pTurrets[i].isActive = 0;
 
 			// Update turret tile
-			if(g_sCurrentLevel.pTiles[ubX][ubY] == TILE_TURRET_ACTIVE_LEFT) {
-				g_sCurrentLevel.pTiles[ubX][ubY] = TILE_TURRET_INACTIVE_LEFT;
-				g_sCurrentLevel.pVisTiles[ubX][ubY] = VIS_TILE_TURRET_INACTIVE_LEFT;
-			}
-			else {
-				g_sCurrentLevel.pTiles[ubX][ubY] = TILE_TURRET_INACTIVE_RIGHT;
-				g_sCurrentLevel.pVisTiles[ubX][ubY] = VIS_TILE_TURRET_INACTIVE_RIGHT;
-			}
+			g_sCurrentLevel.pTiles[ubX][ubY] = TILE_TURRET_INACTIVE;
+			g_sCurrentLevel.pVisTiles[ubX][ubY] = VIS_TILE_TURRET_INACTIVE;
 			mapRequestTileDraw(ubX, ubY);
 			break;
 		}
@@ -1403,7 +1381,7 @@ void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY) {
 	}
 }
 
-void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY, tDirection eDirection) {
+void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY) {
 	tUbCoordYX sPos = {.ubX = ubX, .ubY = ubY};
 	// Remove if list already contains pos
 	for(UBYTE i = 0; i < s_ubTurretCount; ++i) {
@@ -1422,13 +1400,8 @@ void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY, tDirection eDirection) {
 	if(s_ubTurretCount < MAP_TURRETS_MAX) {
 		tTurret *pTurret = &s_pTurrets[s_ubTurretCount];
 		pTurret->sTilePos.uwYX = sPos.uwYX;
-		pTurret->eDirection = eDirection;
 
-		g_sCurrentLevel.pTiles[ubX][ubY] = (
-			(pTurret->eDirection == DIRECTION_LEFT) ?
-			TILE_TURRET_ACTIVE_LEFT :
-			TILE_TURRET_ACTIVE_RIGHT
-		);
+		g_sCurrentLevel.pTiles[ubX][ubY] = TILE_TURRET_ACTIVE;
 		mapRecalculateVisTilesNearTileAt(ubX, ubY);
 
 		++s_ubTurretCount;

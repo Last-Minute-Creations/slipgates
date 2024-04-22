@@ -33,7 +33,6 @@ typedef struct tFix16Coord {
 
 typedef struct tTurretSpawn {
 	tUbCoordYX sTilePos;
-	tDirection eDirection;
 } tTurretSpawn;
 
 typedef struct tLevel {
@@ -80,7 +79,7 @@ UBYTE mapIsSlipgateTunnelOpen(void);
 
 void mapAddOrRemoveSpikeTile(UBYTE ubX, UBYTE ubY);
 
-void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY, tDirection eDirection);
+void mapAddOrRemoveTurret(UBYTE ubX, UBYTE ubY);
 
 //----------------------------------------------------------------- INTERACTIONS
 

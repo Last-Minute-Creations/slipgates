@@ -543,11 +543,11 @@ static UBYTE gameProcessEditor(void) {
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
 			case EDITOR_TILE_PALETTE_TOOL_TURRET_LEFT:
-				mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY, DIRECTION_LEFT);
+				mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY);
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
 			case EDITOR_TILE_PALETTE_TOOL_TURRET_RIGHT:
-				mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY, DIRECTION_RIGHT);
+				mapAddOrRemoveTurret(uwCursorTileX, uwCursorTileY);
 				mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 				break;
 			default:
