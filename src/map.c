@@ -1103,6 +1103,7 @@ UBYTE mapTryLoad(UBYTE ubIndex) {
 		s_sLoadedLevel.sSpawnPos.fY = fix16_from_int(100);
 
 		strcpy(s_sLoadedLevel.szStoryText, "TODO: ADD TEXT\nLINE 2");
+		mapRecalcAllVisTilesOnLevel(&s_sLoadedLevel);
 	}
 	else {
 		char szName[30];
@@ -1180,11 +1181,18 @@ UBYTE mapTryLoad(UBYTE ubIndex) {
 			}
 		}
 
+		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
+			for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
+				UWORD uwVisTileCode;
+				fileRead(pFile, &uwVisTileCode, sizeof(uwVisTileCode));
+				s_sLoadedLevel.pVisTiles[ubX][ubY] = uwVisTileCode;
+			}
+		}
+
 		fileClose(pFile);
 		systemUnuse();
 	}
 
-	mapRecalcAllVisTilesOnLevel(&s_sLoadedLevel);
 	mapRestart();
 	return 1;
 }
@@ -1283,6 +1291,12 @@ void mapSave(UBYTE ubIndex) {
 		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
 			UWORD uwTileCode = mapGetTileAt(ubX, ubY);
 			fileWrite(pFile, &uwTileCode, sizeof(uwTileCode));
+		}
+	}
+	for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
+		for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
+			UWORD uwVisTileCode = mapGetVisTileAt(ubX, ubY);
+			fileWrite(pFile, &uwVisTileCode, sizeof(uwVisTileCode));
 		}
 	}
 	fileClose(pFile);
