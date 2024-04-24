@@ -91,6 +91,12 @@ typedef enum tEditorDecorTool {
 	EDITOR_DECOR_TOOL_COUNT,
 } tEditorDecorTool;
 
+typedef enum tEditorRectangleMode {
+	EDITOR_RECTANGLE_MODE_OFF,
+	EDITOR_RECTANGLE_MODE_SET_TILE,
+	EDITOR_RECTANGLE_MODE_CLEAR_TILE,
+} tEditorRectangleMode;
+
 static const char *s_pTilePaletteToolNames[] = {
 	"Wall",
 	"Wall blocked",
@@ -143,6 +149,9 @@ static tEditorDecorTool s_eEditorCurrentDecorTool;
 static tEditorTileTool s_eEditorCurrentTool;
 static tUbCoordYX s_sEditorPrevCursorTilePos;
 static tUbCoordYX s_sEditorToolSize;
+static tEditorRectangleMode s_eEditorRectangleMode;
+static UBYTE s_ubEditorRectangleKey;
+static tUbCoordYX s_sEditorRectPosStart;
 
 static tState s_sStateOptionPalette, s_sStateTextEdit;
 
@@ -698,9 +707,102 @@ static void gameEditorPlaceTile(
 }
 
 static UBYTE gameEditorProcess(void) {
+	if(keyUse(KEY_C)) {
+		editorEnterPalette(
+			EDITOR_TILE_PALETTE_TOOL_COUNT,
+			onTilePaletteSelected, tilePaletteDrawElement
+		);
+		return 1;
+	}
+	if(keyUse(KEY_V)) {
+		editorEnterPalette(
+			EDITOR_DECOR_TOOL_END,
+			onDecorPaletteSelected, decorPaletteDrawElement
+		);
+		return 1;
+	}
+	if(keyUse(KEY_B)) {
+		statePush(g_pGameStateManager, &s_sStateTextEdit);
+		return 1;
+	}
+	if(keyUse(KEY_N)) {
+		mapRecalcAllVisTilesOnLevel(&g_sCurrentLevel);
+		drawMap();
+		return 1;
+	}
+
 	tUwCoordYX sPosCross = gameGetCrossPosition();
 	UWORD uwCursorTileX = sPosCross.uwX / MAP_TILE_SIZE;
 	UWORD uwCursorTileY = sPosCross.uwY / MAP_TILE_SIZE;
+	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[uwCursorTileX][uwCursorTileY];
+
+	if(s_eEditorRectangleMode) {
+		tUbCoordYX sPosTopLeft = {
+			.ubX = MIN(uwCursorTileX, s_sEditorRectPosStart.ubX),
+			.ubY = MIN(uwCursorTileY, s_sEditorRectPosStart.ubY),
+		};
+		tUbCoordYX sPosBottomRight = {
+			.ubX = MAX(uwCursorTileX, s_sEditorRectPosStart.ubX),
+			.ubY = MAX(uwCursorTileY, s_sEditorRectPosStart.ubY),
+		};
+		if(keyCheck(s_ubEditorRectangleKey)) {
+			s_sEditorToolSize.ubX = sPosBottomRight.ubX - sPosTopLeft.ubX + 1;
+			s_sEditorToolSize.ubY = sPosBottomRight.ubY - sPosTopLeft.ubY + 1;
+			uwCursorTileX = sPosTopLeft.ubX;
+			uwCursorTileY = sPosTopLeft.ubY;
+		}
+		else {
+			if(s_eEditorRectangleMode == EDITOR_RECTANGLE_MODE_SET_TILE) {
+				for(UBYTE ubY = sPosTopLeft.ubY; ubY <= sPosBottomRight.ubY; ++ubY) {
+					for(UBYTE ubX = sPosTopLeft.ubX; ubX <= sPosBottomRight.ubX; ++ubX) {
+						gameEditorPlaceTile(&g_sCurrentLevel.pTiles[ubX][ubY], ubX, ubY);
+					}
+				}
+			}
+			else if(s_eEditorRectangleMode == EDITOR_RECTANGLE_MODE_CLEAR_TILE) {
+				for(UBYTE ubY = sPosTopLeft.ubY; ubY <= sPosBottomRight.ubY; ++ubY) {
+					for(UBYTE ubX = sPosTopLeft.ubX; ubX <= sPosBottomRight.ubX; ++ubX) {
+						g_sCurrentLevel.pTiles[ubX][ubY] = TILE_BG;
+					}
+				}
+				for(UBYTE ubY = sPosTopLeft.ubY; ubY <= sPosBottomRight.ubY; ++ubY) {
+					for(UBYTE ubX = sPosTopLeft.ubX; ubX <= sPosBottomRight.ubX; ++ubX) {
+						mapRecalculateVisTilesNearTileAt(ubX, ubY);
+					}
+				}
+			}
+			s_sEditorToolSize.ubX = 1;
+			s_sEditorToolSize.ubY = 1;
+			s_eEditorRectangleMode = EDITOR_RECTANGLE_MODE_OFF;
+		}
+	}
+	else if(keyCheck(KEY_Z)) {
+		if(s_isDecorEditEnabled) {
+			gameEditorTryPlaceDecor(uwCursorTileX, uwCursorTileY);
+			keyUse(KEY_Z);
+		}
+		else {
+			if(keyCheck(KEY_LALT)) {
+				s_eEditorRectangleMode = EDITOR_RECTANGLE_MODE_SET_TILE;
+				s_ubEditorRectangleKey = KEY_Z;
+				s_sEditorRectPosStart = (tUbCoordYX){.ubX = uwCursorTileX, .ubY = uwCursorTileY};
+			}
+			else {
+				gameEditorPlaceTile(pTileUnderCursor, uwCursorTileX, uwCursorTileY);
+			}
+		}
+	}
+	else if(keyCheck(KEY_X)) {
+		if(keyCheck(KEY_LALT)) {
+			s_eEditorRectangleMode = EDITOR_RECTANGLE_MODE_CLEAR_TILE;
+			s_ubEditorRectangleKey = KEY_X;
+			s_sEditorRectPosStart = (tUbCoordYX){.ubX = uwCursorTileX, .ubY = uwCursorTileY};
+		}
+		else {
+			*pTileUnderCursor = TILE_BG;
+			mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
+		}
+	}
 
 	if(uwCursorTileX != s_sEditorPrevCursorTilePos.ubX || uwCursorTileY != s_sEditorPrevCursorTilePos.ubY) {
 		for(UBYTE ubY = 0; ubY < s_sEditorToolSize.ubY; ++ubY) {
@@ -735,45 +837,6 @@ static UBYTE gameEditorProcess(void) {
 		uwCursorTileX * MAP_TILE_SIZE, uwCursorTileY * MAP_TILE_SIZE + s_sEditorToolSize.ubY * MAP_TILE_SIZE - 1,
 		MAP_TILE_SIZE * s_sEditorToolSize.ubX, 1, 15
 	);
-
-	if(keyUse(KEY_C)) {
-		editorEnterPalette(
-			EDITOR_TILE_PALETTE_TOOL_COUNT,
-			onTilePaletteSelected, tilePaletteDrawElement
-		);
-		return 1;
-	}
-	if(keyUse(KEY_V)) {
-		editorEnterPalette(
-			EDITOR_DECOR_TOOL_END,
-			onDecorPaletteSelected, decorPaletteDrawElement
-		);
-		return 1;
-	}
-	if(keyUse(KEY_B)) {
-		statePush(g_pGameStateManager, &s_sStateTextEdit);
-		return 1;
-	}
-	if(keyUse(KEY_N)) {
-		mapRecalcAllVisTilesOnLevel(&g_sCurrentLevel);
-		drawMap();
-		return 1;
-	}
-
-	tTile *pTileUnderCursor = &g_sCurrentLevel.pTiles[uwCursorTileX][uwCursorTileY];
-	if(keyCheck(KEY_Z)) {
-		if(s_isDecorEditEnabled) {
-			gameEditorTryPlaceDecor(uwCursorTileX, uwCursorTileY);
-			keyUse(KEY_Z);
-		}
-		else {
-			gameEditorPlaceTile(pTileUnderCursor, uwCursorTileX, uwCursorTileY);
-		}
-	}
-	else if(keyCheck(KEY_X)) {
-		*pTileUnderCursor = TILE_BG;
-		mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
-	}
 
 	for(UBYTE i = 0; i < MAP_USER_INTERACTIONS_MAX; ++i) {
 		static const UBYTE pInteractionKeys[] = {
