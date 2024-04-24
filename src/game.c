@@ -74,13 +74,21 @@ typedef enum tEditorTileTool {
 
 typedef enum tEditorDecorTool {
 	EDITOR_DECOR_TOOL_CREATURE,
-	EDITOR_DECOR_TOOL_RANDOM_WALL,
+	EDITOR_DECOR_TOOL_RANDOM_BRICK,
 	EDITOR_DECOR_TOOL_TUT_MOUSE_LEFT,
 	EDITOR_DECOR_TOOL_TUT_MOUSE_RIGHT,
 	EDITOR_DECOR_TOOL_TUT_PERSON,
 	EDITOR_DECOR_TOOL_TUT_RARR,
 	EDITOR_DECOR_TOOL_TUT_SLIP,
-	EDITOR_DECOR_TOOL_COUNT
+	EDITOR_DECOR_TOOL_END,
+	EDITOR_DECOR_TOOL_BRICK_BEGIN = EDITOR_DECOR_TOOL_END,
+	EDITOR_DECOR_TOOL_BRICK_1_2 = EDITOR_DECOR_TOOL_BRICK_BEGIN,
+	EDITOR_DECOR_TOOL_BRICK_3,
+	EDITOR_DECOR_TOOL_BRICK_4_5,
+	EDITOR_DECOR_TOOL_BRICK_6_7,
+	EDITOR_DECOR_TOOL_BRICK_8_9,
+	EDITOR_DECOR_TOOL_BRICK_END,
+	EDITOR_DECOR_TOOL_COUNT,
 } tEditorDecorTool;
 
 static const char *s_pTilePaletteToolNames[] = {
@@ -373,7 +381,7 @@ static const tEditorDecorToolDef s_pEditorDecorToolDefs[EDITOR_DECOR_TOOL_COUNT]
 			VIS_TILE_BG_DECOR_CREATURE_6,
 		}
 	},
-	[EDITOR_DECOR_TOOL_RANDOM_WALL] = {
+	[EDITOR_DECOR_TOOL_RANDOM_BRICK] = {
 		.sSize = {.ubX = 2, .ubY = 1}, .pTiles = {
 			VIS_TILE_BG_DECOR_BRICK_1,
 			VIS_TILE_BG_DECOR_BRICK_2,
@@ -409,6 +417,36 @@ static const tEditorDecorToolDef s_pEditorDecorToolDefs[EDITOR_DECOR_TOOL_COUNT]
 		.sSize = {.ubX = 1, .ubY = 2}, .pTiles = {
 			VIS_TILE_BG_DECOR_TUT_SLIP_1,
 			VIS_TILE_BG_DECOR_TUT_SLIP_2,
+		}
+	},
+	[EDITOR_DECOR_TOOL_BRICK_1_2] = {
+		.sSize = {.ubX = 2, .ubY = 1}, .pTiles = {
+			VIS_TILE_BG_DECOR_BRICK_1,
+			VIS_TILE_BG_DECOR_BRICK_2,
+		}
+	},
+	[EDITOR_DECOR_TOOL_BRICK_3] = {
+		.sSize = {.ubX = 2, .ubY = 1}, .pTiles = {
+			VIS_TILE_BG_DECOR_BRICK_3,
+			VIS_TILE_BG_1,
+		}
+	},
+	[EDITOR_DECOR_TOOL_BRICK_4_5] = {
+		.sSize = {.ubX = 2, .ubY = 1}, .pTiles = {
+			VIS_TILE_BG_DECOR_BRICK_4,
+			VIS_TILE_BG_DECOR_BRICK_5,
+		}
+	},
+	[EDITOR_DECOR_TOOL_BRICK_6_7] = {
+		.sSize = {.ubX = 2, .ubY = 1}, .pTiles = {
+			VIS_TILE_BG_DECOR_BRICK_6,
+			VIS_TILE_BG_DECOR_BRICK_7,
+		}
+	},
+	[EDITOR_DECOR_TOOL_BRICK_8_9] = {
+		.sSize = {.ubX = 2, .ubY = 1}, .pTiles = {
+			VIS_TILE_BG_DECOR_BRICK_8,
+			VIS_TILE_BG_DECOR_BRICK_9,
 		}
 	},
 };
@@ -525,6 +563,13 @@ static void gameTransitionToExit(tExitState eExitState) {
 
 static UBYTE gameEditorTryPlaceDecor(UWORD uwCursorTileX, UWORD uwCursorTileY) {
 	const tEditorDecorToolDef *pDecor = &s_pEditorDecorToolDefs[s_eEditorCurrentDecorTool];
+	if(s_eEditorCurrentDecorTool == EDITOR_DECOR_TOOL_RANDOM_BRICK) {
+		UBYTE ubIndex = EDITOR_DECOR_TOOL_BRICK_BEGIN + (
+			getRayPos().bfPosY %
+			(EDITOR_DECOR_TOOL_BRICK_END - EDITOR_DECOR_TOOL_BRICK_BEGIN)
+		);
+		pDecor = &s_pEditorDecorToolDefs[ubIndex];
+	}
 
 	// Check
 	for(UBYTE ubY = 0; ubY < pDecor->sSize.ubY; ++ubY) {
@@ -700,13 +745,18 @@ static UBYTE gameEditorProcess(void) {
 	}
 	if(keyUse(KEY_V)) {
 		editorEnterPalette(
-			EDITOR_DECOR_TOOL_COUNT,
+			EDITOR_DECOR_TOOL_END,
 			onDecorPaletteSelected, decorPaletteDrawElement
 		);
 		return 1;
 	}
 	if(keyUse(KEY_B)) {
 		statePush(g_pGameStateManager, &s_sStateTextEdit);
+		return 1;
+	}
+	if(keyUse(KEY_N)) {
+		mapRecalcAllVisTilesOnLevel(&g_sCurrentLevel);
+		drawMap();
 		return 1;
 	}
 

@@ -795,14 +795,6 @@ static tVisTile mapCalculateVisTileOnLevel(
 	return VIS_TILE_BG_1;
 }
 
-static void mapFillVisTiles(tLevel *pLevel) {
-	for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
-		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
-			pLevel->pVisTiles[ubX][ubY] = mapCalculateVisTileOnLevel(pLevel, ubX, ubY);
-		}
-	}
-}
-
 static UBYTE mapTrySpawnSlipgateLeftBelow(
 	tSlipgate *pSlipgate, UBYTE ubTileX, UBYTE ubTileY
 ) {
@@ -1192,7 +1184,7 @@ UBYTE mapTryLoad(UBYTE ubIndex) {
 		systemUnuse();
 	}
 
-	mapFillVisTiles(&s_sLoadedLevel);
+	mapRecalcAllVisTilesOnLevel(&s_sLoadedLevel);
 	mapRestart();
 	return 1;
 }
@@ -1417,6 +1409,14 @@ void mapRequestTileDraw(UBYTE ubTileX, UBYTE ubTileY) {
 			s_pDirtyTileQueues[!s_ubCurrentDirtyList][s_pDirtyTileCounts[!s_ubCurrentDirtyList]++] = sCoord;
 		}
 		s_pDirtyTiles[ubTileX][ubTileY] = 2;
+	}
+}
+
+void mapRecalcAllVisTilesOnLevel(tLevel *pLevel) {
+	for(UBYTE ubX = 0; ubX < MAP_TILE_WIDTH; ++ubX) {
+		for(UBYTE ubY = 0; ubY < MAP_TILE_HEIGHT; ++ubY) {
+			pLevel->pVisTiles[ubX][ubY] = mapCalculateVisTileOnLevel(pLevel, ubX, ubY);
+		}
 	}
 }
 

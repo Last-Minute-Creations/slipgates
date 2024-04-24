@@ -71,6 +71,8 @@ void mapDisableTurretAt(UBYTE ubX, UBYTE ubY);
 
 void mapRequestTileDraw(UBYTE ubTileX, UBYTE ubTileY);
 
+void mapRecalcAllVisTilesOnLevel(tLevel *pLevel);
+
 void mapRecalculateVisTilesNearTileAt(UBYTE ubTileX, UBYTE ubTileY);
 
 UBYTE mapIsVistileDecorableBgAt(UBYTE ubTileX, UBYTE ubTileY);
