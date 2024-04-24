@@ -10,8 +10,8 @@
 ## Editor controls
 
 - <kbd>O</kbd> - enter/exit editor mode
-- <kbd>Z</kbd> - erase tile under cursor
-- <kbd>X</kbd> - place selected tile
+- <kbd>Z</kbd> - place selected tile/decor
+- <kbd>X</kbd> - erase tile under cursor
 - <kbd>C</kbd> - tile select
 - <kbd>V</kbd> - tile decor select
 - <kbd>B</kbd> - edit flavor text

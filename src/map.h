@@ -73,6 +73,8 @@ void mapRequestTileDraw(UBYTE ubTileX, UBYTE ubTileY);
 
 void mapRecalculateVisTilesNearTileAt(UBYTE ubTileX, UBYTE ubTileY);
 
+UBYTE mapIsVistileDecorableBgAt(UBYTE ubTileX, UBYTE ubTileY);
+
 UBYTE mapIsSlipgateTunnelOpen(void);
 
 //----------------------------------------------------------------------- EDITOR

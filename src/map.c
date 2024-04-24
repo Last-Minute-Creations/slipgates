@@ -1431,6 +1431,14 @@ void mapRecalculateVisTilesNearTileAt(UBYTE ubTileX, UBYTE ubTileY) {
 	}
 }
 
+UBYTE mapIsVistileDecorableBgAt(UBYTE ubTileX, UBYTE ubTileY) {
+	tVisTile eVisTile = g_sCurrentLevel.pVisTiles[ubTileX][ubTileY];
+	if(eVisTile == VIS_TILE_BG_1 || (VIS_TILE_BG_DECOR_BEGIN <= eVisTile && eVisTile < VIS_TILE_BG_DECOR_END)) {
+		return 1;
+	}
+	return 0;
+}
+
 UBYTE mapIsSlipgateTunnelOpen(void) {
 	return (
 		g_pSlipgates[SLIPGATE_A].eNormal != DIRECTION_NONE &&
