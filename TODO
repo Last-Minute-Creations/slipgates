@@ -71,10 +71,11 @@ Editor:
 Fixes:
 	✔ Pressing direction button in same direction as falling/flying reduces max velocity @done(24-04-19 12:00)
 	✔ Slipgating from floor to floor should give minimal velocity @done(24-04-19 12:09)
+	✔ Fix downward door setting solid tiles above it @done(24-04-25 12:07)
 	☐ Hitting ceiling should remove velocity instantly/faster
 	☐ Boxes are sometimes sliding indefinitely on ground (e.g. when falling from newly created portal to horizontal one)
 	☐ Add ability to jump when falling out of ledge
-	☐ Fix downward door setting solid tiles above it
+	☐ Make level text centered on all lines
 
 Graphics:
 	✔ Migrate to new graphics/palette @done(24-04-18 17:43)

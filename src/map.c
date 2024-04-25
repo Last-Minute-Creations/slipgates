@@ -1516,7 +1516,7 @@ void mapSetOrRemoveDoorInteractionAt(
 			interactionChangeOrRemoveTile(
 				mapGetInteractionByTile(ubX, ubTileY),
 				pNewInteraction, ubX, ubTileY - 1, INTERACTION_KIND_GATE,
-				TILE_DOOR_OPEN, TILE_DOOR_CLOSED,
+				TILE_BG, TILE_BG,
 				g_sCurrentLevel.pVisTiles[ubX][ubTileY - 1] + bClosedToOpen,
 				g_sCurrentLevel.pVisTiles[ubX][ubTileY - 1]
 			);
