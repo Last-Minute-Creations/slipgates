@@ -73,6 +73,8 @@ Fixes:
 	✔ Slipgating from floor to floor should give minimal velocity @done(24-04-19 12:09)
 	☐ Hitting ceiling should remove velocity instantly/faster
 	☐ Boxes are sometimes sliding indefinitely on ground (e.g. when falling from newly created portal to horizontal one)
+	☐ Add ability to jump when falling out of ledge
+	☐ Fix downward door setting solid tiles above it
 
 Graphics:
 	✔ Migrate to new graphics/palette @done(24-04-18 17:43)
@@ -85,7 +87,8 @@ Graphics:
 
 Levels:
 	✔ get rid of holes @done(24-04-18 13:11)
-	☐ lvl 28 (orig 31)
+	✔ fix spawn point: stairs level (7) @done(24-04-24 19:05)
+	✔ lvl 28 (orig 31) @done(24-04-25 11:53)
 	☐ lvl 29 (orig 32)
 	☐ lvl 30 (orig 33)
 	☐ lvl 31 (orig 34)
@@ -96,7 +99,6 @@ Levels:
 	☐ lvl 36 (orig 39)
 	☐ lvl 37 (orig 40)
 	☐ add 3 more levels
-	☐ fix spawn point: stairs level (7)
 	☐ verify spawn point: infinite loop (8)
 	☐ rework The Sadistic Level (10)
 	☐ add hub doors to early levels, permaclosed before ???
