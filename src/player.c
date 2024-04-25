@@ -13,6 +13,7 @@
 #define PLAYER_BODY_HEIGHT 16
 #define PLAYER_VELO_DELTA_X_AIR (fix16_one / 16)
 #define PLAYER_VELO_DELTA_X_GROUND (PLAYER_VELO_DELTA_X_AIR * 40)
+#define PLAYER_ACCELERATION_X_GROUND (PLAYER_VELO_DELTA_X_GROUND / 10)
 
 #define PLAYER_FRAME_COUNT 4
 #define PLAYER_FRAME_COOLDOWN 10
@@ -198,12 +199,24 @@ void playerProcess(tPlayer *pPlayer) {
 	}
 
 	if(pPlayer->sBody.isOnGround) {
-		pPlayer->sBody.fVelocityX = 0;
 		if(keyCheck(KEY_A)) {
-			pPlayer->sBody.fVelocityX = -PLAYER_VELO_DELTA_X_GROUND;
+			if(pPlayer->sBody.fVelocityX > 0) {
+				pPlayer->sBody.fVelocityX = 0;
+			}
+			else if(pPlayer->sBody.fVelocityX > -PLAYER_VELO_DELTA_X_GROUND) {
+				pPlayer->sBody.fVelocityX = fix16_sub(pPlayer->sBody.fVelocityX, PLAYER_ACCELERATION_X_GROUND);
+			}
 		}
 		else if(keyCheck(KEY_D)) {
-			pPlayer->sBody.fVelocityX = PLAYER_VELO_DELTA_X_GROUND;
+			if(pPlayer->sBody.fVelocityX < 0) {
+				pPlayer->sBody.fVelocityX = 0;
+			}
+			else if(pPlayer->sBody.fVelocityX < PLAYER_VELO_DELTA_X_GROUND) {
+				pPlayer->sBody.fVelocityX = fix16_add(pPlayer->sBody.fVelocityX, PLAYER_ACCELERATION_X_GROUND);
+			}
+		}
+		else {
+			pPlayer->sBody.fVelocityX = 0;
 		}
 	}
 	else {
