@@ -370,15 +370,15 @@ convertBitmaps(
 	INTERLEAVED SOURCES
 		${RES_DIR}/player.png ${RES_DIR}/box.png ${RES_DIR}/bouncer.png
 		${RES_DIR}/slipgates_a.png ${RES_DIR}/slipgates_b.png ${RES_DIR}/aim.png
-		${GEN_DIR}/arm.png
+		${GEN_DIR}/arm.png ${RES_DIR}/slip_vfx.png
 		DESTINATIONS
 		${DATA_DIR}/player.bm ${DATA_DIR}/box.bm ${DATA_DIR}/bouncer.bm
 		${DATA_DIR}/slipgate_a.bm ${DATA_DIR}/slipgate_b.bm ${DATA_DIR}/aim.bm
-		${DATA_DIR}/arm.bm
+		${DATA_DIR}/arm.bm ${DATA_DIR}/slip_vfx.bm
 		MASKS
 		${DATA_DIR}/player_mask.bm ${DATA_DIR}/box_mask.bm ${DATA_DIR}/bouncer_mask.bm
 		${DATA_DIR}/slipgates_mask.bm NONE ${DATA_DIR}/aim_mask.bm
-		${DATA_DIR}/arm_mask.bm
+		${DATA_DIR}/arm_mask.bm ${DATA_DIR}/slip_vfx_mask.bm
 )
 
 convertBitmaps(

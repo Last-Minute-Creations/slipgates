@@ -4,6 +4,7 @@
 
 #include "body_box.h"
 #include "game.h"
+#include "vfx.h"
 
 static const fix16_t s_fVeloLimitPositive = F16(11);
 static const fix16_t s_fVeloLimitNegative = F16(-11);
@@ -35,10 +36,13 @@ void bodyInit(
 	pBody->isSlipgatable = 1;
 }
 
-static UBYTE moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
+static UBYTE bodyTryMoveViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 	if(!pBody->isSlipgatable) {
 		return 0;
 	}
+
+	fix16_t fOldX = pBody->fPosX;
+	fix16_t fOldY = pBody->fPosY;
 
 	// Here be dragons
 
@@ -170,7 +174,17 @@ static UBYTE moveBodyViaSlipgate(tBodyBox *pBody, UBYTE ubIndexSrc) {
 		case DIRECTION_COUNT:
 			return 0;
 	}
+
 	logWrite("Slipgated!");
+	if(pBody->cbSlipgateHandler) {
+		pBody->cbSlipgateHandler(pBody->pHandlerData);
+	}
+
+	vfxStartSlipgate(
+		ubIndexSrc,
+		fix16_to_int(fOldX), fix16_to_int(fOldY),
+		fix16_to_int(pBody->fPosX), fix16_to_int(pBody->fPosY)
+	);
 	return 1;
 }
 
@@ -215,12 +229,9 @@ void bodySimulate(tBodyBox *pBody) {
 			g_pSlipgates[SLIPGATE_A].eNormal == DIRECTION_LEFT
 		) {
 			// Slipgate A
-			if(moveBodyViaSlipgate(pBody, 0)) {
+			if(bodyTryMoveViaSlipgate(pBody, 0)) {
 				fNewPosX = pBody->fPosX;
 				fNewPosY = pBody->fPosY;
-				if(pBody->cbSlipgateHandler) {
-					pBody->cbSlipgateHandler(pBody->pHandlerData);
-				}
 			}
 			else {
 				// collide with wall
@@ -233,12 +244,9 @@ void bodySimulate(tBodyBox *pBody) {
 			g_pSlipgates[SLIPGATE_B].eNormal == DIRECTION_LEFT
 		) {
 			// Slipgate B
-			if(moveBodyViaSlipgate(pBody, 1)) {
+			if(bodyTryMoveViaSlipgate(pBody, 1)) {
 				fNewPosX = pBody->fPosX;
 				fNewPosY = pBody->fPosY;
-				if(pBody->cbSlipgateHandler) {
-					pBody->cbSlipgateHandler(pBody->pHandlerData);
-				}
 			}
 			else {
 				// collide with wall
@@ -264,12 +272,9 @@ void bodySimulate(tBodyBox *pBody) {
 			g_pSlipgates[SLIPGATE_A].eNormal == DIRECTION_RIGHT
 		) {
 			// Slipgate A
-			if(moveBodyViaSlipgate(pBody, 0)) {
+			if(bodyTryMoveViaSlipgate(pBody, 0)) {
 				fNewPosX = pBody->fPosX;
 				fNewPosY = pBody->fPosY;
-				if(pBody->cbSlipgateHandler) {
-					pBody->cbSlipgateHandler(pBody->pHandlerData);
-				}
 			}
 			else {
 				// collide with wall
@@ -282,12 +287,9 @@ void bodySimulate(tBodyBox *pBody) {
 			g_pSlipgates[SLIPGATE_B].eNormal == DIRECTION_RIGHT
 		) {
 			// Slipgate B
-			if(moveBodyViaSlipgate(pBody, 1)) {
+			if(bodyTryMoveViaSlipgate(pBody, 1)) {
 				fNewPosX = pBody->fPosX;
 				fNewPosY = pBody->fPosY;
-				if(pBody->cbSlipgateHandler) {
-					pBody->cbSlipgateHandler(pBody->pHandlerData);
-				}
 			}
 			else {
 				// collide with wall
@@ -342,11 +344,8 @@ void bodySimulate(tBodyBox *pBody) {
 			g_pSlipgates[SLIPGATE_A].eNormal == DIRECTION_UP
 		) {
 			// Slipgate A
-			if(moveBodyViaSlipgate(pBody, 0)) {
+			if(bodyTryMoveViaSlipgate(pBody, 0)) {
 				fNewPosY = pBody->fPosY;
-				if(pBody->cbSlipgateHandler) {
-					pBody->cbSlipgateHandler(pBody->pHandlerData);
-				}
 			}
 			else {
 				// collide with floor
@@ -361,11 +360,8 @@ void bodySimulate(tBodyBox *pBody) {
 			g_pSlipgates[SLIPGATE_B].eNormal == DIRECTION_UP
 		) {
 			// Slipgate B
-			if(moveBodyViaSlipgate(pBody, 1)) {
+			if(bodyTryMoveViaSlipgate(pBody, 1)) {
 				fNewPosY = pBody->fPosY;
-				if(pBody->cbSlipgateHandler) {
-					pBody->cbSlipgateHandler(pBody->pHandlerData);
-				}
 			}
 			else {
 				// collide with floor
@@ -388,11 +384,8 @@ void bodySimulate(tBodyBox *pBody) {
 		}
 		else if(mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) == TILE_SLIPGATE_A) {
 			// Slipgate A
-			if(moveBodyViaSlipgate(pBody, 0)) {
+			if(bodyTryMoveViaSlipgate(pBody, 0)) {
 				fNewPosY = pBody->fPosY;
-				if(pBody->cbSlipgateHandler) {
-					pBody->cbSlipgateHandler(pBody->pHandlerData);
-				}
 			}
 			else {
 				// collide with ceil
@@ -402,11 +395,8 @@ void bodySimulate(tBodyBox *pBody) {
 		}
 		else if(mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) == TILE_SLIPGATE_B) {
 			// Slipgate B
-			if(moveBodyViaSlipgate(pBody, 1)) {
+			if(bodyTryMoveViaSlipgate(pBody, 1)) {
 				fNewPosY = pBody->fPosY;
-				if(pBody->cbSlipgateHandler) {
-					pBody->cbSlipgateHandler(pBody->pHandlerData);
-				}
 			}
 			else {
 				// collide with ceil

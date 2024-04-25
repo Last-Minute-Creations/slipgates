@@ -81,9 +81,9 @@ Graphics:
 	✔ Migrate to new graphics/palette @done(24-04-18 17:43)
 	✔ Character main body @done(24-04-19 11:25)
 	✔ Character limb @done(24-04-19 11:25)
+	✔ Portal through vfx @done(24-04-25 18:12)
 	☐ Separate run/stand anims
 	☐ Death anim (burn? explosion?)
-	☐ Portal through vfx
 	☐ Add door/grate/exit tiles for unslipgatable walls?
 
 Levels:
@@ -102,6 +102,7 @@ Levels:
 	☐ add 3 more levels
 	☐ verify spawn point: infinite loop (8)
 	☐ rework The Sadistic Level (10)
+	☐ redo The Hub
 	☐ add hub doors to early levels, permaclosed before ???
 
 Sounds:
@@ -129,6 +130,7 @@ Sounds:
 	☐ Level exit?
 	☐ Forcefield burn
 	☐ Death
+	☐ Buttton click
 
 VO:
 	☐ Intro/outro voiceovers

@@ -27,6 +27,7 @@
 #include "menu.h"
 #include "cutscene.h"
 #include "config.h"
+#include "vfx.h"
 
 #define GAME_BPP 5
 
@@ -976,6 +977,7 @@ static void gameGsCreate(void) {
 		&bouncerGetBody()->sBob, 16, 8, 1,
 		g_pBouncerFrames->Planes[0], g_pBouncerMasks->Planes[0], 0, 0
 	);
+	vfxInit();
 
 	bobReallocateBgBuffers();
 
@@ -1060,6 +1062,7 @@ static void gameGsLoop(void) {
 		gameTransitionToExit(EXIT_RESTART);
 	}
 
+	vfxProcess();
 	if(g_pSlipgates[SLIPGATE_AIM].eNormal != DIRECTION_NONE && !s_sPlayer.pGrabbedBox) {
 		bobPush(&s_sBobAim);
 	}

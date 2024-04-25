@@ -8,6 +8,7 @@
 #include "game.h"
 #include "game_math.h"
 #include "assets.h"
+#include "anim_frame_def.h"
 
 #define PLAYER_BODY_WIDTH 8
 #define PLAYER_BODY_HEIGHT 16
@@ -24,11 +25,6 @@
 
 #define PLAYER_DAMAGE_COOLDOWN 5
 #define PLAYER_REGEN_COOLDOWN 20
-
-typedef struct tAnimFrameDef {
-	UBYTE *pFrame;
-	UBYTE *pMask;
-} tAnimFrameDef;
 
 static fix16_t s_fPlayerJumpVeloY = F16(-3);
 static UBYTE s_ubFrameCooldown;
