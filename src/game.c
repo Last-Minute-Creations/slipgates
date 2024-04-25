@@ -651,7 +651,7 @@ static void gameEditorPlaceTile(
 	case EDITOR_TILE_PALETTE_TOOL_BUTTON:
 		if (mapTileIsButton(*pTileUnderCursor))
 		{
-			if (keyUse(KEY_X))
+			if (keyUse(KEY_Z))
 			{
 				if (*pTileUnderCursor == TILE_BUTTON_H)
 				{
@@ -666,7 +666,7 @@ static void gameEditorPlaceTile(
 		}
 		else
 		{
-			keyUse(KEY_X); // prevent double-processing of same tile
+			keyUse(KEY_Z); // prevent double-processing of same tile
 			*pTileUnderCursor = TILE_BUTTON_A;
 			mapRecalculateVisTilesNearTileAt(uwCursorTileX, uwCursorTileY);
 		}
