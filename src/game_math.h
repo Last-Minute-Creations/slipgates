@@ -9,8 +9,8 @@
 #include <fixmath/fix16.h>
 
 #define GAME_MATH_ANGLE_COUNT 128
-#define GAME_MATH_ATAN2_SCALE 8
-#define GAME_MATH_PRECALCULATED
+#define GAME_MATH_ATAN2_SCALE 4
+// #define GAME_MATH_PRECALCULATED
 // #define GAME_MATH_SAVE_PRECALC
 
 #define ANGLE_0    0

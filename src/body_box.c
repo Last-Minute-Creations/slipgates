@@ -10,6 +10,7 @@ static const fix16_t s_fVeloLimitPositive = F16(11);
 static const fix16_t s_fVeloLimitNegative = F16(-11);
 static const fix16_t s_fVeloClampPositive = F16(7);
 static const fix16_t s_fVeloClampNegative = F16(-7);
+static const fix16_t s_fFriction = fix16_one / 2;
 
 static UBYTE bodyCheckCollision(
 	tBodyBox *pBody, UBYTE ubTileX, UBYTE ubTileY,
@@ -329,13 +330,12 @@ void bodySimulate(tBodyBox *pBody) {
 			fNewPosY = fix16_from_int(uwTop);
 			pBody->fVelocityY = 0;
 			pBody->isOnGround = 1;
-			if(fVeloClampedY) {
-				static fix16_t fFriction = fix16_one/2;
-				if(fVeloClampedY > 0) {
-					fVeloClampedY = fix16_max(fix16_sub(fVeloClampedY, fFriction), 0);
+			if(pBody->fVelocityX) {
+				if(pBody->fVelocityX > 0) {
+					pBody->fVelocityX = fix16_max(fix16_sub(pBody->fVelocityX, s_fFriction), 0);
 				}
 				else {
-					fVeloClampedY = fix16_min(fix16_add(fVeloClampedY, fFriction), 0);
+					pBody->fVelocityX = fix16_min(fix16_add(pBody->fVelocityX, s_fFriction), 0);
 				}
 			}
 		}
@@ -353,6 +353,14 @@ void bodySimulate(tBodyBox *pBody) {
 				fNewPosY = fix16_from_int(uwTop);
 				pBody->fVelocityY = 0;
 				pBody->isOnGround = 1;
+				if(pBody->fVelocityX) {
+					if(pBody->fVelocityX > 0) {
+						pBody->fVelocityX = fix16_max(fix16_sub(pBody->fVelocityX, s_fFriction), 0);
+					}
+					else {
+						pBody->fVelocityX = fix16_min(fix16_add(pBody->fVelocityX, s_fFriction), 0);
+					}
+				}
 			}
 		}
 		else if(
@@ -369,6 +377,14 @@ void bodySimulate(tBodyBox *pBody) {
 				fNewPosY = fix16_from_int(uwTop);
 				pBody->fVelocityY = 0;
 				pBody->isOnGround = 1;
+				if(pBody->fVelocityX) {
+					if(pBody->fVelocityX > 0) {
+						pBody->fVelocityX = fix16_max(fix16_sub(pBody->fVelocityX, s_fFriction), 0);
+					}
+					else {
+						pBody->fVelocityX = fix16_min(fix16_add(pBody->fVelocityX, s_fFriction), 0);
+					}
+				}
 			}
 		}
 	}
