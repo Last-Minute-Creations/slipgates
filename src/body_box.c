@@ -380,7 +380,7 @@ void bodySimulate(tBodyBox *pBody) {
 		) {
 			// collide with ceil
 			fNewPosY = fix16_from_int((uwTop / MAP_TILE_SIZE + 1) * MAP_TILE_SIZE);
-			// pBody->fVelocityY = 0;
+			pBody->fVelocityY = 0;
 		}
 		else if(mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) == TILE_SLIPGATE_A) {
 			// Slipgate A
@@ -390,7 +390,7 @@ void bodySimulate(tBodyBox *pBody) {
 			else {
 				// collide with ceil
 				fNewPosY = fix16_from_int((uwTop / MAP_TILE_SIZE + 1) * MAP_TILE_SIZE);
-				// pBody->fVelocityY = 0;
+				pBody->fVelocityY = 0;
 			}
 		}
 		else if(mapGetTileAt(uwLeft / MAP_TILE_SIZE, uwTop / MAP_TILE_SIZE) == TILE_SLIPGATE_B) {
@@ -401,7 +401,7 @@ void bodySimulate(tBodyBox *pBody) {
 			else {
 				// collide with ceil
 				fNewPosY = fix16_from_int((uwTop / MAP_TILE_SIZE + 1) * MAP_TILE_SIZE);
-				// pBody->fVelocityY = 0;
+				pBody->fVelocityY = 0;
 			}
 		}
 	}
