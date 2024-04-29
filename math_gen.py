@@ -10,7 +10,7 @@ angle_180 = angle_count // 2
 
 screen_width = 320
 screen_height = 256
-atan2_scale = 8
+atan2_scale = 4
 
 with open("build/data/game_math.dat", "wb") as file_out:
     # tan
