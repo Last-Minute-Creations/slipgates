@@ -44,6 +44,8 @@ void assetsGameCreate(void) {
 	g_pPlayerWhiteFrame = bitmapCreate(16, 16, 5, BMF_INTERLEAVED);
 	blitRect(g_pPlayerWhiteFrame, 0, 0, 16, 16, COLOR_WHITE);
 
+	g_pMod = ptplayerModCreate("data/slip2.mod");
+
 	systemUnuse();
 }
 
@@ -66,6 +68,7 @@ void assetsGameDestroy(void) {
 	bitmapDestroy(g_pSlipVfxMasks);
 	bitmapDestroy(g_pBmTiles);
 	bitmapDestroy(g_pPlayerWhiteFrame);
+	ptplayerModDestroy(g_pMod);
 	systemUnuse();
 }
 
@@ -90,3 +93,4 @@ tBitMap *g_pBmCursor;
 tBitMap *g_pBmTiles;
 tBitMap *g_pPlayerWhiteFrame;
 tFont *g_pFont;
+tPtplayerMod *g_pMod;

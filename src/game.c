@@ -998,6 +998,8 @@ static void gameGsCreate(void) {
 
 	systemUnuse();
 	loadLevel(g_sConfig.ubCurrentLevel, 1);
+	ptplayerLoadMod(g_pMod, 0, 0);
+	ptplayerEnableMusic(1);
 }
 
 static void gameGsLoop(void) {

@@ -63,6 +63,7 @@ file(MAKE_DIRECTORY ${GEN_DIR}/arm_right)
 file(MAKE_DIRECTORY ${GEN_DIR}/arm)
 file(GLOB COPY_FILES ${RES_DIR}/copied/*)
 file(COPY ${COPY_FILES} DESTINATION ${DATA_DIR})
+file(COPY ${RES_DIR}/music/slip2.mod DESTINATION ${DATA_DIR})
 
 # Palette
 file(GLOB palette_menu_plt ${RES_DIR}/menu.plt)

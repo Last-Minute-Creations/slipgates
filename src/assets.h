@@ -6,6 +6,7 @@
 #define SLIPGATES_ASSETS_H
 
 #include <ace/utils/font.h>
+#include <ace/managers/ptplayer.h>
 
 void assetsGlobalCreate(void);
 
@@ -36,5 +37,6 @@ extern tBitMap *g_pBmCursor;
 extern tBitMap *g_pBmTiles;
 extern tBitMap *g_pPlayerWhiteFrame;
 extern tFont *g_pFont;
+extern tPtplayerMod *g_pMod;
 
 #endif // SLIPGATES_ASSETS_H
