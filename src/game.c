@@ -965,6 +965,7 @@ static void gameGsCreate(void) {
 		&s_sPlayer.sBody.sBob, 16, 16, 1,
 		g_pPlayerFrames->Planes[0], g_pPlayerMasks->Planes[0], 0, 0
 	);
+	bobInit(&s_sPlayer.sBobArm, 16, 16, 0, 0, 0, 0, 0);
 	bobInit(&s_sBobAim, 16, 16, 1, 0, 0, 0, 0);
 
 	for(UBYTE i = 0; i < MAP_BOXES_MAX; ++i) {

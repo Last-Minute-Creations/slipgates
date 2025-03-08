@@ -104,7 +104,7 @@ void playerManagerInit(void) {
 
 void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	bodyInit(&pPlayer->sBody, fPosX, fPosY, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT);
-	bobInit(&pPlayer->sBobArm, 16, 16, 0, g_pArmFrames->Planes[0], g_pArmMasks->Planes[0], 0, 0);
+	bobSetFrame(&pPlayer->sBobArm, g_pArmFrames->Planes[0], g_pArmMasks->Planes[0]);
 	pPlayer->sBody.bBobOffsX = -4;
 	pPlayer->sBody.cbTileCollisionHandler = playerCollisionHandler;
 	pPlayer->sBody.cbSlipgateHandler = playerSlipgateHandler;
