@@ -27,6 +27,8 @@ void genericCreate(void) {
 	g_pGameStateManager = stateManagerCreate();
 	assetsGlobalCreate();
 	configLoad();
+	ptplayerLoadMod(g_pMod, 0, 0);
+
 	// statePush(g_pGameStateManager, &g_sStateLogo);
 	statePush(g_pGameStateManager, &g_sStateMenu);
 	// statePush(g_pGameStateManager, &g_sStateGame);

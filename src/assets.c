@@ -11,11 +11,13 @@ void assetsGlobalCreate(void) {
 	systemUse();
 	g_pFont = fontCreateFromPath("data/uni54.fnt");
 	g_pBmCursor = bitmapCreateFromPath("data/cursor.bm", 0);
+	g_pMod = ptplayerModCreateFromPath("data/slip2.mod");
 	systemUnuse();
 }
 
 void assetsGlobalDestroy(void) {
 	systemUse();
+	ptplayerModDestroy(g_pMod);
 	bitmapDestroy(g_pBmCursor);
 	fontDestroy(g_pFont);
 	systemUnuse();
@@ -90,3 +92,4 @@ tBitMap *g_pBmCursor;
 tBitMap *g_pBmTiles;
 tBitMap *g_pPlayerWhiteFrame;
 tFont *g_pFont;
+tPtplayerMod *g_pMod;

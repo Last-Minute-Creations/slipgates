@@ -333,6 +333,7 @@ static void menuGsCreate(void) {
 
 	fadeStart(s_pFade, FADE_STATE_IN, 15, 0, 0);
 	viewLoad(s_pMenuView);
+	ptplayerEnableMusic(1);
 }
 
 static void menuGsLoop(void) {
@@ -364,6 +365,7 @@ static void menuGsLoop(void) {
 }
 
 static void menuGsDestroy(void) {
+	ptplayerEnableMusic(0);
 	viewLoad(0);
 	systemSetDmaBit(DMAB_SPRITE, 0);
 
