@@ -943,7 +943,7 @@ static void gameGsCreate(void) {
 		TAG_SIMPLEBUFFER_VPORT, s_pVpMain,
 	TAG_END);
 
-	paletteLoad("data/slipgates.plt", s_pPalettes[PLAYER_MAX_HEALTH], 32);
+	paletteLoadFromPath("data/slipgates.plt", s_pPalettes[PLAYER_MAX_HEALTH], 32);
 	UBYTE ubPaletteIndexLast = PLAYER_MAX_HEALTH;
 	paletteToRed(s_pPalettes[ubPaletteIndexLast], s_pPalettes[0], 32);
 	for(UBYTE i = 0; i < ubPaletteIndexLast; ++i) {
@@ -979,7 +979,7 @@ static void gameGsCreate(void) {
 	);
 	vfxInit();
 
-	bobReallocateBgBuffers();
+	bobReallocateBuffers();
 
 	spriteManagerCreate(s_pView, 0);
 	s_pSpriteCrosshair = spriteAdd(0, g_pBmCursor);
@@ -998,8 +998,6 @@ static void gameGsCreate(void) {
 
 	systemUnuse();
 	loadLevel(g_sConfig.ubCurrentLevel, 1);
-	ptplayerLoadMod(g_pMod, 0, 0);
-	ptplayerEnableMusic(1);
 }
 
 static void gameGsLoop(void) {

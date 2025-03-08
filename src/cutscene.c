@@ -214,7 +214,7 @@ static void cutsceneGsCreate(void) {
 
 	// Load palette
 	UWORD pPalette[32];
-	paletteLoad("data/slipgates.plt", pPalette, 32);
+	paletteLoadFromPath("data/slipgates.plt", pPalette, 32);
 	s_pFade = fadeCreate(s_pView, pPalette, 32);
 	s_pTextBitmap = fontCreateTextBitMap(320 + 16, g_pFont->uwHeight);
 
@@ -250,8 +250,8 @@ static void cutsceneGsCreate(void) {
 		// 	break;
 		// }
 		// sprintf(szPath, "data/%s/%hhu.plt", s_isOutro ? "outro" : "intro", ubSlideIndex);
-		// paletteLoad(szPath, s_pSlides[ubSlideIndex].pPalette, 32);
-		paletteLoad("data/slipgates.plt", s_pSlides[ubSlideIndex].pPalette, 32);
+		// paletteLoadFromPath(szPath, s_pSlides[ubSlideIndex].pPalette, 32);
+		paletteLoadFromPath("data/slipgates.plt", s_pSlides[ubSlideIndex].pPalette, 32);
 		s_pSlides[ubSlideIndex].pPalette[COLOR_TEXT] = s_uwFontColorVal;
 	}
 

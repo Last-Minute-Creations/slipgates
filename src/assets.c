@@ -9,8 +9,8 @@
 
 void assetsGlobalCreate(void) {
 	systemUse();
-	g_pFont = fontCreate("data/uni54.fnt");
-	g_pBmCursor = bitmapCreateFromFile("data/cursor.bm", 0);
+	g_pFont = fontCreateFromPath("data/uni54.fnt");
+	g_pBmCursor = bitmapCreateFromPath("data/cursor.bm", 0);
 	systemUnuse();
 }
 
@@ -23,28 +23,26 @@ void assetsGlobalDestroy(void) {
 
 void assetsGameCreate(void) {
 	systemUse();
-	g_pPlayerFrames = bitmapCreateFromFile("data/player.bm", 0);
-	g_pPlayerMasks = bitmapCreateFromFile("data/player_mask.bm", 0);
-	g_pArmFrames = bitmapCreateFromFile("data/arm.bm", 0);
-	g_pArmMasks = bitmapCreateFromFile("data/arm_mask.bm", 0);
-	g_pBoxFrames = bitmapCreateFromFile("data/box.bm", 0);
-	g_pBoxMasks = bitmapCreateFromFile("data/box_mask.bm", 0);
-	g_pBouncerFrames = bitmapCreateFromFile("data/bouncer.bm", 0);
-	g_pBouncerMasks = bitmapCreateFromFile("data/bouncer_mask.bm", 0);
-	g_pSlipgateFramesA = bitmapCreateFromFile("data/slipgate_a.bm", 0);
-	g_pSlipgateFramesB = bitmapCreateFromFile("data/slipgate_b.bm", 0);
-	g_pSlipgateMasks = bitmapCreateFromFile("data/slipgates_mask.bm", 0);
-	g_pAim = bitmapCreateFromFile("data/aim.bm", 0);
-	g_pAimMasks = bitmapCreateFromFile("data/aim_mask.bm", 0);
-	g_pSlipVfx = bitmapCreateFromFile("data/slip_vfx.bm", 0);
-	g_pSlipVfxMasks = bitmapCreateFromFile("data/slip_vfx_mask.bm", 0);
+	g_pPlayerFrames = bitmapCreateFromPath("data/player.bm", 0);
+	g_pPlayerMasks = bitmapCreateFromPath("data/player_mask.bm", 0);
+	g_pArmFrames = bitmapCreateFromPath("data/arm.bm", 0);
+	g_pArmMasks = bitmapCreateFromPath("data/arm_mask.bm", 0);
+	g_pBoxFrames = bitmapCreateFromPath("data/box.bm", 0);
+	g_pBoxMasks = bitmapCreateFromPath("data/box_mask.bm", 0);
+	g_pBouncerFrames = bitmapCreateFromPath("data/bouncer.bm", 0);
+	g_pBouncerMasks = bitmapCreateFromPath("data/bouncer_mask.bm", 0);
+	g_pSlipgateFramesA = bitmapCreateFromPath("data/slipgate_a.bm", 0);
+	g_pSlipgateFramesB = bitmapCreateFromPath("data/slipgate_b.bm", 0);
+	g_pSlipgateMasks = bitmapCreateFromPath("data/slipgates_mask.bm", 0);
+	g_pAim = bitmapCreateFromPath("data/aim.bm", 0);
+	g_pAimMasks = bitmapCreateFromPath("data/aim_mask.bm", 0);
+	g_pSlipVfx = bitmapCreateFromPath("data/slip_vfx.bm", 0);
+	g_pSlipVfxMasks = bitmapCreateFromPath("data/slip_vfx_mask.bm", 0);
 
-	g_pBmTiles = bitmapCreateFromFile("data/tiles.bm", 0);
+	g_pBmTiles = bitmapCreateFromPath("data/tiles.bm", 0);
 
 	g_pPlayerWhiteFrame = bitmapCreate(16, 16, 5, BMF_INTERLEAVED);
 	blitRect(g_pPlayerWhiteFrame, 0, 0, 16, 16, COLOR_WHITE);
-
-	g_pMod = ptplayerModCreate("data/slip2.mod");
 
 	systemUnuse();
 }
@@ -68,7 +66,6 @@ void assetsGameDestroy(void) {
 	bitmapDestroy(g_pSlipVfxMasks);
 	bitmapDestroy(g_pBmTiles);
 	bitmapDestroy(g_pPlayerWhiteFrame);
-	ptplayerModDestroy(g_pMod);
 	systemUnuse();
 }
 
@@ -93,4 +90,3 @@ tBitMap *g_pBmCursor;
 tBitMap *g_pBmTiles;
 tBitMap *g_pPlayerWhiteFrame;
 tFont *g_pFont;
-tPtplayerMod *g_pMod;

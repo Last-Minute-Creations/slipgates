@@ -278,7 +278,7 @@ static void menuGsCreate(void) {
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, 16,
 	TAG_END);
 
-	bitmapLoadFromFile(s_pMenuBfr->pFront, "data/menu_bg.bm", 0, 0);
+	bitmapLoadFromPath(s_pMenuBfr->pFront, "data/menu_bg.bm", 0, 0);
 	blitCopyAligned(s_pMenuBfr->pFront, 0, 0, s_pMenuBfr->pBack, 0, 0, 320, 128);
 	blitCopyAligned(s_pMenuBfr->pFront, 0, 128, s_pMenuBfr->pBack, 0, 128, 320, 128);
 

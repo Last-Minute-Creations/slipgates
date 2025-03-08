@@ -60,7 +60,7 @@ tFadeState fadeProcess(tFade *pFade) {
 		pFade->pPaletteRef, pFade->pView->pFirstVPort->pPalette,
 		pFade->ubColorCount, ubPaletteRatio
 	);
-	viewUpdatePalette(pFade->pView);
+	viewUpdateGlobalPalette(pFade->pView);
 
 	if(pFade->isMusic) {
 		UBYTE ubVolume = (PTPLAYER_VOLUME_MAX * ubCnt) / pFade->ubCntEnd;

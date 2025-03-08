@@ -4,7 +4,7 @@
 
 #include "map.h"
 #include <bartman/gcc8_c_support.h>
-#include <ace/utils/file.h>
+#include <ace/utils/disk_file.h>
 #include <ace/managers/system.h>
 #include "game.h"
 #include "bouncer.h"
@@ -1109,7 +1109,7 @@ UBYTE mapTryLoad(UBYTE ubIndex) {
 		char szName[30];
 		sprintf(szName, "data/levels/L%03hhu.dat", ubIndex);
 		systemUse();
-		tFile *pFile = fileOpen(szName, "rb");
+		tFile *pFile = diskFileOpen(szName, "rb");
 		if(!pFile) {
 			systemUnuse();
 			return 0;
@@ -1239,7 +1239,7 @@ void mapSave(UBYTE ubIndex) {
 	char szName[30];
 	sprintf(szName, "data/levels/L%03hhu.dat", ubIndex);
 	systemUse();
-	tFile *pFile = fileOpen(szName, "wb");
+	tFile *pFile = diskFileOpen(szName, "wb");
 	fileWrite(pFile, &g_sCurrentLevel.sSpawnPos.fX, sizeof(g_sCurrentLevel.sSpawnPos.fX));
 	fileWrite(pFile, &g_sCurrentLevel.sSpawnPos.fY, sizeof(g_sCurrentLevel.sSpawnPos.fY));
 

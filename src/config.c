@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include <ace/managers/system.h>
-#include <ace/utils/file.h>
+#include <ace/utils/disk_file.h>
 
 void configResetProgress(void) {
 	g_sConfig.ubCurrentLevel = 1;
@@ -16,9 +16,9 @@ void configLoad(void) {
 	configResetProgress();
 
 	systemUse();
-	tFile *pFile = fileOpen("save.dat", "rb");
+	tFile *pFile = diskFileOpen("save.dat", "rb");
 	if(!pFile) {
-		pFile = fileOpen("save.bak", "rb");
+		pFile = diskFileOpen("save.bak", "rb");
 	}
 	if(pFile) {
 		fileRead(pFile, &g_sConfig.ubUnlockedLevels, sizeof(g_sConfig.ubUnlockedLevels));
@@ -30,14 +30,14 @@ void configLoad(void) {
 
 void configSave(void) {
 	systemUse();
-	fileMove("save.dat", "save.bak");
-	tFile *pFile = fileOpen("save.dat", "wb");
+	diskFileMove("save.dat", "save.bak");
+	tFile *pFile = diskFileOpen("save.dat", "wb");
 	if(pFile) {
 		fileWrite(pFile, &g_sConfig.ubUnlockedLevels, sizeof(g_sConfig.ubUnlockedLevels));
 		fileWrite(pFile, &g_sConfig.ubCurrentLevel, sizeof(g_sConfig.ubCurrentLevel));
 		fileClose(pFile);
 	}
-	fileDelete("save.bak");
+	diskFileDelete("save.bak");
 	systemUnuse();
 }
 

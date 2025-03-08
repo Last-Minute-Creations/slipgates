@@ -5,7 +5,7 @@
 #include "game_math.h"
 #include <ace/generic/screen.h>
 #include <ace/managers/system.h>
-#include <ace/utils/file.h>
+#include <ace/utils/disk_file.h>
 
 static WORD s_pAtan2[SCREEN_PAL_HEIGHT / GAME_MATH_ATAN2_SCALE][SCREEN_PAL_WIDTH / GAME_MATH_ATAN2_SCALE];
 
@@ -61,7 +61,7 @@ UWORD fastMagnitude(UWORD uwDx, UWORD uwDy) {
 void gameMathInit(void) {
 #if defined(GAME_MATH_PRECALCULATED)
 	systemUse();
-	tFile *pFile = fileOpen("data/game_math.dat", "rb");
+	tFile *pFile = diskFileOpen("data/game_math.dat", "rb");
 	fileRead(pFile, s_pAtan2, sizeof(s_pAtan2));
 	fileRead(pFile, g_pSin, sizeof(g_pSin));
 	systemUnuse();
@@ -82,7 +82,7 @@ void gameMathInit(void) {
 
 #if defined(GAME_MATH_SAVE_PRECALC)
 	systemUse();
-	tFile *pFile = fileOpen("data/game_math.dat", "wb");
+	tFile *pFile = diskFileOpen("data/game_math.dat", "wb");
 	fileWrite(pFile, s_pAtan2, sizeof(s_pAtan2));
 	fileWrite(pFile, g_pSin, sizeof(g_pSin));
 	systemUnuse();
