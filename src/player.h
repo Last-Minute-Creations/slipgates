@@ -18,6 +18,7 @@ typedef struct tPlayer {
 	UBYTE ubDamageFrameCooldown;
 	UBYTE ubRegenCooldown;
 	UBYTE ubAnimDirection;
+	UBYTE ubCoyoteFrames;
 } tPlayer;
 
 void playerManagerInit(void);

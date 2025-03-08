@@ -26,6 +26,8 @@
 #define PLAYER_DAMAGE_COOLDOWN 5
 #define PLAYER_REGEN_COOLDOWN 20
 
+#define PLAYER_COYOTE_FRAMES_MAX 5
+
 static fix16_t s_fPlayerJumpVeloY = F16(-3);
 static UBYTE s_ubFrameCooldown;
 static UBYTE s_ubAnimFrame;
@@ -35,7 +37,7 @@ static tAnimFrameDef s_pArmFrameAddresses[GAME_MATH_ANGLE_COUNT / 4];
 //------------------------------------------------------------------ PRIVATE FNS
 
 static UBYTE playerCanJump(tPlayer *pPlayer) {
-	return pPlayer->sBody.isOnGround;
+	return pPlayer->ubCoyoteFrames;
 }
 
 static UBYTE playerCollisionHandler(
@@ -114,6 +116,7 @@ void playerReset(tPlayer *pPlayer, fix16_t fPosX, fix16_t fPosY) {
 	pPlayer->ubDamageFrameCooldown = 0;
 	pPlayer->ubRegenCooldown = PLAYER_REGEN_COOLDOWN;
 	pPlayer->ubAnimDirection = 0;
+	pPlayer->ubCoyoteFrames = 0;
 	s_ubAnimFrame = 0;
 	s_ubFrameCooldown = PLAYER_FRAME_COOLDOWN;
 }
@@ -190,11 +193,8 @@ void playerProcess(tPlayer *pPlayer) {
 	}
 
 	// Player movement
-	if(keyUse(KEY_W) && playerCanJump(pPlayer)) {
-		pPlayer->sBody.fVelocityY = s_fPlayerJumpVeloY;
-	}
-
 	if(pPlayer->sBody.isOnGround) {
+		pPlayer->ubCoyoteFrames = PLAYER_COYOTE_FRAMES_MAX;
 		if(keyCheck(KEY_A)) {
 			if(pPlayer->sBody.fVelocityX > 0) {
 				pPlayer->sBody.fVelocityX = 0;
@@ -216,6 +216,9 @@ void playerProcess(tPlayer *pPlayer) {
 		}
 	}
 	else {
+		if(pPlayer->ubCoyoteFrames) {
+			--pPlayer->ubCoyoteFrames;
+		}
 		if(keyCheck(KEY_A)) {
 			if(pPlayer->sBody.fVelocityX > -PLAYER_VELO_DELTA_X_GROUND) {
 				pPlayer->sBody.fVelocityX = fix16_sub(
@@ -232,6 +235,11 @@ void playerProcess(tPlayer *pPlayer) {
 				);
 			}
 		}
+	}
+
+	if(keyUse(KEY_W) && playerCanJump(pPlayer)) {
+		pPlayer->sBody.fVelocityY = s_fPlayerJumpVeloY;
+		pPlayer->ubCoyoteFrames = 0;
 	}
 
 	// Player pickup
