@@ -69,7 +69,7 @@ static const tGatewayKind s_pGatewayKinds[] = {
 
 //------------------------------------------------------------ PRIVATE FUNCTIONS
 
-static void mapLogicTryOpenSlipgates() {
+static void mapLogicTryOpenSlipgates(void) {
 	if(!mapIsSlipgateTunnelOpen()) {
 		return;
 	}
@@ -83,7 +83,7 @@ static void mapLogicTryOpenSlipgates() {
 	g_sCurrentLevel.pTiles[pSlipgateTiles[1].ubX][pSlipgateTiles[1].ubY] = TILE_SLIPGATE_B;
 }
 
-static void mapLogicCloseSlipgates() {
+static void mapLogicCloseSlipgates(void) {
 	tSlipgate *pSlipgate = &g_pSlipgates[SLIPGATE_A];
 	if(pSlipgate->eNormal != DIRECTION_NONE) {
 		g_sCurrentLevel.pTiles[pSlipgate->sTilePositions[0].ubX][pSlipgate->sTilePositions[0].ubY] = pSlipgate->pPrevTiles[0];

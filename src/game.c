@@ -178,6 +178,35 @@ static void editorEnterPalette(
 	tCbOptionPaletteDrawElement cbOptionDrawElement
 );
 
+static void drawStoryText(void) {
+	UWORD uwY = 0;
+	char szLine[100];
+	char *pLineEnd = szLine;
+	char *pC = g_sCurrentLevel.szStoryText;
+	while(*pC) {
+		if(*pC == '\n') {
+			*pLineEnd = '\0';
+			fontDrawStr(
+				g_pFont, s_pBufferMain->pBack, 320/2, uwY, szLine,
+				GAME_COLOR_TEXT, FONT_COOKIE | FONT_HCENTER, s_pTextBuffer
+			);
+			uwY += g_pFont->uwHeight;
+			pLineEnd = szLine;
+		}
+		else {
+			*(pLineEnd++) = *pC;
+		}
+		++pC;
+	}
+	if(pLineEnd != szLine) {
+		*pLineEnd = 0;
+		fontDrawStr(
+			g_pFont, s_pBufferMain->pBack, 320/2, uwY, szLine,
+			GAME_COLOR_TEXT, FONT_COOKIE | FONT_HCENTER, s_pTextBuffer
+		);
+	}
+}
+
 // TODO: refactor and move to map.c?
 static void drawMap(void) {
 	for(UBYTE ubTileX = 0; ubTileX < MAP_TILE_WIDTH; ++ubTileX) {
@@ -186,11 +215,7 @@ static void drawMap(void) {
 		}
 	}
 
-	fontDrawStr(
-		g_pFont, s_pBufferMain->pBack, 320/2, 0,
-		g_sCurrentLevel.szStoryText,
-		GAME_COLOR_TEXT, FONT_COOKIE | FONT_HCENTER, s_pTextBuffer
-	);
+	drawStoryText();
 
 	char szLevel[11];
 	char *szLabel;
@@ -957,7 +982,7 @@ static void gameGsCreate(void) {
 	s_pFade = fadeCreate(s_pView, s_pPalettes[PLAYER_MAX_HEALTH], 1 << GAME_BPP);
 
 	assetsGameCreate();
-	s_pTextBuffer = fontCreateTextBitMap(336, g_pFont->uwHeight * 4);
+	s_pTextBuffer = fontCreateTextBitMap(320 + 16, g_pFont->uwHeight);
 	playerManagerInit();
 
 	bobManagerCreate(s_pBufferMain->pFront, s_pBufferMain->pBack, s_pBufferMain->uBfrBounds.uwY);
@@ -1228,11 +1253,7 @@ static UBYTE s_ubTextEditPos;
 
 static void textEditUpdateText(void) {
 	blitRect(s_pBufferMain->pFront, 0, 0, 320, g_pFont->uwHeight * 4, 0);
-	fontDrawStr(
-		g_pFont, s_pBufferMain->pFront, 0, 0,
-		g_sCurrentLevel.szStoryText,
-		GAME_COLOR_EDITOR_TEXT, FONT_LAZY, s_pTextBuffer
-	);
+	drawStoryText();
 }
 
 static void textEditGsCreate(void) {

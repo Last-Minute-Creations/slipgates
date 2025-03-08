@@ -74,8 +74,8 @@ Fixes:
 	✔ Fix downward door setting solid tiles above it @done(24-04-25 12:07)
 	✔ Hitting ceiling should remove velocity instantly/faster @done(24-04-26 15:09)
 	✔ Boxes are sometimes sliding indefinitely on ground (e.g. when falling from newly created portal to horizontal one) @done(24-04-26 15:28)
+	✔ Make level text centered on all lines @done(25-03-08)
 	☐ Add ability to jump when falling out of ledge
-	☐ Make level text centered on all lines
 
 Graphics:
 	✔ Migrate to new graphics/palette @done(24-04-18 17:43)
